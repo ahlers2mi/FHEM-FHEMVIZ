@@ -3,7 +3,8 @@ name: Update controls_FHEMVIZ.txt
 on:
   push:
     paths:
-      - 'FHEM/98_FHEMVIZ.pm'
+      - 'FHEM/**'
+      - 'www/**'
   workflow_dispatch:
 
 jobs:
@@ -13,12 +14,26 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # volle Historie fuer per-Datei-Commitdatum
 
-      - name: Update controls_FHEMVIZ.txt
+      - name: Regenerate controls_FHEMVIZ.txt
         run: |
-          SIZE=$(wc -c < FHEM/98_FHEMVIZ.pm)
-          DATE=$(date -u +"%Y-%m-%d_%H:%M:%S")
-          echo "UPD ${DATE} ${SIZE} FHEM/98_FHEMVIZ.pm" > controls_FHEMVIZ.txt
+          OUT=controls_FHEMVIZ.txt
+          : > "$OUT"
+          # Alle auszuliefernden Dateien: Module (FHEM/) + Web-Assets (www/).
+          # Pfade sind relativ zur FHEM-Installationswurzel - genau so, wie
+          # FHEM 'update' sie erwartet (FHEM/... und www/...).
+          while IFS= read -r f; do
+            SIZE=$(wc -c < "$f")
+            # Zeitstempel = letztes Commit-Datum der Datei (UTC), damit nur
+            # tatsaechlich geaenderte Dateien beim naechsten 'update' neu
+            # geladen werden.
+            DATE=$(TZ=UTC git log -1 --format=%cd \
+                     --date=format-local:'%Y-%m-%d_%H:%M:%S' -- "$f")
+            [ -z "$DATE" ] && DATE=$(date -u +"%Y-%m-%d_%H:%M:%S")
+            echo "UPD ${DATE} ${SIZE} ${f}" >> "$OUT"
+          done < <(find FHEM www -type f ! -name '.*' | sort)
 
       - name: Commit updated controls_FHEMVIZ.txt
         run: |
