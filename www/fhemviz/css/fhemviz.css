@@ -156,15 +156,28 @@ fhemviz-switch, fhemviz-sensor, fhemviz-dimmer, fhemviz-actions {
 }
 
 /* TV-Modus -------------------------------------------------------------------
- * Keine Tabs, keine Bedienung, groessere Ziffern, mehr Luft. */
+ * Keine Tabs, keine Bedienung, groessere Ziffern, mehr Luft. Szenen mit
+ * wenigen Kacheln werden zentriert (statt verloren oben links). */
 html[data-vizmode="tv"] .viz-tabs { display: none; }
-html[data-vizmode="tv"] #fhemviz-app { padding: 26px 34px 30px; }
+html[data-vizmode="tv"] #fhemviz-app {
+  padding: 26px 34px 30px;
+  min-height: calc(100vh - 110px);
+  display: flex; flex-direction: column;
+  justify-content: safe center; /* zentriert; scrollt sicher bei Ueberlauf */
+}
 html[data-vizmode="tv"] {
-  --viz-tile-min: 240px;
+  --viz-tile-min: 260px;
   --viz-tile-row: 140px;
   --viz-gap: 16px;
 }
-html[data-vizmode="tv"] .viz-room > h2 { font-size: 1.2rem; }
+html[data-vizmode="tv"] .viz-grid {
+  /* auto-fit + Max-Breite: wenige Kacheln werden breiter und mittig */
+  grid-template-columns: repeat(auto-fit, minmax(var(--viz-tile-min), 480px));
+  justify-content: center;
+}
+html[data-vizmode="tv"] .viz-group > h3 { text-align: center; }
+html[data-vizmode="tv"] .viz-room { margin-bottom: 0; }
+html[data-vizmode="tv"] .viz-room > h2 { font-size: 1.2rem; text-align: center; }
 html[data-vizmode="tv"] #viz-header { padding: 14px 34px; }
 
 /* Event-Uebernahme: dezenter roter Rahmen um den gesamten Schirm */
