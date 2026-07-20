@@ -1,11 +1,22 @@
 /*
- * FHEMVIZ - responsives Auto-Layout (PoC v0.2.0).
- * Aufbau rein aus Attributen: room -> Sicht, group -> Karte, sortby ->
- * Reihenfolge. Geraete ohne group -> "Allgemein", ohne room -> "Unsortiert".
- * Das CSS-Grid (auto-fill/minmax) bricht die Kacheln automatisch um.
+ * FHEMVIZ - responsives Auto-Layout mit Raum-Tabs (v0.4.0).
+ * Aufbau rein aus Attributen: room -> Tab, group -> Karte, sortby ->
+ * Reihenfolge. Es ist immer nur EIN Raum sichtbar (oder "Alle"); die
+ * Auswahl wird in localStorage gemerkt. Das CSS-Grid (auto-fill/minmax)
+ * bricht die Kacheln automatisch um.
+ *
+ * Rausch-Filter (Konfiguration via 98_FHEMVIZ.pm, get config):
+ *   hideRooms  - Raeume, die nicht als Tabs/Abschnitte erscheinen
+ *   hideTypes  - FHEM-TYPEs ohne Kachel (SVG, FileLog, notify, at, ...)
+ *   hideStates - Geraete mit bedeutungslosem state (???, initialized, ...)
+ * Ein Geraet mit gesetztem vizWidget-Attribut wird IMMER gezeigt.
  */
 
 import { createWidget } from "./widgets/registry.js";
+
+// Sentinel fuer den "Alle Raeume"-Tab (kollidiert nicht mit Raumnamen).
+const ALL_ROOMS = "*";
+const LS_ACTIVE_ROOM = "fhemviz.activeRoom";
 
 // FHEM erlaubt mehrere Raeume/Gruppen kommasepariert an EINEM Geraet.
 function splitAttr(v) {
@@ -15,19 +26,18 @@ function splitAttr(v) {
     .filter(Boolean);
 }
 
-// hideRooms (Attribut am FHEMVIZ-Geraet): kommaseparierte Regex-Liste von
-// Raeumen, die nicht als eigene Dashboard-Raeume erscheinen sollen
-// (Default vom Modul: System->.*, Homebridge, Alexa, FileLog, hidden).
-function compileHideRooms(spec) {
-  return String(spec ?? "hidden")
+// Kommaseparierte Regex-Liste -> Array kompilierter RegExp (Volltreffer,
+// case-insensitive). Ungueltige Eintraege werden still ignoriert.
+function compileRegexList(spec, fallback) {
+  return String(spec ?? fallback)
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean)
     .map((p) => {
       try {
-        return new RegExp("^(?:" + p + ")$");
+        return new RegExp("^(?:" + p + ")$", "i");
       } catch {
-        return null; // ungueltige Regex still ignorieren
+        return null;
       }
     })
     .filter(Boolean);
@@ -38,25 +48,65 @@ function prettyRoom(room) {
   return room.replace(/->/g, " › ");
 }
 
+// Klartext eines states (HTML-Markup entfernen) fuer den hideStates-Filter.
+function plainState(s) {
+  return String(s ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function sortKey(dev) {
   const a = dev.attr || {};
   return (a.sortby || a.alias || dev.name).toLowerCase();
 }
 
+function loadActiveRoom() {
+  try {
+    return localStorage.getItem(LS_ACTIVE_ROOM) || ALL_ROOMS;
+  } catch {
+    return ALL_ROOMS;
+  }
+}
+
+function saveActiveRoom(room) {
+  try {
+    localStorage.setItem(LS_ACTIVE_ROOM, room);
+  } catch {
+    /* localStorage nicht verfuegbar - Auswahl gilt nur fuer die Sitzung */
+  }
+}
+
 /**
- * Rendert alle Geraete des Stores gruppiert nach room/group in den Container.
+ * Rendert Tab-Leiste + Geraete des aktiven Raums in den Container.
  * @param {HTMLElement} root
  * @param {import("./store.js").Store} store
  * @param {object} client - FhemClient (fuer set-Befehle)
- * @param {object} [opts] - { hideRooms: kommaseparierte Regex-Liste }
+ * @param {object} [opts] - { hideRooms, hideTypes, hideStates, activeRoom }
  */
 export function renderLayout(root, store, client, opts = {}) {
-  const hideRooms = compileHideRooms(opts.hideRooms);
+  const hideRooms = compileRegexList(opts.hideRooms, "hidden");
+  const hideStates = compileRegexList(opts.hideStates, "");
+  const hideTypes = new Set(
+    String(opts.hideTypes || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  );
+
   const rooms = new Map(); // room -> Map(group -> devices[])
 
   for (const dev of store.all()) {
     const attr = dev.attr || {};
     if (attr.vizHide) continue;
+
+    // Rausch-Filter - ausser der Nutzer erzwingt die Kachel via vizWidget.
+    if (!attr.vizWidget) {
+      const type = (dev.internals && dev.internals.TYPE) || "";
+      if (hideTypes.has(type)) continue;
+      const st = plainState(dev.state);
+      if (st === "" || hideStates.some((re) => re.test(st))) continue;
+    }
 
     // Ein Geraet kann in mehreren Raeumen UND Gruppen liegen -> es erscheint
     // in jeder Raum/Gruppe-Kombination (wie in FHEMWEB).
@@ -81,20 +131,48 @@ export function renderLayout(root, store, client, opts = {}) {
 
   root.textContent = "";
 
-  if (rooms.size === 0) {
+  const roomNames = [...rooms.keys()].sort((a, b) => a.localeCompare(b));
+  if (roomNames.length === 0) {
     const empty = document.createElement("p");
     empty.className = "viz-status";
-    empty.textContent = "Keine Geraete in der Sicht (devspec pruefen).";
+    empty.textContent = "Keine Geraete in der Sicht (devspec/Filter pruefen).";
     root.appendChild(empty);
     return;
   }
 
-  for (const [room, groups] of [...rooms.entries()].sort()) {
+  // Aktiver Raum: explizit uebergeben > gemerkt > "Alle".
+  let active = opts.activeRoom ?? loadActiveRoom();
+  if (active !== ALL_ROOMS && !rooms.has(active)) active = ALL_ROOMS;
+
+  // Tab-Leiste ("Alle" + ein Tab je Raum).
+  const nav = document.createElement("nav");
+  nav.className = "viz-tabs";
+  for (const name of [ALL_ROOMS, ...roomNames]) {
+    const tab = document.createElement("button");
+    tab.className = "viz-tab" + (name === active ? " active" : "");
+    tab.textContent = name === ALL_ROOMS ? "Alle" : prettyRoom(name);
+    tab.addEventListener("click", () => {
+      saveActiveRoom(name);
+      renderLayout(root, store, client, { ...opts, activeRoom: name });
+    });
+    nav.appendChild(tab);
+  }
+  root.appendChild(nav);
+
+  const shownRooms = active === ALL_ROOMS ? roomNames : [active];
+
+  for (const room of shownRooms) {
+    const groups = rooms.get(room);
     const roomEl = document.createElement("section");
     roomEl.className = "viz-room";
-    const h2 = document.createElement("h2");
-    h2.textContent = prettyRoom(room);
-    roomEl.appendChild(h2);
+
+    // Raum-Ueberschrift nur in der "Alle"-Ansicht (im Einzel-Tab ist der
+    // Raumname bereits im aktiven Tab sichtbar).
+    if (active === ALL_ROOMS) {
+      const h2 = document.createElement("h2");
+      h2.textContent = prettyRoom(room);
+      roomEl.appendChild(h2);
+    }
 
     for (const [group, devices] of [...groups.entries()].sort()) {
       const groupEl = document.createElement("div");

@@ -65,7 +65,11 @@ async function main() {
 
     // Rendern.
     registerCoreWidgets();
-    renderLayout(root, store, client, { hideRooms: cfg.hideRooms });
+    renderLayout(root, store, client, {
+      hideRooms: cfg.hideRooms,
+      hideTypes: cfg.hideTypes,
+      hideStates: cfg.hideStates,
+    });
     setStatus(`${count} Gerät(e) geladen – warte auf Live-Events…`);
 
     // Live-Kanal öffnen (Filter auf die geladenen Geräte).

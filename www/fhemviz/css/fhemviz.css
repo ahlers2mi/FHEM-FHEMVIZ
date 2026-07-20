@@ -80,6 +80,34 @@ body {
 
 #fhemviz-app { padding: 16px; }
 
+/* Raum-Tabs (Chip-Leiste, horizontal scrollbar auf schmalen Displays) ------- */
+.viz-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+}
+.viz-tab {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--viz-border);
+  background: var(--viz-surface);
+  color: var(--viz-text);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.viz-tab.active {
+  background: var(--viz-accent);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+}
+
 /* Raum -> Gruppe -> Kachelraster ------------------------------------------- */
 .viz-room { margin-bottom: 24px; }
 .viz-room > h2 {
