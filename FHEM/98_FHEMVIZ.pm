@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.7.7
+# Version:  v0.7.8
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.7";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.8";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -72,7 +72,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,actions,text,agenda",
+    "vizWidget:switch,sensor,dimmer,actions,text,agenda,contact",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHide:1,0",
     "vizReadings:textField-long",
@@ -209,7 +209,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"tvScenes":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.7.7"),
+            FHEMVIZ_jsonStr("v0.7.8"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -365,7 +365,7 @@ sub FHEMVIZ_Attr {
   <a name="FHEMVIZdevattr"></a>
   <b>Geraete-Attribute (an den visualisierten Geraeten, global registriert)</b>
   <ul>
-    <li><b>vizWidget</b> switch|sensor|dimmer|actions|text|agenda &ndash; Widget-Typ
+    <li><b>vizWidget</b> switch|sensor|dimmer|actions|text|agenda|contact &ndash; Widget-Typ
         erzwingen; uebersteuert genericDeviceType/Heuristik und die
         Rausch-Filter (Geraet wird immer angezeigt). <code>text</code> zeigt
         mehrzeiligen Klartext (z. B. Kalender-/Terminlisten) mit erhaltenen

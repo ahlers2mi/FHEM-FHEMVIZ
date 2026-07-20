@@ -13,6 +13,7 @@ import { FhemvizDimmer } from "./dimmer.js";
 import { FhemvizActions } from "./actions.js";
 import { FhemvizText } from "./text.js";
 import { FhemvizAgenda } from "./agenda.js";
+import { FhemvizContact } from "./contact.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -21,6 +22,7 @@ export const WIDGET_REGISTRY = {
   actions: "fhemviz-actions",
   text: "fhemviz-text",
   agenda: "fhemviz-agenda",
+  contact: "fhemviz-contact",
   // TODO: thermostat, blind/shutter, chart, media.
 };
 
@@ -33,6 +35,9 @@ const GDT_MAP = {
   shutter: "dimmer",
   thermostat: "sensor",
   sensor: "sensor",
+  window: "contact",
+  door: "contact",
+  contact: "contact",
 };
 
 export function registerCoreWidgets() {
@@ -43,6 +48,7 @@ export function registerCoreWidgets() {
     ["fhemviz-actions", FhemvizActions],
     ["fhemviz-text", FhemvizText],
     ["fhemviz-agenda", FhemvizAgenda],
+    ["fhemviz-contact", FhemvizContact],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -88,7 +94,17 @@ export function selectWidget(device) {
   if (/\bpct\b|\bdim\b/.test(sets)) return WIDGET_REGISTRY.dimmer;
   if (/\bon\b/.test(sets) && /\boff\b/.test(sets)) return WIDGET_REGISTRY.switch;
 
-  // 5. Fallback
+  // 5. Kontakt-Erkennung am Zustand (MAX-Fensterkontakte u. ae. haben
+  //    weder GDT noch webCmd - der state verraet sie).
+  const st = String(device.state ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .trim()
+    .toLowerCase();
+  if (/^(open|opened|closed|tilted|auf|offen|zu|geschlossen|gekippt)$/.test(st)) {
+    return WIDGET_REGISTRY.contact;
+  }
+
+  // 6. Fallback
   return WIDGET_REGISTRY.sensor;
 }
 

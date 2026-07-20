@@ -68,7 +68,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 | Attribut | Werte | Wirkung |
 |---|---|---|
-| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
+| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `contact` = Fenster/Tür-Kontakt (Symbol + Offen/Gekippt/Zu, offen = Bernstein; wird bei state open/closed/tilted automatisch gewählt), `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
 | `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
 | `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
 | `vizReadings` | `reading[:Label[:Einheit[:Farbe]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Gesetzt = state wird ignoriert, Gerät immer angezeigt |
