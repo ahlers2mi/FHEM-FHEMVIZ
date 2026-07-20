@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+  FHEMVIZ - moderne, responsive FHEM-Visualisierung (Single-Page-App).
+
+  GRUNDGERUEST / SCAFFOLD (v0.1.0) - noch KEINE Render-/Client-Logik.
+  Ausgeliefert von FHEMWEB aus www/fhemviz/:
+    http://<fhem>:<port>/fhem/fhemviz/index.html
+
+  Buildfrei: native Web Components (ES-Module) + CSS Custom Properties,
+  kein Node/npm noetig ("Datei kopieren, fertig"). Siehe CONCEPT.md, §6.
+-->
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FHEMVIZ</title>
+    <link rel="stylesheet" href="./css/fhemviz.css" />
+  </head>
+  <body>
+    <!-- App-Wurzel. Der Store fuellt spaeter das responsive Auto-Layout (§4). -->
+    <div id="fhemviz-app" data-state="scaffold">
+      <noscript>FHEMVIZ benoetigt JavaScript.</noscript>
+    </div>
+
+    <!-- Einstiegspunkt als ES-Modul (buildfrei). -->
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
