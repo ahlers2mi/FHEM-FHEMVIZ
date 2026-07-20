@@ -27,8 +27,13 @@ export class FhemClient {
     return i >= 0 ? p.slice(0, i) : "/fhem";
   }
 
-  _url(cmd, extra = "") {
-    return `${this.base}?cmd=${encodeURIComponent(cmd)}&XHR=1${extra}`;
+  _url(cmd) {
+    // FHEMWEB mit aktivem csrfToken verlangt fwcsrf bei ALLEN ?cmd=-Aufrufen
+    // (auch lesenden wie jsonlist2/get), nicht nur bei set/attr.
+    const csrf = this.csrfToken
+      ? `&fwcsrf=${encodeURIComponent(this.csrfToken)}`
+      : "";
+    return `${this.base}?cmd=${encodeURIComponent(cmd)}&XHR=1${csrf}`;
   }
 
   /** CSRF-Token aus dem Header X-FHEM-csrfToken holen. */
@@ -43,7 +48,9 @@ export class FhemClient {
     const r = await fetch(this._url(`get ${device} config`), {
       credentials: "same-origin",
     });
+    if (!r.ok) throw new Error(`get ${device} config: HTTP ${r.status}`);
     const text = (await r.text()).trim();
+    if (!text) throw new Error(`get ${device} config: leere Antwort`);
     return JSON.parse(text);
   }
 
@@ -57,7 +64,10 @@ export class FhemClient {
   async snapshot(devspec, readingRegex) {
     const cmd = "jsonlist2 " + devspec + (readingRegex ? " " + readingRegex : "");
     const r = await fetch(this._url(cmd), { credentials: "same-origin" });
-    return r.json();
+    if (!r.ok) throw new Error(`jsonlist2 ${devspec}: HTTP ${r.status}`);
+    const text = (await r.text()).trim();
+    if (!text) throw new Error(`jsonlist2 ${devspec}: leere Antwort`);
+    return JSON.parse(text);
   }
 
   /**
@@ -129,12 +139,9 @@ export class FhemClient {
     onEvent && onEvent(id, value);
   }
 
-  /** Schreibenden Befehl (set/attr) mit CSRF absetzen. */
+  /** Schreibenden Befehl (set/attr) absetzen (CSRF via _url). */
   async command(cmd) {
-    const extra = this.csrfToken
-      ? `&fwcsrf=${encodeURIComponent(this.csrfToken)}`
-      : "";
-    const r = await fetch(this._url(cmd, extra), { credentials: "same-origin" });
+    const r = await fetch(this._url(cmd), { credentials: "same-origin" });
     return r.text();
   }
 }
