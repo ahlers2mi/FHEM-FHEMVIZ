@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.7.1
+# Version:  v0.7.3
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.1";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.3";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -56,13 +56,22 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 # Geraetebezogene viz*-Attribute (an den VISUALISIERTEN Geraeten, nicht am
 # FHEMVIZ-Geraet). Werden in Initialize global registriert (addToAttrList),
 # damit sie an jedem Geraet im FHEMWEB-Dropdown auftauchen.
-#   vizWidget - Widget-Typ erzwingen (uebersteuert GDT/Heuristik/Rauschfilter)
-#   vizSize   - Kachelgroesse im Raster (1x1, 2x1, 1x2, 2x2)
-#   vizHide   - Geraet aus der Sicht ausblenden
+#   vizWidget   - Widget-Typ erzwingen (uebersteuert GDT/Heuristik/Rauschfilter)
+#   vizSize     - Kachelgroesse im Raster (1x1, 2x1, 1x2, 2x2)
+#   vizHide     - Geraet aus der Sicht ausblenden
+#   vizReadings - Kachelinhalt direkt aus Readings statt state-Parsing:
+#                 "reading[:Label[:Einheit[:Farbe]]]" kommasepariert,
+#                 erster Eintrag = Hauptwert. Farbe: ok|warn|bad|accent|blau
+#                 (bzw. gruen/orange/rot). Beispiel:
+#                 attr d_Wechselrichter_all vizReadings
+#                   soc:Ladung:%:accent,pv_leistung:PV:W:ok,
+#                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
+#                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,actions",
+    "vizWidget:switch,sensor,dimmer,actions,text,agenda",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHide:1,0",
+    "vizReadings:textField-long",
 );
 
 # ----------------------------------------------------------------------------
@@ -194,7 +203,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"tvScenes":%s,'
               . '"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.7.1"),
+            FHEMVIZ_jsonStr("v0.7.3"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -345,12 +354,23 @@ sub FHEMVIZ_Attr {
   <a name="FHEMVIZdevattr"></a>
   <b>Geraete-Attribute (an den visualisierten Geraeten, global registriert)</b>
   <ul>
-    <li><b>vizWidget</b> switch|sensor|dimmer|actions &ndash; Widget-Typ
+    <li><b>vizWidget</b> switch|sensor|dimmer|actions|text|agenda &ndash; Widget-Typ
         erzwingen; uebersteuert genericDeviceType/Heuristik und die
-        Rausch-Filter (Geraet wird immer angezeigt)</li>
+        Rausch-Filter (Geraet wird immer angezeigt). <code>text</code> zeigt
+        mehrzeiligen Klartext (z. B. Kalender-/Terminlisten) mit erhaltenen
+        Zeilenumbruechen.</li>
     <li><b>vizSize</b> 1x1|2x1|1x2|2x2 &ndash; Kachelgroesse im Raster;
         2x2 ergibt eine Hero-Kachel mit groesserer Schrift</li>
     <li><b>vizHide</b> 1|0 &ndash; Geraet aus der Sicht ausblenden</li>
+    <li><b>vizReadings</b> &ndash; Kachelinhalt direkt aus Readings statt
+        state-Parsing: <code>reading[:Label[:Einheit[:Farbe]]]</code>,
+        kommasepariert; erster Eintrag = Hauptwert (gross). Farben sind
+        semantische Namen: <code>ok</code>/<code>gruen</code>,
+        <code>warn</code>/<code>orange</code>, <code>bad</code>/<code>rot</code>,
+        <code>accent</code>, <code>blau</code>. Ist das Attribut gesetzt, wird
+        state ignoriert und das Geraet immer angezeigt. Beispiel:<br>
+        <code>attr d_Wechselrichter_all vizReadings
+        soc:Ladung:%:accent,pv_leistung:PV:W:ok,out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,batterie_leistung:Batterie:W:warn</code></li>
   </ul>
 </ul>
 

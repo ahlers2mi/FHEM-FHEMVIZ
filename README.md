@@ -67,13 +67,32 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 | Attribut | Werte | Wirkung |
 |---|---|---|
-| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt) |
+| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
 | `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
 | `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
+| `vizReadings` | `reading[:Label[:Einheit[:Farbe]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Gesetzt = state wird ignoriert, Gerät immer angezeigt |
 
-**Widget-Auswahl** (Reihenfolge): `vizWidget` → `genericDeviceType` →
-`webCmd` (reine on/off → Schalter, `pct`/`dim` → Dimmer, sonst
-Aktions-Buttons) → PossibleSets-Heuristik → Sensor-Kachel.
+**Beispiel Wechselrichter** (Readings statt stateFormat-Raten, mit Farben
+wie im alten Solardashboard):
+
+```
+attr d_Wechselrichter_all vizReadings soc:Ladung:%:accent,pv_leistung:PV:W:ok,out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,batterie_leistung:Batterie:W:warn
+attr d_Wechselrichter_all vizSize 2x2
+```
+
+**Beispiel Müllkalender** (Terminliste im Agenda-Stil, nächster Termin
+hervorgehoben):
+
+```
+attr rem_d_cal_muell vizWidget agenda
+attr rem_d_cal_muell alias Termine
+attr rem_d_cal_muell vizSize 2x2
+```
+
+**Widget-Auswahl** (Reihenfolge): `vizWidget` → `vizReadings` (→ Readings-
+Kachel) → `genericDeviceType` → `webCmd` (reine on/off → Schalter,
+`pct`/`dim` → Dimmer, sonst Aktions-Buttons) → PossibleSets-Heuristik →
+Sensor-Kachel.
 
 ## TV-/Kiosk-Modus einrichten
 
