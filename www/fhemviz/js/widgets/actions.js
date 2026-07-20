@@ -57,7 +57,9 @@ export class FhemvizActions extends FhemvizWidget {
   }
 
   render() {
-    const state = this.escape(this.plain(this.device.state));
+    const mapped = this.vizStateInfo();
+    const state = this.escape(mapped ? mapped.text : this.plain(this.device.state));
+    const stColor = mapped && mapped.color ? `color:${mapped.color};` : "";
     let body = "";
     if (!this.readonly) {
       const parts = [];
@@ -98,7 +100,7 @@ export class FhemvizActions extends FhemvizWidget {
     return `
       <div class="card">
         <span class="label">${this.escape(this.displayName())}</span>
-        <div class="value" style="font-size:1.15rem;font-weight:450;">${state}</div>
+        <div class="value" style="font-size:1.15rem;font-weight:450;${stColor}">${state}</div>
         ${body}
         ${this.readingRowsHtml()}
       </div>`;

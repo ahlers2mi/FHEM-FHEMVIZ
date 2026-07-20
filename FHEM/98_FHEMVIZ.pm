@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.7.15
+# Version:  v0.7.20
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.15";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.20";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -76,6 +76,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHide:1,0",
     "vizReadings:textField-long",
+    "vizStates:textField-long",
 );
 
 # ----------------------------------------------------------------------------
@@ -110,8 +111,10 @@ sub FHEMVIZ_Initialize {
 
     # viz*-Attribute global verfuegbar machen (erstklassige FHEM-Buerger:
     # Dropdown + Vervollstaendigung an jedem Geraet).
+    # Zweiter Parameter ordnet die Attribute dem Modul zu (sauberes
+    # Aufraeumen, Zuordnung in FHEMWEB) - wie im FHEM-Gemini-Modul.
     foreach my $a (@FHEMVIZ_DEV_ATTRS) {
-        addToAttrList($a);
+        addToAttrList($a, "FHEMVIZ");
     }
 }
 
@@ -211,7 +214,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"tvScenes":%s,"statusBar":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.7.15"),
+            FHEMVIZ_jsonStr("v0.7.20"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -380,6 +383,10 @@ sub FHEMVIZ_Attr {
     <li><b>vizSize</b> 1x1|2x1|1x2|2x2 &ndash; Kachelgroesse im Raster;
         2x2 ergibt eine Hero-Kachel mit groesserer Schrift</li>
     <li><b>vizHide</b> 1|0 &ndash; Geraet aus der Sicht ausblenden</li>
+    <li><b>vizStates</b> &ndash; uebersetzt technische Status-Codes in
+        Klartext + Farbe: <code>pattern:Label[:Farbe]</code> kommasepariert,
+        pattern = Regex (Volltreffer). Beispiel:
+        <code>attr rem_SILENO vizStates ok_cutting:Maeht:ok,ok_charging:Laedt:accent,ok_searching:Sucht:ok,parked.*:Geparkt</code></li>
     <li><b>vizReadings</b> &ndash; Kachelinhalt direkt aus Readings statt
         state-Parsing: <code>reading[:Label[:Einheit[:Farbe]]]</code>,
         kommasepariert; erster Eintrag = Hauptwert (gross). Farben sind

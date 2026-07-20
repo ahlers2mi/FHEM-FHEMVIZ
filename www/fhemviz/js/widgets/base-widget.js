@@ -235,6 +235,29 @@ export class FhemvizWidget extends HTMLElement {
       .join("");
   }
 
+  /**
+   * vizStates-Attribut: "pattern:Label[:Farbe]" kommasepariert - uebersetzt
+   * technische Status-Codes (ok_cutting, In Betrieb) in Klartext + Farbe.
+   * Pattern = Regex (Volltreffer, case-insensitiv). null wenn kein Treffer.
+   */
+  vizStateInfo(raw = this.device.state) {
+    const spec = this.device.attr && this.device.attr.vizStates;
+    if (!spec) return null;
+    const st = this.plain(raw);
+    for (const t of String(spec).split(",")) {
+      const [pat, label, color] = t.split(":").map((x) => (x || "").trim());
+      if (!pat) continue;
+      try {
+        if (new RegExp("^(?:" + pat + ")$", "i").test(st)) {
+          return { text: label || st, color: this.colorVar(color) };
+        }
+      } catch {
+        /* ungueltige Regex ignorieren */
+      }
+    }
+    return null;
+  }
+
   /** Muss von abgeleiteten Widgets ueberschrieben werden. */
   render() {
     return `<div class="card"><span class="label">${this.escape(

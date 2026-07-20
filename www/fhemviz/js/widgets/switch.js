@@ -13,6 +13,8 @@ export class FhemvizSwitch extends FhemvizWidget {
   }
 
   _stateText() {
+    const mapped = this.vizStateInfo();
+    if (mapped) return mapped.text;
     const st = this.plain(this.device.state);
     if (/^on$/i.test(st)) return "An";
     if (/^off$/i.test(st)) return "Aus";
