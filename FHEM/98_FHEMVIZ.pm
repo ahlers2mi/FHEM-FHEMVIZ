@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.7.8
+# Version:  v0.7.11
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.8";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.11";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -72,7 +72,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,actions,text,agenda,contact",
+    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHide:1,0",
     "vizReadings:textField-long",
@@ -101,6 +101,7 @@ sub FHEMVIZ_Initialize {
           "theme:auto,light,dark " .
           "mode:tablet,tv " .
           "tvScenes " .
+          "statusBar:textField-long " .
           "showRooms " .
           "hideRooms " .
           "hideTypes " .
@@ -199,6 +200,7 @@ sub FHEMVIZ_Get {
         my $readonly   = AttrVal($name, "readonly", 0) ? "true" : "false";
         my $mode       = AttrVal($name, "mode", "tablet");
         my $tvScenes   = AttrVal($name, "tvScenes", "");
+        my $statusBar  = AttrVal($name, "statusBar", "");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
@@ -206,15 +208,16 @@ sub FHEMVIZ_Get {
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"tvScenes":%s,'
+              . '"mode":%s,"tvScenes":%s,"statusBar":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.7.8"),
+            FHEMVIZ_jsonStr("v0.7.11"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
             FHEMVIZ_jsonStr($mode),
             FHEMVIZ_jsonStr($tvScenes),
+            FHEMVIZ_jsonStr($statusBar),
             FHEMVIZ_jsonStr($showRooms),
             FHEMVIZ_jsonStr($hideRooms),
             FHEMVIZ_jsonStr($hideTypes),
@@ -339,6 +342,10 @@ sub FHEMVIZ_Attr {
         (Default): bedienbar, Raum-Tabs unten. <code>tv</code>: keine
         Bedienelemente, grosse Ziffern, automatische Szenen-Rotation.
         Per URL uebersteuerbar: <code>?mode=tv</code></li>
+    <li><b>statusBar</b> &ndash; immer sichtbare Status-Chips im Kopf:
+        kommaseparierte Liste <code>geraet[:reading[:einheit]]</code>.
+        structure-Geraete werden zu "Alias: n offen", Readings zu
+        Wert-Chips. Tablet: Chip tippen springt zum FHEMVIZ-Raum.</li>
     <li><b>tvScenes</b> &ndash; Szenen-Rotation im TV-Modus als
         kommaseparierte Liste <code>Raum:Sekunden</code>, z. B.
         <code>Solar:30,Wohnzimmer:20,Garage:15</code>. Ohne Angabe rotieren
@@ -365,7 +372,7 @@ sub FHEMVIZ_Attr {
   <a name="FHEMVIZdevattr"></a>
   <b>Geraete-Attribute (an den visualisierten Geraeten, global registriert)</b>
   <ul>
-    <li><b>vizWidget</b> switch|sensor|dimmer|actions|text|agenda|contact &ndash; Widget-Typ
+    <li><b>vizWidget</b> switch|sensor|dimmer|shutter|actions|text|agenda|contact &ndash; Widget-Typ
         erzwingen; uebersteuert genericDeviceType/Heuristik und die
         Rausch-Filter (Geraet wird immer angezeigt). <code>text</code> zeigt
         mehrzeiligen Klartext (z. B. Kalender-/Terminlisten) mit erhaltenen

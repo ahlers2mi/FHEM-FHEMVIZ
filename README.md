@@ -68,7 +68,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 | Attribut | Werte | Wirkung |
 |---|---|---|
-| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `contact` = Fenster/Tür-Kontakt (Symbol + Offen/Gekippt/Zu, offen = Bernstein; wird bei state open/closed/tilted automatisch gewählt), `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
+| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `contact` = Fenster/Tür-Kontakt (Symbol + Offen/Gekippt/Zu, offen = Bernstein; wird bei state open/closed/tilted automatisch gewählt; `structure`-Geräte wie `st_fenster` werden zur Gruppen-Kachel: „2 offen · 1 gekippt" + ein Mini-Symbol je Mitglied, live), `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
 | `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
 | `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
 | `vizReadings` | `reading[:Label[:Einheit[:Farbe]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Gesetzt = state wird ignoriert, Gerät immer angezeigt |
@@ -137,6 +137,30 @@ Rotation automatisch zurück.
 |---|---|
 | `?device=<name>` | Bestimmtes FHEMVIZ-Gerät (sonst: erstes `TYPE=FHEMVIZ`) |
 | `?mode=tv` / `?mode=tablet` | Betriebsart übersteuern (für Kiosk-Start-URLs) |
+
+## Eigene Widgets (Plugin-API)
+
+Eigene Widgets leben in `www/fhemviz/js/widgets/custom/index.js` — die Datei
+gehört dir und wird von FHEM `update` **nie überschrieben** (sie steht nicht
+in der controls-Datei). Buildfrei, keine Toolchain:
+
+```js
+import { registerWidget, FhemvizWidget } from "../registry.js";
+
+class PoolWidget extends FhemvizWidget {
+  render() {
+    const t = this.plain((this.device.readings || {}).poolTemp ?? "–");
+    return `<div class="card"><span class="label">${this.escape(this.displayName())}</span>
+      <div class="value">${this.escape(t)}<span class="unit">°C</span></div>
+      ${this.readingRowsHtml()}</div>`;
+  }
+}
+registerWidget("pool", PoolWidget);
+```
+
+Aktivierung: `attr <gerät> vizWidget pool`. Die Basisklasse liefert
+`plain()`, `escape()`, `readingRowsHtml()` (vizReadings), `sendCommand()`
+und das Karten-CSS mit allen Design-Tokens.
 
 ## Struktur
 

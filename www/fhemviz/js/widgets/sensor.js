@@ -53,31 +53,9 @@ export class FhemvizSensor extends FhemvizWidget {
       });
   }
 
-  /**
-   * vizReadings-Attribut: "reading[:Label[:Einheit[:Farbe]]]" kommasepariert.
-   * Liefert die Kachel-Komponenten direkt aus den Readings - praezise
-   * Live-Updates, kein state-Parsing. null wenn nicht gesetzt.
-   */
+  /** vizReadings (Basis-Parser); hat Vorrang vor dem state-Parsing. */
   _configuredParts() {
-    const spec = this.device.attr && this.device.attr.vizReadings;
-    if (!spec) return null;
-    const readings = this.device.readings || {};
-    const items = String(spec)
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean)
-      .map((t) => {
-        const [reading, label, unit, color] = t.split(":").map((x) => (x || "").trim());
-        if (!reading) return null;
-        const raw = readings[reading];
-        const value =
-          (raw === undefined || raw === null || raw === ""
-            ? "–"
-            : this.plain(raw)) + (unit ? " " + unit : "");
-        return { label: label || reading, value, color: this.colorVar(color) };
-      })
-      .filter(Boolean);
-    return items.length ? items : null;
+    return this.vizReadingParts();
   }
 
   /** Schriftgroessen-Klasse: lange Hauptwerte werden kleiner statt zu wrappen. */

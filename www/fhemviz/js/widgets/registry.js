@@ -14,6 +14,7 @@ import { FhemvizActions } from "./actions.js";
 import { FhemvizText } from "./text.js";
 import { FhemvizAgenda } from "./agenda.js";
 import { FhemvizContact } from "./contact.js";
+import { FhemvizShutter } from "./shutter.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -23,6 +24,7 @@ export const WIDGET_REGISTRY = {
   text: "fhemviz-text",
   agenda: "fhemviz-agenda",
   contact: "fhemviz-contact",
+  shutter: "fhemviz-shutter",
   // TODO: thermostat, blind/shutter, chart, media.
 };
 
@@ -31,8 +33,8 @@ const GDT_MAP = {
   switch: "switch",
   light: "switch",
   socket: "switch",
-  blind: "dimmer",
-  shutter: "dimmer",
+  blind: "shutter",
+  shutter: "shutter",
   thermostat: "sensor",
   sensor: "sensor",
   window: "contact",
@@ -49,6 +51,7 @@ export function registerCoreWidgets() {
     ["fhemviz-text", FhemvizText],
     ["fhemviz-agenda", FhemvizAgenda],
     ["fhemviz-contact", FhemvizContact],
+    ["fhemviz-shutter", FhemvizShutter],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -63,13 +66,16 @@ export function selectWidget(device) {
   if (attr.vizWidget && WIDGET_REGISTRY[attr.vizWidget]) {
     return WIDGET_REGISTRY[attr.vizWidget];
   }
-  // 1b. vizReadings konfiguriert -> Readings-Kachel (Sensor), ausser
-  //     vizWidget sagt explizit etwas anderes.
-  if (attr.vizReadings) return WIDGET_REGISTRY.sensor;
-
-  // 2. genericDeviceType
+  // 2. genericDeviceType. Rollladen brauchen pct - Pegel-Proxies
+  //    (gdt blind, aber nur state-Slider) bekommen den Dimmer.
   const gdt = attr.genericDeviceType || attr.gdt;
-  if (gdt && GDT_MAP[gdt]) return WIDGET_REGISTRY[GDT_MAP[gdt]];
+  if (gdt && GDT_MAP[gdt]) {
+    let key = GDT_MAP[gdt];
+    if (key === "shutter" && !/\bpct\b/.test(String(device.possibleSets || ""))) {
+      key = "dimmer";
+    }
+    return WIDGET_REGISTRY[key];
+  }
 
   // 3. webCmd: bewusst konfigurierte Bedienung hat Vorrang vor der
   //    PossibleSets-Heuristik (z. B. "Auf:Zu:Lueften:Stop" am Garagentor,
@@ -88,6 +94,11 @@ export function selectWidget(device) {
     }
     return WIDGET_REGISTRY.actions;
   }
+
+  // 3b. vizReadings konfiguriert (und kein passenderes Widget gefunden)
+  //     -> Readings-Kachel; bei GDT/webCmd-Widgets erscheinen die
+  //     vizReadings stattdessen als Info-Zeilen in der Kachel.
+  if (attr.vizReadings) return WIDGET_REGISTRY.sensor;
 
   // 4. Heuristik aus PossibleSets
   const sets = String(device.possibleSets || "");
@@ -131,6 +142,25 @@ export function createWidget(device, store, client, opts = {}) {
     if (m[2] === "2") el.style.gridRow = "span 2";
   }
   return el;
+}
+
+/**
+ * Plugin-API fuer eigene Widgets (update-sicher, buildfrei):
+ * www/fhemviz/js/widgets/custom/index.js anlegen - sie wird beim Start
+ * automatisch geladen (fehlt sie, passiert nichts) und ruft:
+ *
+ *   import { registerWidget, FhemvizWidget } from "../registry.js";
+ *   class MeinWidget extends FhemvizWidget { render() { ... } }
+ *   registerWidget("meinwidget", MeinWidget);
+ *
+ * Aktivierung am Geraet: attr <geraet> vizWidget meinwidget
+ * (FHEM akzeptiert auch Werte ausserhalb des Dropdowns.)
+ */
+export function registerWidget(key, cls) {
+  const tag = "fhemviz-" + String(key).toLowerCase().replace(/[^a-z0-9]/g, "");
+  WIDGET_REGISTRY[key] = tag;
+  if (!customElements.get(tag)) customElements.define(tag, cls);
+  return tag;
 }
 
 export { FhemvizWidget };
