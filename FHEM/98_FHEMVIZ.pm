@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.2.0
+# Version:  v0.3.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,13 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.2.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.3.0";
+
+# Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
+# im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
+# Regex-Liste (jeder Eintrag wird in der SPA als ^(?:...)$ gematcht).
+# Per "attr <name> hideRooms ..." anpassbar; leerer Wert zeigt alles.
+my $FHEMVIZ_DEFAULT_HIDEROOMS = 'System->.*,Homebridge,Alexa,FileLog,hidden';
 
 # Minimaler Satz eigener Attribute (Namespace-Praefix "viz"), gedacht fuer die
 # visualisierten Geraete - NICHT fuer das FHEMVIZ-Geraet selbst. Sie werden in
@@ -72,6 +78,7 @@ sub FHEMVIZ_Initialize {
           "readonly:1,0 " .
           "devspec " .
           "theme:auto,light,dark " .
+          "hideRooms " .
           $readingFnAttributes;
 }
 
@@ -125,17 +132,19 @@ sub FHEMVIZ_Get {
     }
 
     if ($opt eq "manifest" || $opt eq "config") {
-        my $devspec  = AttrVal($name, "devspec", "");
-        my $theme    = AttrVal($name, "theme", "auto");
-        my $readonly = AttrVal($name, "readonly", 0) ? "true" : "false";
+        my $devspec   = AttrVal($name, "devspec", "");
+        my $theme     = AttrVal($name, "theme", "auto");
+        my $readonly  = AttrVal($name, "readonly", 0) ? "true" : "false";
+        my $hideRooms = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
 
         return sprintf(
-            '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s}',
+            '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,"hideRooms":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.2.0"),
+            FHEMVIZ_jsonStr("v0.3.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
-            $readonly
+            $readonly,
+            FHEMVIZ_jsonStr($hideRooms)
         );
     }
 
@@ -240,6 +249,10 @@ sub FHEMVIZ_Attr {
     <li><b>readonly</b> 1|0 &ndash; Nur-Lese-Sicht (keine Set-Buttons)</li>
     <li><b>devspec</b> &ndash; Geraeteauswahl fuer diese Sicht</li>
     <li><b>theme</b> auto|light|dark &ndash; Farbschema der Oberflaeche</li>
+    <li><b>hideRooms</b> &ndash; kommaseparierte Regex-Liste von Raeumen, die
+        nicht als eigene Dashboard-Raeume erscheinen (Default:
+        <code>System-&gt;.*,Homebridge,Alexa,FileLog,hidden</code>;
+        leer = alle Raeume anzeigen)</li>
   </ul>
   <br>
 

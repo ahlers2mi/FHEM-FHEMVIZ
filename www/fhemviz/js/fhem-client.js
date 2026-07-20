@@ -135,7 +135,9 @@ export class FhemClient {
     if (!Array.isArray(arr) || typeof arr[0] !== "string") return;
     const id = arr[0];
     if (id.startsWith("#")) return; // FHEMWEB-Steuerzeile
-    const value = arr.length > 2 ? arr[2] : arr[1];
+    // Feld 2 = Rohwert (z. B. "off"). Feld 3 waere die FHEMWEB-HTML-
+    // Darstellung (devStateIcon-SVG) - die wollen wir NICHT ins Datenmodell.
+    const value = arr[1];
     onEvent && onEvent(id, value);
   }
 

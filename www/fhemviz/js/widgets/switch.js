@@ -16,7 +16,7 @@ export class FhemvizSwitch extends FhemvizWidget {
       <div class="card">
         <div class="title">${this.escape(this.displayName())}</div>
         <div class="row">
-          <span class="sub">${this.escape(this.device.state)}</span>
+          <span class="sub">${this.escape(this.plain(this.device.state))}</span>
           <button id="toggle" class="${on ? "on" : ""}">${on ? "AN" : "AUS"}</button>
         </div>
       </div>`;

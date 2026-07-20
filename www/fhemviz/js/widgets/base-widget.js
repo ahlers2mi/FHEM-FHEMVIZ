@@ -74,6 +74,18 @@ export class FhemvizWidget extends HTMLElement {
     );
   }
 
+  /**
+   * Klartext eines State/Werts: entfernt HTML-Tags (devStateIcon-SVG,
+   * stateFormat mit <b>…</b>) und kollabiert Whitespace, damit nie
+   * FHEMWEB-Markup als Text in einer Kachel landet.
+   */
+  plain(s) {
+    return String(s ?? "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   /** Muss von abgeleiteten Widgets ueberschrieben werden. */
   render() {
     return `<div class="card"><div class="title">${this.escape(
@@ -81,10 +93,10 @@ export class FhemvizWidget extends HTMLElement {
     )}</div></div>`;
   }
 
-  /** Setzt einen FHEM-Befehl fuer dieses Geraet ab (CSRF via Client). */
+  /** Setzt "set <dev> <cmd>" fuer dieses Geraet ab (CSRF via Client). */
   sendCommand(cmd) {
     if (!this.client) return;
-    this.client.command(`${this.device.name} ${cmd}`).catch((e) => {
+    this.client.command(`set ${this.device.name} ${cmd}`).catch((e) => {
       // eslint-disable-next-line no-console
       console.error("FHEMVIZ set fehlgeschlagen:", e);
     });
