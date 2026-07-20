@@ -89,6 +89,22 @@ attr rem_d_cal_muell alias Termine
 attr rem_d_cal_muell vizSize 2x2
 ```
 
+## Raum-Konvention `FHEMVIZ-><Name>`
+
+Reine Dashboard-Räume (z. B. für TV-Szenen) legst du als Unterräume von
+`FHEMVIZ` an — in FHEMWEB bleiben sie als eine zusammengeklappte Hierarchie
+sichtbar, im Dashboard erscheint nur der Kurzname:
+
+```
+attr rem_d_cal_muell room Remote->Calendar,System->mcp_rw,FHEMVIZ->Termine
+attr myViz tvScenes Solar:30,Wohnzimmer:20,Termine:15
+```
+
+- Tab/Szene heißt schlicht **„Termine"** (der Präfix wird ausgeblendet)
+- In `tvScenes` und `set myViz scene …` genügt der **Kurzname** —
+  `Termine` findet automatisch `FHEMVIZ->Termine` (exakter Name gewinnt,
+  falls beides existiert)
+
 **Widget-Auswahl** (Reihenfolge): `vizWidget` → `vizReadings` (→ Readings-
 Kachel) → `genericDeviceType` → `webCmd` (reine on/off → Schalter,
 `pct`/`dim` → Dimmer, sonst Aktions-Buttons) → PossibleSets-Heuristik →
