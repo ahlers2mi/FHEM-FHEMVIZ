@@ -12,13 +12,20 @@ import { Store } from "./store.js";
 import { renderLayout, collectRooms, ALL_ROOMS } from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
 
+// Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
+// entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
+// update nicht neu geladen (reload 98_FHEMVIZ).
+const SPA_VERSION = "v0.7.1";
+
 const el = (id) => document.getElementById(id);
+
+let versionWarn = "";
 
 function setStatus(text, kind = "") {
   const s = el("viz-status");
   if (!s) return;
-  s.textContent = text;
-  s.className = "viz-status" + (kind ? " viz-" + kind : "");
+  s.textContent = versionWarn ? `${text} · ${versionWarn}` : text;
+  s.className = "viz-status" + (versionWarn ? " viz-error" : kind ? " viz-" + kind : "");
 }
 
 function applyTheme(theme) {
@@ -146,6 +153,13 @@ async function main() {
     // Konfiguration vom Modul holen; URL uebersteuert den Modus.
     const cfg = await client.getConfig(vizDevice);
     applyTheme(cfg.theme);
+
+    // Versions-Waechter: Modul- und SPA-Version muessen zusammenpassen.
+    if (cfg.version && cfg.version !== SPA_VERSION) {
+      versionWarn =
+        `Versionskonflikt: Modul ${cfg.version} / Oberfläche ${SPA_VERSION}` +
+        ` – Strg+F5 (Browser-Cache) bzw. reload 98_FHEMVIZ`;
+    }
     const urlMode = (params.get("mode") || "").toLowerCase();
     const mode = urlMode === "tv" || urlMode === "tablet" ? urlMode : cfg.mode || "tablet";
     document.documentElement.dataset.vizmode = mode;

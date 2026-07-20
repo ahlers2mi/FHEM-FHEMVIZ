@@ -18,14 +18,32 @@ export class FhemvizSensor extends FhemvizWidget {
   }
 
   /**
-   * Zerlegt den state in Komponenten (Trenner: Komma). Label/Wert-
-   * Erkennung: fuehrender Text ohne Ziffern = Label, Rest ab erster
-   * Zahl = Wert ("Feuchtigkeit 53.0 %" -> "Feuchtigkeit" | "53.0 %").
+   * Zerlegt den state in Komponenten (Trenner: Komma ODER Pipe - beide
+   * sind in stateFormat ueblich, z. B. "452 W / 289 V | Haus 202 W").
+   * Label/Wert-Erkennung: fuehrender Text ohne Ziffern = Label, Rest ab
+   * erster Zahl = Wert ("Feuchtigkeit 53.0 %" -> "Feuchtigkeit" | "53.0 %").
    */
+  /** Split an | und , - aber nicht innerhalb von Klammern. */
+  _split(s) {
+    const parts = [];
+    let cur = "";
+    let depth = 0;
+    for (const ch of s) {
+      if (ch === "(") depth++;
+      else if (ch === ")") depth = Math.max(0, depth - 1);
+      if ((ch === "|" || ch === ",") && depth === 0) {
+        parts.push(cur);
+        cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    parts.push(cur);
+    return parts.map((p) => p.trim()).filter(Boolean);
+  }
+
   _parts() {
-    return this.plain(this.device.state)
-      .split(/\s*,\s*/)
-      .filter(Boolean)
+    return this._split(this.plain(this.device.state))
       .map((part) => {
         const m = part.match(/^([^\d]+?)[:\s]\s*(-?\d.*)$/);
         if (m && /[a-zA-ZäöüÄÖÜß]/.test(m[1])) {
@@ -35,29 +53,43 @@ export class FhemvizSensor extends FhemvizWidget {
       });
   }
 
+  /** Schriftgroessen-Klasse: lange Hauptwerte werden kleiner statt zu wrappen. */
+  _sizeClass(v) {
+    if (v.length > 18) return " sm";
+    if (v.length > 9) return " md";
+    return "";
+  }
+
   render() {
     const ok = this._okState();
     const parts = this._parts();
     const main = parts.shift() ?? { label: "", value: "" };
     const mainHtml = `
-      <div class="value">${this.escape(main.value)}</div>
+      <div class="value${this._sizeClass(main.value)}">${this.escape(main.value)}</div>
       ${main.label ? `<span class="sub">${this.escape(main.label)}</span>` : ""}`;
-    const rest = parts
-      .map(
-        (p) =>
-          `<div class="row"><span class="sub">${this.escape(
-            p.label || " "
-          )}</span><span class="sub" style="color:var(--viz-text);">${this.escape(
-            p.value
-          )}</span></div>`
-      )
-      .join("");
+
+    // Zeilen-Deckel gegen Monster-Kacheln (z. B. BMS mit 9 Komponenten).
+    const MAX_ROWS = 5;
+    const shown = parts.slice(0, MAX_ROWS);
+    const more = parts.length - shown.length;
+    const rest =
+      shown
+        .map(
+          (p) =>
+            `<div class="row"><span class="sub">${this.escape(
+              p.label || " "
+            )}</span><span class="sub" style="color:var(--viz-text);">${this.escape(
+              p.value
+            )}</span></div>`
+        )
+        .join("") +
+      (more > 0 ? `<div class="sub">+${more} weitere</div>` : "");
 
     return `
       <div class="card ${ok}">
         <span class="label">${this.escape(this.displayName())}</span>
         ${mainHtml}
-        ${rest ? `<div class="grow"></div>${rest}` : ""}
+        ${shown.length ? `<div class="grow"></div>${rest}` : ""}
       </div>`;
   }
 }
