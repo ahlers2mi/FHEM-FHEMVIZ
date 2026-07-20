@@ -24,6 +24,8 @@ const SHUTTER_CSS = `
     background: repeating-linear-gradient(180deg,
       var(--viz-accent, #ffb020) 0 3px, transparent 3px 7px);
   }
+  button.blindbtn { background: none; border: 0; padding: 0; cursor: pointer; }
+  button.blindbtn:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 2px; border-radius: 6px; }
   :host([data-tv]) .blindbox { width: 44px; height: 60px; }
 `;
 
@@ -59,7 +61,13 @@ export class FhemvizShutter extends FhemvizWidget {
       <div class="card${closed > 0 ? " on" : ""}">
         <span class="label">${this.escape(this.displayName())}</span>
         <div class="swrap">
-          <div class="blindbox"><div class="slats" style="height:${closed}%"></div></div>
+          ${this.readonly
+            ? `<div class="blindbox"><div class="slats" style="height:${closed}%"></div></div>`
+            : `<button id="blindbtn" class="blindbtn"
+                 title="Tippen: ganz ${pct < 50 ? "auf" : "zu"}"
+                 aria-label="${this.escape(this.displayName())} ganz ${pct < 50 ? "öffnen" : "schließen"}">
+                 <div class="blindbox"><div class="slats" style="height:${closed}%"></div></div>
+               </button>`}
           <div>
             <div class="value" style="font-size:1.5rem;">${pct}<span class="unit">%</span></div>
             <span class="sub">${closed === 0 ? "Offen" : closed === 100 ? "Zu" : "Teils"}</span>
@@ -71,6 +79,15 @@ export class FhemvizShutter extends FhemvizWidget {
   }
 
   afterRender() {
+    // Tipp auf den Behang: unter 50 % -> ganz auf, sonst ganz zu.
+    const btn = this.shadowRoot.getElementById("blindbtn");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        const spec = this._spec();
+        const target = this._pct() < 50 ? spec.max : spec.min;
+        this.sendCommand(spec.cmd === "state" ? String(target) : `${spec.cmd} ${target}`);
+      });
+    }
     const s = this.shadowRoot.getElementById("slider");
     if (s) {
       const cmd = this._spec().cmd;
