@@ -1,48 +1,56 @@
 /*
- * FHEMVIZ - Basis-Styles & Theming (PoC v0.2.0).
- * Theming ueber CSS Custom Properties (Dark-Mode), responsives Auto-Layout
- * via CSS-Grid auto-fill/minmax.
+ * FHEMVIZ - Styles & Theming (v0.7.0).
+ * Designsprache aus dem Designkonzept: tiefes Blauschwarz (blendfrei fuer
+ * Wandtablet/TV), Bernstein als Identitaetsfarbe, Semantik getrennt
+ * (Gruen = ok, Blau = bedienbar, Rot = Alarm/Event).
+ * Zwei Betriebsarten: html[data-vizmode="tablet"|"tv"].
  */
 
-/* Design-Tokens (Light-Default) --------------------------------------------- */
+/* Design-Tokens ------------------------------------------------------------- */
 :root {
-  --viz-bg: #f5f6f8;
+  --viz-bg: #eef0f2;
   --viz-surface: #ffffff;
-  --viz-border: #e2e4e8;
-  --viz-text: #1a1c1e;
-  --viz-muted: #5f6368;
-  --viz-accent: #2f6feb;
-  --viz-ok: #2e7d32;
+  --viz-raised: #e4e7ea;
+  --viz-border: #d8dce1;
+  --viz-text: #1b1e23;
+  --viz-muted: #5d646e;
+  --viz-accent: #c97a06;   /* Bernstein (Identitaet, "an/aktiv") */
+  --viz-ok: #1e9e5f;
   --viz-warn: #ed6c02;
-  --viz-error: #c62828;
-  --viz-radius: 12px;
+  --viz-error: #cc3b3b;
+  --viz-action: #2f6feb;   /* bedienbare Elemente */
+  --viz-radius: 14px;
   --viz-gap: 12px;
   --viz-tile-min: 180px;
+  --viz-tile-row: 104px;   /* Basiszeile des Rasters (vizSize-Spans) */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --viz-bg: #121316;
-    --viz-surface: #1e2023;
-    --viz-border: #2c2f33;
-    --viz-text: #e5e7ea;
-    --viz-muted: #9aa0a6;
+    --viz-bg: #0a0c0f;
+    --viz-surface: #151920;
+    --viz-raised: #1c212a;
+    --viz-border: #262c35;
+    --viz-text: #e8eaed;
+    --viz-muted: #77808c;
+    --viz-accent: #ffb020;
+    --viz-ok: #34c77b;
+    --viz-warn: #ffab40;
+    --viz-error: #ff5d5d;
+    --viz-action: #4c8dff;
   }
 }
-
 [data-theme="dark"] {
-  --viz-bg: #121316;
-  --viz-surface: #1e2023;
-  --viz-border: #2c2f33;
-  --viz-text: #e5e7ea;
-  --viz-muted: #9aa0a6;
+  --viz-bg: #0a0c0f; --viz-surface: #151920; --viz-raised: #1c212a;
+  --viz-border: #262c35; --viz-text: #e8eaed; --viz-muted: #77808c;
+  --viz-accent: #ffb020; --viz-ok: #34c77b; --viz-warn: #ffab40;
+  --viz-error: #ff5d5d; --viz-action: #4c8dff;
 }
 [data-theme="light"] {
-  --viz-bg: #f5f6f8;
-  --viz-surface: #ffffff;
-  --viz-border: #e2e4e8;
-  --viz-text: #1a1c1e;
-  --viz-muted: #5f6368;
+  --viz-bg: #eef0f2; --viz-surface: #ffffff; --viz-raised: #e4e7ea;
+  --viz-border: #d8dce1; --viz-text: #1b1e23; --viz-muted: #5d646e;
+  --viz-accent: #c97a06; --viz-ok: #1e9e5f; --viz-warn: #ed6c02;
+  --viz-error: #cc3b3b; --viz-action: #2f6feb;
 }
 
 /* Grundlayout --------------------------------------------------------------- */
@@ -53,85 +61,119 @@ body {
   background: var(--viz-bg);
   color: var(--viz-text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
+/* Kopfzeile ------------------------------------------------------------------ */
 #viz-header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 12px 16px;
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: baseline; gap: 14px;
+  padding: 12px 18px;
+  background: var(--viz-bg);
   border-bottom: 1px solid var(--viz-border);
-  background: var(--viz-surface);
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 #viz-header h1 {
-  font-size: 1.1rem;
-  margin: 0;
-  font-weight: 600;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; margin: 0; color: var(--viz-muted);
 }
-.viz-status {
-  font-size: 0.85rem;
-  color: var(--viz-muted);
+.viz-scene {
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--viz-accent);
 }
+.viz-status { font-size: 0.8rem; color: var(--viz-muted); }
 .viz-status.viz-error { color: var(--viz-error); font-weight: 600; }
 .viz-status.viz-live  { color: var(--viz-ok); }
+.viz-clock {
+  margin-left: auto;
+  font-size: 1.5rem; font-weight: 200; letter-spacing: -0.02em;
+  line-height: 1;
+}
 
-#fhemviz-app { padding: 16px; }
+/* Szenen-Fortschritt (TV): schmale Linie an der Unterkante des Headers */
+#viz-progress {
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: transparent; overflow: hidden;
+}
+#viz-progress i {
+  display: block; height: 100%; width: 100%;
+  background: var(--viz-accent);
+  transform: scaleX(0); transform-origin: left;
+}
+#viz-progress.run i {
+  animation: viz-prog var(--viz-scene-sec, 20s) linear forwards;
+}
+@keyframes viz-prog { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-/* Raum-Tabs (Chip-Leiste, horizontal scrollbar auf schmalen Displays) ------- */
+#fhemviz-app { padding: 16px 18px 84px; }
+
+/* Raum-Tabs: fest an der Unterkante (Daumenreichweite auf dem Wandtablet) --- */
 .viz-tabs {
-  display: flex;
-  gap: 8px;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  display: flex; gap: 8px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
   overflow-x: auto;
-  padding-bottom: 4px;
-  margin-bottom: 16px;
+  background: color-mix(in srgb, var(--viz-bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--viz-border);
   scrollbar-width: thin;
 }
 .viz-tab {
-  font: inherit;
-  font-size: 0.85rem;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--viz-border);
-  background: var(--viz-surface);
-  color: var(--viz-text);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
+  font: inherit; font-size: 0.85rem; font-weight: 600;
+  min-height: 44px; padding: 10px 18px;
+  border-radius: 999px; border: 1px solid var(--viz-border);
+  background: transparent; color: var(--viz-muted);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
 }
 .viz-tab.active {
-  background: var(--viz-accent);
-  color: #fff;
+  background: var(--viz-text); color: var(--viz-bg);
   border-color: transparent;
-  font-weight: 600;
 }
+.viz-tab:focus-visible { outline: 2px solid var(--viz-action); outline-offset: 2px; }
 
-/* Raum -> Gruppe -> Kachelraster ------------------------------------------- */
-.viz-room { margin-bottom: 24px; }
+/* Raum -> Gruppe -> Kachelraster --------------------------------------------- */
+.viz-room { margin-bottom: 26px; }
 .viz-room > h2 {
-  font-size: 1rem;
-  margin: 0 0 8px;
-  font-weight: 600;
+  font-size: 1rem; font-weight: 650; margin: 0 0 10px;
+  letter-spacing: -0.01em;
 }
-.viz-group { margin: 0 0 16px; }
+.viz-group { margin: 0 0 18px; }
 .viz-group > h3 {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--viz-muted);
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--viz-muted);
   margin: 0 0 8px;
-  font-weight: 600;
 }
 .viz-grid {
   display: grid;
   gap: var(--viz-gap);
   grid-template-columns: repeat(auto-fill, minmax(var(--viz-tile-min), 1fr));
+  grid-auto-rows: minmax(var(--viz-tile-row), auto);
+  grid-auto-flow: dense;
 }
 
-/* Kachel-Grundstil (auch von Widgets via Shadow-DOM-Parts nutzbar) ---------- */
-.viz-tile,
-fhemviz-switch, fhemviz-sensor, fhemviz-dimmer {
-  display: block;
+/* Widgets sind Custom Elements (Shadow DOM); hier nur die Raster-Huelle. */
+fhemviz-switch, fhemviz-sensor, fhemviz-dimmer, fhemviz-actions {
+  display: block; min-width: 0;
+}
+
+/* TV-Modus -------------------------------------------------------------------
+ * Keine Tabs, keine Bedienung, groessere Ziffern, mehr Luft. */
+html[data-vizmode="tv"] .viz-tabs { display: none; }
+html[data-vizmode="tv"] #fhemviz-app { padding: 26px 34px 30px; }
+html[data-vizmode="tv"] {
+  --viz-tile-min: 240px;
+  --viz-tile-row: 140px;
+  --viz-gap: 16px;
+}
+html[data-vizmode="tv"] .viz-room > h2 { font-size: 1.2rem; }
+html[data-vizmode="tv"] #viz-header { padding: 14px 34px; }
+
+/* Event-Uebernahme: dezenter roter Rahmen um den gesamten Schirm */
+body.viz-alert::after {
+  content: ""; position: fixed; inset: 0; z-index: 99;
+  border: 3px solid var(--viz-error); pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #viz-progress.run i { animation: none; transform: scaleX(1); }
+  .viz-tabs { backdrop-filter: none; }
 }

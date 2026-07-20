@@ -1,59 +1,121 @@
 # FHEM-FHEMVIZ
 
 Moderne, responsive **FHEM-Visualisierung** – Konfiguration vollständig im
-FHEM-Standard („FHEM-Standard-first").
+FHEM-Standard („FHEM-Standard-first"). Ein System, zwei Betriebsarten:
+**Tablet** (Touch, Raum-Tabs unten) und **TV/Kiosk** (bedienlos,
+Szenen-Rotation, steuerbar per FHEM-Event).
 
-> **Status: Grundgerüst (v0.1.0).** Dieses Repo enthält aktuell nur die
-> Struktur und Platzhalter – **noch keine Render-/Client-Logik**. Das
-> ausgearbeitete Konzept und die Architektur stehen in
-> [`CONCEPT.md`](./CONCEPT.md).
+Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) · Stand: **v0.7.0**
 
-## Idee
+---
 
-Eine moderne, responsive Oberfläche, deren Konfiguration **an den FHEM-Geräten
-selbst** liegt (Attribute = Single Source of Truth), die sich **ohne Polling
-live** aktualisiert, sobald ein Gerät seinen Zustand ändert, und die **keinen
-zusätzlichen Server** neben FHEM benötigt.
+## Installation
 
-Zwei Bausteine, beide über den vorhandenen FHEMWEB-Port erreichbar:
+```
+update add https://raw.githubusercontent.com/ahlers2mi/FHEM-FHEMVIZ/main/controls_FHEMVIZ.txt
+update all
+reload 98_FHEMVIZ
+```
 
-- **Statische SPA** unter `www/fhemviz/`, ausgeliefert von FHEMWEB
-  (`http://<fhem>:<port>/fhem/fhemviz/index.html`) – buildfrei (native Web
-  Components + CSS Custom Properties, kein Node/npm).
-- **Schlankes Helfer-Modul** `FHEM/98_FHEMVIZ.pm` – rendert nichts, deklariert
-  die Zusatz-Attribute (`viz*`) und liefert später die aktive Sicht als JSON
-  (`get manifest`/`get config`).
+Danach im Browser: `http://<fhem>:<port>/fhem/fhemviz/index.html`
 
-Datenfluss über die vorhandene FHEMWEB-API: `jsonlist2` (Snapshot) +
-`inform` (Live-Push, WebSocket/Longpoll) + CSRF-gesicherte `set`/`attr`
-(Aktionen). Details in [`CONCEPT.md`](./CONCEPT.md).
+## Schnellstart
+
+```
+define myViz FHEMVIZ
+attr myViz devspec room=Wohnzimmer|Garage|Solar
+```
+
+Mehr ist nicht nötig – die SPA findet das Gerät automatisch, lädt alle
+Geräte des `devspec`, gruppiert nach `room`/`group` und aktualisiert live
+(kein Polling). Alles Weitere ist optional.
+
+## Konfiguration: das FHEMVIZ-Gerät
+
+| Attribut | Werte | Wirkung |
+|---|---|---|
+| `devspec` | FHEM-devspec | **Pflicht.** Welche Geräte in der Sicht sind, z. B. `room=Dashboard.*` oder `d_garage_neu,mySolar.*` |
+| `mode` | `tablet` (Default) / `tv` | Betriebsart; per URL übersteuerbar (`?mode=tv`) |
+| `tvScenes` | `Raum:Sek,Raum:Sek` | Szenen-Rotation im TV-Modus, z. B. `Solar:30,Wohnzimmer:20,Garage:15`. Ohne Angabe: alle sichtbaren Räume à 20 s |
+| `theme` | `auto` (Default) / `light` / `dark` | Farbschema; `auto` folgt dem System |
+| `readonly` | `0` / `1` | Keine Bedienelemente (Gäste-/Wandmodus); im TV-Modus immer aktiv |
+| `hideRooms` | Regex-Liste | Räume ohne eigenen Tab/Abschnitt. Default: `System->.*,Homebridge,Alexa,FileLog,hidden` |
+| `hideTypes` | TYPE-Liste | Geräte-TYPEs ohne Kachel. Default: `SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup` |
+| `hideStates` | Regex-Liste | Geräte, deren state komplett matcht, werden ausgeblendet. Default: `\?\?\?,unknown,initialized,defined,disabled,inactive` |
+
+**Set-Befehl** (TV-Steuerung aus FHEM heraus):
+
+```
+set myViz scene <Raum> [Sekunden]     # Szene übernehmen, danach Rotation
+```
+
+## Konfiguration: die visualisierten Geräte
+
+FHEMVIZ liest zuerst die **Standard-Attribute** – wer seine Geräte sauber
+pflegt, braucht nichts Neues:
+
+| Standard-Attribut | Wirkung in FHEMVIZ |
+|---|---|
+| `room` | Tab/Szene (kommasepariert = Gerät erscheint in jedem Raum) |
+| `group` | Karten-Gruppierung im Raum |
+| `alias` | Anzeigename der Kachel |
+| `sortby` | Reihenfolge in der Gruppe |
+| `genericDeviceType` | Widget-Wahl (light/switch → Schalter, blind → Dimmer, …) |
+| `webCmd` | Bedien-Buttons (z. B. `Auf:Zu:Lüften:Stop` → Aktions-Widget) |
+
+Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
+
+| Attribut | Werte | Wirkung |
+|---|---|---|
+| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt) |
+| `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
+| `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
+
+**Widget-Auswahl** (Reihenfolge): `vizWidget` → `genericDeviceType` →
+`webCmd` (reine on/off → Schalter, `pct`/`dim` → Dimmer, sonst
+Aktions-Buttons) → PossibleSets-Heuristik → Sensor-Kachel.
+
+## TV-/Kiosk-Modus einrichten
+
+Fernseher/Kiosk-Browser (Fully Kiosk, Chromium-Kiosk) bekommt als Start-URL:
+
+```
+http://<fhem>:<port>/fhem/fhemviz/index.html?mode=tv&device=myViz
+```
+
+Szenen-Rotation konfigurieren und per Event übernehmen lassen:
+
+```
+attr myViz tvScenes Solar:30,Wohnzimmer:20,Draußen:15
+
+# Geräte-Event kapert den Schirm - ein ganz normales notify:
+define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
+```
+
+Der rote Rahmen signalisiert die Event-Übernahme; nach Ablauf kehrt die
+Rotation automatisch zurück.
+
+## URL-Parameter
+
+| Parameter | Wirkung |
+|---|---|
+| `?device=<name>` | Bestimmtes FHEMVIZ-Gerät (sonst: erstes `TYPE=FHEMVIZ`) |
+| `?mode=tv` / `?mode=tablet` | Betriebsart übersteuern (für Kiosk-Start-URLs) |
 
 ## Struktur
 
 ```
-.github/workflows/update-controls.yml   FHEM-update: controls-Datei pflegen
-FHEM/98_FHEMVIZ.pm                       Helfer-Modul (Attribute, get config)
-controls_FHEMVIZ.txt                     FHEM-update-Manifest
-CONCEPT.md                               Konzept & Architektur (Referenz)
-www/fhemviz/
-  index.html                            SPA-Einstieg
-  css/fhemviz.css                       Theming (Tokens, Dark-Mode) + Grid
-  js/
-    app.js                              Bootstrap
-    fhem-client.js                      Snapshot + inform-Live + CSRF-Set
-    store.js                            reaktives Gerätemodell
-    layout.js                           responsives Auto-Layout
-    widgets/
-      registry.js                       semantischer Typ -> Web-Component
-      base-widget.js                    Basis-Custom-Element
-      switch.js / sensor.js / dimmer.js  Kern-Widgets (§9)
+FHEM/98_FHEMVIZ.pm     Helfer-Modul (Attribute, get config, set scene)
+www/fhemviz/           buildfreie SPA (Web Components, kein Node/npm)
+controls_FHEMVIZ.txt   FHEM-update-Manifest (wird per Workflow gepflegt)
+CONCEPT.md             Konzept & Architektur
 ```
 
 ## Roadmap
 
-Siehe [`CONCEPT.md`](./CONCEPT.md), Abschnitt 9. Der aktuelle Stand ist das
-Grundgerüst; die Bau-Session ergänzt PoC-Client, Store, Auto-Layout und die
-Kern-Widgets.
+Nächster Meilenstein: **v0.8 Energiefluss-Widget** (ersetzt Floorplan-
+Solardashboards mit ihren Pfeil-Hilfsgeräten durch ein konfigurierbares
+Fluss-Diagramm). Danach: Chart-Widget (FileLog/DbLog), webCmd-Slider.
 
 ## Lizenz
 

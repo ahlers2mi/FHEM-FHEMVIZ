@@ -1,23 +1,39 @@
 /*
- * FHEMVIZ - Switch-Widget (on/off), PoC v0.2.0.
- * Stellt den Ein/Aus-Zustand dar und sendet "set <dev> on|off".
+ * FHEMVIZ - Switch-Widget (v0.7.0).
+ * Echter Kipp-Toggle statt Zustands-Button: der Regler zeigt die Lage,
+ * die Bernstein-Farbe den Zustand. Statusleiste der Kachel = an/aus.
+ * readonly (TV-Modus): nur Zustandstext, kein Bedienelement.
  */
 
 import { FhemvizWidget } from "./base-widget.js";
 
 export class FhemvizSwitch extends FhemvizWidget {
   _isOn() {
-    return /^(on|1|true|open|ge?offnet)$/i.test(String(this.device.state));
+    return /^(on|1|true|open|ge?offnet|an)$/i.test(this.plain(this.device.state));
+  }
+
+  _stateText() {
+    const st = this.plain(this.device.state);
+    if (/^on$/i.test(st)) return "An";
+    if (/^off$/i.test(st)) return "Aus";
+    return st;
   }
 
   render() {
     const on = this._isOn();
+    const control = this.readonly
+      ? ""
+      : `<button class="toggle${on ? " on" : ""}" id="toggle"
+           role="switch" aria-checked="${on}"
+           aria-label="${this.escape(this.displayName())} schalten"></button>`;
     return `
-      <div class="card">
-        <div class="title">${this.escape(this.displayName())}</div>
-        <div class="row">
-          <span class="sub">${this.escape(this.plain(this.device.state))}</span>
-          <button id="toggle" class="${on ? "on" : ""}">${on ? "AN" : "AUS"}</button>
+      <div class="card${on ? " on" : ""}">
+        <span class="label">${this.escape(this.displayName())}</span>
+        <div class="row grow">
+          <span class="value" style="font-size:1.15rem;font-weight:450;">${this.escape(
+            this._stateText()
+          )}</span>
+          ${control}
         </div>
       </div>`;
   }
