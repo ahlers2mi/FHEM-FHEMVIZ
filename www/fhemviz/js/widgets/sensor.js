@@ -70,6 +70,12 @@ export class FhemvizSensor extends FhemvizWidget {
     // vizReadings hat Vorrang vor dem state-Parsing.
     const configured = this._configuredParts();
     const parts = configured ?? this._parts();
+    // vizStates: technischen state in Klartext + Farbe uebersetzen.
+    const mapped = configured ? null : this.vizStateInfo();
+    if (mapped) {
+      parts.length = 0;
+      parts.push({ label: "", value: mapped.text, color: mapped.color });
+    }
     const main = parts.shift() ?? { label: "", value: "" };
     const mainColor = main.color ? ` style="color:${main.color};"` : "";
     const mainHtml = `
