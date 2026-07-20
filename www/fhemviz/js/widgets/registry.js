@@ -15,6 +15,7 @@ import { FhemvizText } from "./text.js";
 import { FhemvizAgenda } from "./agenda.js";
 import { FhemvizContact } from "./contact.js";
 import { FhemvizShutter } from "./shutter.js";
+import { FhemvizVent } from "./vent.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -25,6 +26,7 @@ export const WIDGET_REGISTRY = {
   agenda: "fhemviz-agenda",
   contact: "fhemviz-contact",
   shutter: "fhemviz-shutter",
+  vent: "fhemviz-vent",
   // TODO: thermostat, blind/shutter, chart, media.
 };
 
@@ -52,6 +54,7 @@ export function registerCoreWidgets() {
     ["fhemviz-agenda", FhemvizAgenda],
     ["fhemviz-contact", FhemvizContact],
     ["fhemviz-shutter", FhemvizShutter],
+    ["fhemviz-vent", FhemvizVent],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);

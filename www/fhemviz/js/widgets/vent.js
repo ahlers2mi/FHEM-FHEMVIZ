@@ -1,0 +1,66 @@
+/*
+ * FHEMVIZ - Lueftungs-Widget (v0.7.14).
+ * Fuer Lueftungs-Empfehlungs-Dummies (state 0..9 = wie sinnvoll ist
+ * Lueften; Reading cooling on = Lueften kuehlt zusaetzlich):
+ * Wind-Wellen-Symbol mit 1-3 aktiven Wellen, gruen = lueften sinnvoll,
+ * blau = kuehlt dabei, grau = nicht lueften.
+ * Aktivierung: attr <geraet> vizWidget vent
+ */
+
+import { FhemvizWidget } from "./base-widget.js";
+
+const VENT_CSS = `
+  .vwrap { display: flex; align-items: center; gap: 14px; flex: 1; }
+  .vicon { flex-shrink: 0; width: 44px; height: 44px; }
+  .vicon path { stroke: var(--viz-border, #262c35); }
+  .vicon path.a { stroke: var(--viz-ok, #34c77b); }
+  .card.cool .vicon path.a { stroke: var(--viz-action, #4c8dff); }
+  .vstate { font-size: 1.15rem; font-weight: 450; }
+  .card.go .vstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
+  .card.cool .vstate { color: var(--viz-action, #4c8dff); }
+  :host([data-tv]) .vicon { width: 56px; height: 56px; }
+  :host([data-tv]) .vstate { font-size: 1.5rem; }
+`;
+
+const LABELS = ["Nicht lüften", "Wenig sinnvoll", "Lüften sinnvoll", "Unbedingt lüften"];
+
+export class FhemvizVent extends FhemvizWidget {
+  _level() {
+    const n = parseInt(this.plain(this.device.state), 10);
+    return isNaN(n) ? 0 : Math.max(0, Math.min(3, n));
+  }
+
+  _cooling() {
+    return /^on$/i.test(String((this.device.readings || {}).cooling || ""));
+  }
+
+  render() {
+    const level = this._level();
+    const cool = this._cooling();
+    // Drei Wind-Wellen; "level" davon aktiv (gruen bzw. blau bei cooling).
+    const waves = [
+      `M3 8 h9 a2.5 2.5 0 1 0 -2.5 -2.5`,
+      `M3 13 h13 a2.5 2.5 0 1 1 -2.5 2.5`,
+      `M3 18 h7 a2.5 2.5 0 1 1 -2.5 2.5`,
+    ]
+      .map(
+        (d, i) =>
+          `<path d="${d}" class="${i < level ? "a" : ""}" fill="none"
+             stroke-width="1.8" stroke-linecap="round"/>`
+      )
+      .join("");
+    const label =
+      LABELS[level] + (cool && level > 0 ? " · kühlt" : "");
+    const cls = level > 0 ? (cool ? " on cool go" : " ok go") : "";
+    return `
+      <style>${VENT_CSS}</style>
+      <div class="card${cls}">
+        <span class="label">${this.escape(this.displayName())}</span>
+        <div class="vwrap">
+          <svg class="vicon" viewBox="0 0 24 24" aria-hidden="true">${waves}</svg>
+          <span class="vstate">${this.escape(label)}</span>
+        </div>
+        ${this.readingRowsHtml()}
+      </div>`;
+  }
+}

@@ -150,7 +150,11 @@ button.viz-chip { cursor: pointer; }
   font-size: 1rem; font-weight: 650; margin: 0 0 10px;
   letter-spacing: -0.01em;
 }
-.viz-group { margin: 0 0 18px; }
+.viz-groups {
+  display: flex; flex-wrap: wrap; align-items: start;
+  gap: 18px var(--viz-gap);
+}
+.viz-group { min-width: 0; }
 .viz-group > h3 {
   font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--viz-muted);
@@ -159,9 +163,15 @@ button.viz-chip { cursor: pointer; }
 .viz-grid {
   display: grid;
   gap: var(--viz-gap);
-  grid-template-columns: repeat(auto-fill, minmax(var(--viz-tile-min), 1fr));
+  /* Spaltenzahl je Gruppe aus layout.js (Kachel-Spannweiten, gedeckelt) */
+  grid-template-columns: repeat(var(--viz-group-cols, 4), minmax(var(--viz-tile-min), 260px));
   grid-auto-rows: minmax(var(--viz-tile-row), auto);
   grid-auto-flow: dense;
+}
+@media (max-width: 720px) {
+  .viz-grid { grid-template-columns: repeat(auto-fill, minmax(var(--viz-tile-min), 1fr)); }
+  .viz-groups { display: block; }
+  .viz-group { margin-bottom: 18px; }
 }
 
 /* Widgets sind Custom Elements (Shadow DOM); hier nur die Raster-Huelle. */
@@ -188,10 +198,9 @@ html[data-vizmode="tv"] {
   --viz-tile-row: 140px;
   --viz-gap: 16px;
 }
+html[data-vizmode="tv"] .viz-groups { justify-content: center; }
 html[data-vizmode="tv"] .viz-grid {
-  /* auto-fit + Max-Breite: wenige Kacheln werden breiter und mittig */
-  grid-template-columns: repeat(auto-fit, minmax(var(--viz-tile-min), 480px));
-  justify-content: center;
+  grid-template-columns: repeat(var(--viz-group-cols, 3), minmax(var(--viz-tile-min), 480px));
 }
 html[data-vizmode="tv"] .viz-group > h3 { text-align: center; }
 html[data-vizmode="tv"] .viz-room { margin-bottom: 0; }
