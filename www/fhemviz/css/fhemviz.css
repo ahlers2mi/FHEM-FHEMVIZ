@@ -159,11 +159,15 @@ fhemviz-switch, fhemviz-sensor, fhemviz-dimmer, fhemviz-actions {
  * Keine Tabs, keine Bedienung, groessere Ziffern, mehr Luft. Szenen mit
  * wenigen Kacheln werden zentriert (statt verloren oben links). */
 html[data-vizmode="tv"] .viz-tabs { display: none; }
+html[data-vizmode="tv"] body { overflow: hidden; }
 html[data-vizmode="tv"] #fhemviz-app {
   padding: 26px 34px 30px;
-  min-height: calc(100vh - 110px);
+  /* Fernseher scrollen nie: feste Flaeche, Ueberlauf blaettert die
+   * Szenen-Rotation automatisch seitenweise (app.js, Auto-Paging). */
+  height: calc(100vh - var(--viz-header-h, 58px));
+  overflow: hidden;
   display: flex; flex-direction: column;
-  justify-content: safe center; /* zentriert; scrollt sicher bei Ueberlauf */
+  justify-content: safe center; /* wenige Kacheln mittig, Ueberlauf oben */
 }
 html[data-vizmode="tv"] {
   --viz-tile-min: 260px;
