@@ -226,9 +226,25 @@ export function renderLayout(root, store, client, opts = {}) {
       roomEl.appendChild(h2);
     }
 
+    // Gruppen fliessen nebeneinander: jede Gruppe ist nur so breit wie
+    // ihre Kacheln (Spaltenzahl = Summe der Spannweiten, gedeckelt) -
+    // kleine Gruppen teilen sich eine Zeile statt sie zu verschwenden.
+    const groupsWrap = document.createElement("div");
+    groupsWrap.className = "viz-groups";
+    roomEl.appendChild(groupsWrap);
+
     for (const [group, devices] of [...groups.entries()].sort()) {
       const groupEl = document.createElement("div");
       groupEl.className = "viz-group";
+      const cols = Math.min(
+        devices.reduce(
+          (a, d) =>
+            a + (/^2/.test(String((d.attr || {}).vizSize || "")) ? 2 : 1),
+          0
+        ),
+        opts.tv ? 4 : 6
+      );
+      groupEl.style.setProperty("--viz-group-cols", cols);
       // Die Default-Gruppe "Allgemein" braucht keine Ueberschrift, wenn sie
       // die einzige Gruppe des Raums ist.
       if (!(groups.size === 1 && group === "Allgemein")) {
@@ -246,7 +262,7 @@ export function renderLayout(root, store, client, opts = {}) {
         );
 
       groupEl.appendChild(grid);
-      roomEl.appendChild(groupEl);
+      groupsWrap.appendChild(groupEl);
     }
     root.appendChild(roomEl);
   }

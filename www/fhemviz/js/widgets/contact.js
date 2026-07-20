@@ -148,6 +148,17 @@ export class FhemvizContact extends FhemvizWidget {
     const members = this._members();
     if (members.length) return this._renderGroup(members);
 
+    // structure ohne aufloesbare Mitglieder: erklaeren statt "undefined".
+    if ((this.device.internals || {}).TYPE === "structure") {
+      return `
+        <style>${CONTACT_CSS}</style>
+        <div class="card">
+          <span class="label">${this.escape(this.displayName())}</span>
+          <span class="cstate">–</span>
+          <span class="sub">Mitglieder nicht in der Sicht (FHEMVIZ-Raum am Geraet pruefen)</span>
+        </div>`;
+    }
+
     const state = this._state();
     // Statusleiste: offen/gekippt = Bernstein ("on"), zu = neutral.
     const cardCls = state === "open" || state === "tilted" ? ` on ${state}` : ` ${state}`;
