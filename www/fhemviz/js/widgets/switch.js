@@ -35,6 +35,7 @@ export class FhemvizSwitch extends FhemvizWidget {
           )}</span>
           ${control}
         </div>
+        ${this.readingRowsHtml()}
       </div>`;
   }
 

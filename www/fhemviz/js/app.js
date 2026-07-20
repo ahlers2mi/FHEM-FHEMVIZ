@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.7.10";
+const SPA_VERSION = "v0.7.11";
 
 const el = (id) => document.getElementById(id);
 
@@ -97,6 +97,98 @@ function computePageOffsets(container) {
     if (bottom - cur > H && top > cur) pages.push(top);
   }
   return pages;
+}
+
+/**
+ * Status-Chips (attr statusBar): "geraet[,geraet:reading[:einheit]],..."
+ * Immer sichtbare Zusammenfassung im Header - structure-Geraete werden zu
+ * "Alias: n offen", Readings zu Wert-Chips, sonst Zustands-Chip.
+ * Live ueber Store-Abos (inkl. structure-Mitglieder); Tablet: Chip tippen
+ * springt zum ersten FHEMVIZ->-Raum des Geraets.
+ */
+function setupStatusBar(store, spec, opts) {
+  const bar = el("viz-statusbar");
+  const plain = (x) => String(x ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const entries = String(spec || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .map((t) => {
+      const [dev, reading, unit] = t.split(":").map((x) => (x || "").trim());
+      return { dev, reading, unit, device: store.get(dev) };
+    })
+    .filter((c) => c.device);
+  if (!entries.length) return;
+  bar.hidden = false;
+
+  const contactState = (st) => {
+    st = plain(st).toLowerCase();
+    if (/^(open|opened|auf|offen|on)$/.test(st)) return "open";
+    if (/^(tilted|gekippt)$/.test(st)) return "tilted";
+    return "closed";
+  };
+  const members = (d) =>
+    (d.internals && d.internals.TYPE) === "structure"
+      ? String(d.internals.DEF || "")
+          .split(/\s+/)
+          .slice(1)
+          .map((n) => n.replace(/,$/, ""))
+          .map((n) => store.get(n))
+          .filter(Boolean)
+      : [];
+
+  function chipData(c) {
+    const alias = (c.device.attr && c.device.attr.alias) || c.device.name;
+    if (c.reading) {
+      const v = plain((c.device.readings || {})[c.reading] ?? "–");
+      return { text: `${alias} ${v}${c.unit ? " " + c.unit : ""}`, warn: false };
+    }
+    const mem = members(c.device);
+    if (mem.length) {
+      const st = mem.map((m) => contactState(m.state));
+      const open = st.filter((x) => x === "open").length;
+      const tilted = st.filter((x) => x === "tilted").length;
+      const parts = [];
+      if (open) parts.push(`${open} offen`);
+      if (tilted) parts.push(`${tilted} gekippt`);
+      return parts.length
+        ? { text: `${alias}: ${parts.join(" · ")}`, warn: true }
+        : { text: `${alias} zu`, warn: false };
+    }
+    const st = plain(c.device.state);
+    const warn = /^(on|an|open|offen|auf|true|running|l(ä|ae)uft|1)$/i.test(st);
+    return { text: `${alias} ${st}`, warn };
+  }
+
+  function jumpRoom(c) {
+    const rooms = String((c.device.attr || {}).room || "")
+      .split(",")
+      .map((r) => r.trim());
+    return rooms.find((r) => r.startsWith(VIZ_ROOM_PREFIX)) || rooms[0] || null;
+  }
+
+  function render() {
+    bar.textContent = "";
+    for (const c of entries) {
+      const d = chipData(c);
+      const chip = document.createElement(opts.tv ? "span" : "button");
+      chip.className = "viz-chip" + (d.warn ? " warn" : "");
+      chip.textContent = d.text;
+      if (!opts.tv) {
+        const room = jumpRoom(c);
+        if (room) chip.addEventListener("click", () => opts.jump(room));
+      }
+      bar.appendChild(chip);
+    }
+  }
+
+  const watch = new Set();
+  entries.forEach((c) => {
+    watch.add(c.device.name);
+    members(c.device).forEach((m) => watch.add(m.name));
+  });
+  watch.forEach((n) => store.subscribe(n, render));
+  render();
 }
 
 class TvController {
@@ -270,6 +362,13 @@ async function main() {
     const count = store.all().length;
 
     registerCoreWidgets();
+    // Eigene Widgets laden (optional; Datei gehoert dem Nutzer und wird
+    // von FHEM update nie ueberschrieben - fehlt sie, still weiter).
+    try {
+      await import("./widgets/custom/index.js");
+    } catch {
+      /* keine Custom-Widgets vorhanden */
+    }
     const baseOpts = {
       showRooms: cfg.showRooms,
       hideRooms: cfg.hideRooms,
@@ -278,6 +377,13 @@ async function main() {
       readonly: tv || cfg.readonly === true,
       tv,
     };
+
+    // Status-Chips (VOR dem TV-Start, damit die Flaechenmessung stimmt).
+    setupStatusBar(store, cfg.statusBar, {
+      tv,
+      jump: (room) =>
+        renderLayout(root, store, client, { ...baseOpts, activeRoom: room }),
+    });
 
     // Rendern: TV startet die Szenen-Rotation, Tablet die Tab-Ansicht.
     let tvc = null;

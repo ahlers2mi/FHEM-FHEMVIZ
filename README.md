@@ -138,6 +138,30 @@ Rotation automatisch zurück.
 | `?device=<name>` | Bestimmtes FHEMVIZ-Gerät (sonst: erstes `TYPE=FHEMVIZ`) |
 | `?mode=tv` / `?mode=tablet` | Betriebsart übersteuern (für Kiosk-Start-URLs) |
 
+## Eigene Widgets (Plugin-API)
+
+Eigene Widgets leben in `www/fhemviz/js/widgets/custom/index.js` — die Datei
+gehört dir und wird von FHEM `update` **nie überschrieben** (sie steht nicht
+in der controls-Datei). Buildfrei, keine Toolchain:
+
+```js
+import { registerWidget, FhemvizWidget } from "../registry.js";
+
+class PoolWidget extends FhemvizWidget {
+  render() {
+    const t = this.plain((this.device.readings || {}).poolTemp ?? "–");
+    return `<div class="card"><span class="label">${this.escape(this.displayName())}</span>
+      <div class="value">${this.escape(t)}<span class="unit">°C</span></div>
+      ${this.readingRowsHtml()}</div>`;
+  }
+}
+registerWidget("pool", PoolWidget);
+```
+
+Aktivierung: `attr <gerät> vizWidget pool`. Die Basisklasse liefert
+`plain()`, `escape()`, `readingRowsHtml()` (vizReadings), `sendCommand()`
+und das Karten-CSS mit allen Design-Tokens.
+
 ## Struktur
 
 ```

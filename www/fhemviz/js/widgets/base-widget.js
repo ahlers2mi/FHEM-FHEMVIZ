@@ -82,7 +82,16 @@ const CARD_CSS = `
     width: 100%; margin: 4px 0 0;
     accent-color: var(--viz-accent, #ffb020);
   }
-  .btnrow { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btnrow { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  select.pill {
+    font: inherit; font-size: 0.8rem; font-weight: 600;
+    min-height: 38px; padding: 6px 10px; border-radius: 10px;
+    border: 1px solid var(--viz-border, #262c35);
+    background: var(--viz-raised, #1c212a); color: var(--viz-text, #e8eaed);
+  }
+  .ctlrow { display: flex; align-items: center; gap: 10px; }
+  .ctlrow .sub { flex-shrink: 0; }
+  .ctlrow input[type=range] { flex: 1; margin: 0; }
 
   .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .dot.ok  { background: var(--viz-ok, #34c77b); }
@@ -177,6 +186,48 @@ export class FhemvizWidget extends HTMLElement {
     };
     const v = map[String(name || "").toLowerCase()];
     return v ? `var(${v})` : "";
+  }
+
+  /**
+   * vizReadings-Attribut parsen: "reading[:Label[:Einheit[:Farbe]]]".
+   * Liefert [{label,value,color}] direkt aus den Readings, null wenn
+   * nicht gesetzt. Von ALLEN Widgets nutzbar (Info-Zeilen).
+   */
+  vizReadingParts() {
+    const spec = this.device.attr && this.device.attr.vizReadings;
+    if (!spec) return null;
+    const readings = this.device.readings || {};
+    const items = String(spec)
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .map((t) => {
+        const [reading, label, unit, color] = t.split(":").map((x) => (x || "").trim());
+        if (!reading) return null;
+        const raw = readings[reading];
+        const value =
+          (raw === undefined || raw === null || raw === "" ? "–" : this.plain(raw)) +
+          (unit ? " " + unit : "");
+        return { label: label || reading, value, color: this.colorVar(color) };
+      })
+      .filter(Boolean);
+    return items.length ? items : null;
+  }
+
+  /** vizReadings als kompakte Label/Wert-Zeilen (fuer Nicht-Sensor-Widgets). */
+  readingRowsHtml() {
+    const parts = this.vizReadingParts();
+    if (!parts) return "";
+    return parts
+      .map(
+        (p) =>
+          `<div class="row"><span class="sub">${this.escape(
+            p.label || " "
+          )}</span><span class="sub" style="color:${
+            p.color || "var(--viz-text)"
+          };">${this.escape(p.value)}</span></div>`
+      )
+      .join("");
   }
 
   /** Muss von abgeleiteten Widgets ueberschrieben werden. */
