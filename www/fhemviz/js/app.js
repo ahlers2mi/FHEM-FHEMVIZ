@@ -9,23 +9,25 @@
 
 import { FhemClient } from "./fhem-client.js";
 import { Store } from "./store.js";
-import { renderLayout, collectRooms, ALL_ROOMS, VIZ_ROOM_PREFIX } from "./layout.js";
+import { renderLayout, collectRooms, resolveRoom, ALL_ROOMS, VIZ_ROOM_PREFIX } from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
 
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.7.4";
+const SPA_VERSION = "v0.7.5";
 
 const el = (id) => document.getElementById(id);
 
 let versionWarn = "";
+let configWarn = "";
 
 function setStatus(text, kind = "") {
   const s = el("viz-status");
   if (!s) return;
-  s.textContent = versionWarn ? `${text} · ${versionWarn}` : text;
-  s.className = "viz-status" + (versionWarn ? " viz-error" : kind ? " viz-" + kind : "");
+  const warn = [versionWarn, configWarn].filter(Boolean).join(" · ");
+  s.textContent = warn ? `${text} · ${warn}` : text;
+  s.className = "viz-status" + (warn ? " viz-error" : kind ? " viz-" + kind : "");
 }
 
 function applyTheme(theme) {
@@ -129,11 +131,18 @@ class TvController {
 
   /** Geraete-Event: Szene uebernimmt fuer <sec> Sekunden den Schirm. */
   forceScene(room, sec) {
+    // Unbekannte Szene: Event ignorieren statt "Alle" zu zeigen.
+    const resolved = resolveRoom(collectRooms(this.store, this.baseOpts), room);
+    if (!resolved) {
+      // eslint-disable-next-line no-console
+      console.warn(`FHEMVIZ: Szene "${room}" nicht in der Sicht - Event ignoriert`);
+      return;
+    }
     clearTimeout(this.timer);
     clearTimeout(this.eventTimer);
     document.body.classList.add("viz-alert");
-    this._render(room);
-    el("viz-scene").textContent = sceneLabel(room) + " · Event";
+    this._render(resolved);
+    el("viz-scene").textContent = sceneLabel(resolved) + " · Event";
     this._progress(sec);
     this.eventTimer = setTimeout(() => {
       document.body.classList.remove("viz-alert");
@@ -204,7 +213,23 @@ async function main() {
     // Rendern: TV startet die Szenen-Rotation, Tablet die Tab-Ansicht.
     let tvc = null;
     if (tv) {
-      const scenes = parseScenes(cfg.tvScenes, collectRooms(store, baseOpts));
+      const roomsAvail = collectRooms(store, baseOpts);
+      const wanted = parseScenes(cfg.tvScenes, roomsAvail);
+      // Szenen beim Start aufloesen: unbekannte Raeume werden uebersprungen
+      // und gemeldet - NICHT stillschweigend "Alle" gezeigt.
+      const scenes = [];
+      const missing = [];
+      for (const sc of wanted) {
+        const r = sc.room === ALL_ROOMS ? sc.room : resolveRoom(roomsAvail, sc.room);
+        if (r) scenes.push({ room: r, sec: sc.sec });
+        else missing.push(sc.room);
+      }
+      if (missing.length) {
+        configWarn = `Szene(n) nicht in der Sicht: ${missing.join(", ")} (devspec/room pruefen)`;
+      }
+      if (scenes.length === 0) {
+        scenes.push(...roomsAvail.map((r) => ({ room: r, sec: 20 })));
+      }
       tvc = new TvController(root, store, client, baseOpts, scenes);
       tvc.start();
     } else {
