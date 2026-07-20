@@ -205,9 +205,14 @@ export class FhemvizWidget extends HTMLElement {
         const [reading, label, unit, color] = t.split(":").map((x) => (x || "").trim());
         if (!reading) return null;
         const raw = readings[reading];
+        const v =
+          raw === undefined || raw === null || raw === "" ? "–" : this.plain(raw);
+        // Einheit nur anhaengen, wenn der Wert sie nicht schon traegt
+        // (Readings wie "17821 Wh" bringen ihre Einheit selbst mit).
         const value =
-          (raw === undefined || raw === null || raw === "" ? "–" : this.plain(raw)) +
-          (unit ? " " + unit : "");
+          unit && !v.toLowerCase().endsWith(unit.toLowerCase())
+            ? v + " " + unit
+            : v;
         return { label: label || reading, value, color: this.colorVar(color) };
       })
       .filter(Boolean);
