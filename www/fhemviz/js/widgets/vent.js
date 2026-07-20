@@ -29,16 +29,18 @@ const VENT_CSS = `
   :host([data-tv]) .vstate { font-size: 1.5rem; }
 `;
 
+// Wortlaut aus my_lueften() (lueftentext-Readings) uebernommen.
 const LABELS = {
-  "3": "Unbedingt lüften", "2": "Lüften sinnvoll", "1": "Wenig sinnvoll",
-  "0": "Nicht lüften", "-1": "Eher zu lassen", "-2": "Fenster zu lassen",
-  "-3": "Unbedingt zu lassen",
+  "4": "Bitte unbedingt lüften", "3": "Bitte lüften",
+  "2": "Kann gelüftet werden", "1": "Bei Bedarf lüften",
+  "0": "Eher nicht lüften", "-1": "Besser nicht lüften",
+  "-2": "Auf keinen Fall lüften", "-3": "Auf keinen Fall lüften",
 };
 
 export class FhemvizVent extends FhemvizWidget {
   _level() {
     const n = parseInt(this.plain(this.device.state), 10);
-    return isNaN(n) ? 0 : Math.max(-3, Math.min(3, n));
+    return isNaN(n) ? 0 : Math.max(-3, Math.min(4, n));
   }
 
   _cooling() {
@@ -56,7 +58,7 @@ export class FhemvizVent extends FhemvizWidget {
     ]
       .map(
         (d, i) =>
-          `<path d="${d}" class="${i < Math.abs(level) ? "a" : ""}" fill="none"
+          `<path d="${d}" class="${i < Math.min(3, Math.abs(level)) ? "a" : ""}" fill="none"
              stroke-width="1.8" stroke-linecap="round"/>`
       )
       .join("");
