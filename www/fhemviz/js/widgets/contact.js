@@ -19,6 +19,12 @@ const CONTACT_CSS = `
   .card.open .cstate, .card.tilted .cstate { color: var(--viz-accent, #ffb020); font-weight: 600; }
   :host([data-tv]) .cicon { width: 56px; height: 56px; }
   :host([data-tv]) .cstate { font-size: 1.6rem; }
+
+  /* Gruppen-Modus (structure): Mini-Symbol je Mitglied */
+  .members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .members .cicon { width: 20px; height: 20px; }
+  .members .cicon.open, .members .cicon.tilted { color: var(--viz-accent, #ffb020); }
+  :host([data-tv]) .members .cicon { width: 26px; height: 26px; }
 `;
 
 // Einfache Stroke-Symbole (24x24): Fenster/Tuer, je zu/gekippt/offen.
@@ -31,13 +37,51 @@ const ICONS = {
 };
 
 export class FhemvizContact extends FhemvizWidget {
-  /** open | tilted | closed | unknown */
-  _state() {
-    const st = this.plain(this.device.state).toLowerCase();
-    if (/^(open|opened|auf|offen|ge(ö|oe)ffnet)$/.test(st)) return "open";
+  connectedCallback() {
+    super.connectedCallback();
+    // Gruppen-Modus: Mitglieder live abonnieren, damit jedes Mini-Symbol
+    // bei einer Zustandsaenderung einzeln nachzieht.
+    if (this.store) {
+      this._memberUnsubs = this._members().map((m) =>
+        this.store.subscribe(m.name, () => this._paint())
+      );
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    (this._memberUnsubs || []).forEach((u) => u());
+  }
+
+  /**
+   * structure-Geraet? Dann Mitglieder aus der DEF lesen und ueber den
+   * Store aufloesen (nur die, die in der Sicht sind).
+   * DEF-Format: "structure <struct_type> <dev1> <dev2> ..."
+   */
+  _members() {
+    if (!this.store) return [];
+    const internals = this.device.internals || {};
+    if (internals.TYPE !== "structure") return [];
+    return String(internals.DEF || "")
+      .split(/\s+/)
+      .slice(1) // erstes Token ist der struct_type (z. B. "onoff")
+      .map((n) => n.replace(/,$/, ""))
+      .map((n) => this.store.get(n))
+      .filter(Boolean);
+  }
+
+  /** open | tilted | closed | unknown (fuer beliebige state-Strings) */
+  _stateOf(raw) {
+    const st = this.plain(raw).toLowerCase();
+    if (/^(open|opened|auf|offen|ge(ö|oe)ffnet|on)$/.test(st)) return "open";
     if (/^(tilted|gekippt|kipp(en|stellung)?)$/.test(st)) return "tilted";
-    if (/^(closed|zu|geschlossen)$/.test(st)) return "closed";
+    if (/^(closed|zu|geschlossen|off)$/.test(st)) return "closed";
     return "unknown";
+  }
+
+  /** open | tilted | closed | unknown (eigener state) */
+  _state() {
+    return this._stateOf(this.device.state);
   }
 
   _isDoor() {
@@ -45,14 +89,13 @@ export class FhemvizContact extends FhemvizWidget {
     return /t(ü|ue|u)r|door|tor\b/i.test(hay);
   }
 
-  _icon(state) {
-    const door = this._isDoor();
+  _icon(state, isDoor, extraCls = "") {
     let key;
-    if (door) key = state === "closed" ? "door_closed" : "door_open";
+    if (isDoor) key = state === "closed" ? "door_closed" : "door_open";
     else if (state === "tilted") key = "window_tilted";
     else if (state === "open") key = "window_open";
     else key = "window_closed";
-    return `<svg class="cicon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    return `<svg class="cicon ${extraCls}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">${ICONS[key]}</svg>`;
   }
 
@@ -63,7 +106,48 @@ export class FhemvizContact extends FhemvizWidget {
     return this.plain(this.device.state); // unbekannter Zustand: roh anzeigen
   }
 
+  _looksLikeDoor(name) {
+    return /t(ü|ue|u)r|door|tor\b/i.test(name);
+  }
+
+  /** Gruppen-Kachel: "2 offen · 1 gekippt" bzw. "Alles zu" + Mini-Symbole. */
+  _renderGroup(members) {
+    const infos = members.map((m) => ({
+      state: this._stateOf(m.state),
+      door: this._looksLikeDoor(`${(m.attr && m.attr.alias) || ""} ${m.name}`),
+      title: (m.attr && m.attr.alias) || m.name,
+    }));
+    const open = infos.filter((i) => i.state === "open").length;
+    const tilted = infos.filter((i) => i.state === "tilted").length;
+
+    const headParts = [];
+    if (open) headParts.push(`${open} offen`);
+    if (tilted) headParts.push(`${tilted} gekippt`);
+    const head = headParts.length ? headParts.join(" · ") : "Alles zu";
+    const attention = open + tilted > 0;
+
+    const minis = infos
+      .map((i) =>
+        this._icon(i.state, i.door, i.state).replace(
+          "<svg ",
+          `<svg data-title="${this.escape(i.title)}" `
+        )
+      )
+      .join("");
+
+    return `
+      <style>${CONTACT_CSS}</style>
+      <div class="card${attention ? " on open" : " closed"}">
+        <span class="label">${this.escape(this.displayName())}</span>
+        <span class="cstate">${this.escape(head)}</span>
+        <div class="members">${minis}</div>
+      </div>`;
+  }
+
   render() {
+    const members = this._members();
+    if (members.length) return this._renderGroup(members);
+
     const state = this._state();
     // Statusleiste: offen/gekippt = Bernstein ("on"), zu = neutral.
     const cardCls = state === "open" || state === "tilted" ? ` on ${state}` : ` ${state}`;
@@ -72,7 +156,7 @@ export class FhemvizContact extends FhemvizWidget {
       <div class="card${cardCls}">
         <span class="label">${this.escape(this.displayName())}</span>
         <div class="cwrap">
-          ${this._icon(state)}
+          ${this._icon(state, this._isDoor())}
           <span class="cstate">${this.escape(this._label(state))}</span>
         </div>
       </div>`;
