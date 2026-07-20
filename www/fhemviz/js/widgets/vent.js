@@ -19,6 +19,9 @@ const VENT_CSS = `
   .card.lo .vicon path.a { stroke: var(--viz-muted, #77808c); }
   .card.lo .vstate { color: var(--viz-muted, #77808c); font-weight: 450; }
   .card.hi .vstate { font-weight: 700; }
+  /* Negative Stufen: Lueften waere kontraproduktiv -> rot */
+  .card.neg .vicon path.a { stroke: var(--viz-error, #ff5d5d); }
+  .card.neg .vstate { color: var(--viz-error, #ff5d5d); }
   .vstate { font-size: 1.15rem; font-weight: 450; }
   .card.go .vstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
   .card.cool .vstate { color: var(--viz-action, #4c8dff); }
@@ -26,12 +29,16 @@ const VENT_CSS = `
   :host([data-tv]) .vstate { font-size: 1.5rem; }
 `;
 
-const LABELS = ["Nicht lüften", "Wenig sinnvoll", "Lüften sinnvoll", "Unbedingt lüften"];
+const LABELS = {
+  "3": "Unbedingt lüften", "2": "Lüften sinnvoll", "1": "Wenig sinnvoll",
+  "0": "Nicht lüften", "-1": "Eher zu lassen", "-2": "Fenster zu lassen",
+  "-3": "Unbedingt zu lassen",
+};
 
 export class FhemvizVent extends FhemvizWidget {
   _level() {
     const n = parseInt(this.plain(this.device.state), 10);
-    return isNaN(n) ? 0 : Math.max(0, Math.min(3, n));
+    return isNaN(n) ? 0 : Math.max(-3, Math.min(3, n));
   }
 
   _cooling() {
@@ -49,15 +56,16 @@ export class FhemvizVent extends FhemvizWidget {
     ]
       .map(
         (d, i) =>
-          `<path d="${d}" class="${i < level ? "a" : ""}" fill="none"
+          `<path d="${d}" class="${i < Math.abs(level) ? "a" : ""}" fill="none"
              stroke-width="1.8" stroke-linecap="round"/>`
       )
       .join("");
     const label =
-      LABELS[level] + (cool && level > 0 ? " · kühlt" : "");
+      LABELS[String(level)] + (cool && level > 0 ? " · kühlt" : "");
     let cls = "";
     if (level === 1) cls = " lo";
     else if (level >= 2) cls = (cool ? " on cool go" : " ok go") + (level >= 3 ? " hi" : "");
+    else if (level < 0) cls = " neg" + (level <= -2 ? " bad" : "") + (level <= -3 ? " hi" : "");
     return `
       <style>${VENT_CSS}</style>
       <div class="card${cls}">
