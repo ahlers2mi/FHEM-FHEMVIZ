@@ -67,7 +67,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 | Attribut | Werte | Wirkung |
 |---|---|---|
-| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext (Kalender-/Terminlisten) |
+| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
 | `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
 | `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
 | `vizReadings` | `reading[:Label[:Einheit[:Farbe]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Gesetzt = state wird ignoriert, Gerät immer angezeigt |
@@ -80,11 +80,13 @@ attr d_Wechselrichter_all vizReadings soc:Ladung:%:accent,pv_leistung:PV:W:ok,ou
 attr d_Wechselrichter_all vizSize 2x2
 ```
 
-**Beispiel Müllkalender** (mehrzeiliger Text):
+**Beispiel Müllkalender** (Terminliste im Agenda-Stil, nächster Termin
+hervorgehoben):
 
 ```
-attr rem_d_cal_muell vizWidget text
-attr rem_d_cal_muell vizSize 2x1
+attr rem_d_cal_muell vizWidget agenda
+attr rem_d_cal_muell alias Termine
+attr rem_d_cal_muell vizSize 2x2
 ```
 
 **Widget-Auswahl** (Reihenfolge): `vizWidget` → `vizReadings` (→ Readings-

@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.7.2";
+const SPA_VERSION = "v0.7.3";
 
 const el = (id) => document.getElementById(id);
 
@@ -82,6 +82,12 @@ class TvController {
     const p = (n) => String(n).padStart(2, "0");
     el("viz-clock").textContent =
       p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+    // Im TV-Header steht das Datum statt des FHEMVIZ-Schriftzugs.
+    el("viz-title").textContent = d.toLocaleDateString("de-DE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
   }
 
   _render(room) {

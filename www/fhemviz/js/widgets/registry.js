@@ -12,6 +12,7 @@ import { FhemvizSensor } from "./sensor.js";
 import { FhemvizDimmer } from "./dimmer.js";
 import { FhemvizActions } from "./actions.js";
 import { FhemvizText } from "./text.js";
+import { FhemvizAgenda } from "./agenda.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -19,6 +20,7 @@ export const WIDGET_REGISTRY = {
   dimmer: "fhemviz-dimmer",
   actions: "fhemviz-actions",
   text: "fhemviz-text",
+  agenda: "fhemviz-agenda",
   // TODO: thermostat, blind/shutter, chart, media.
 };
 
@@ -40,6 +42,7 @@ export function registerCoreWidgets() {
     ["fhemviz-dimmer", FhemvizDimmer],
     ["fhemviz-actions", FhemvizActions],
     ["fhemviz-text", FhemvizText],
+    ["fhemviz-agenda", FhemvizAgenda],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
