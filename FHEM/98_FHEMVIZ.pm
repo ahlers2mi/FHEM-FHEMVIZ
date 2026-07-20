@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.7.16
+# Version:  v0.7.17
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.16";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.17";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -111,8 +111,10 @@ sub FHEMVIZ_Initialize {
 
     # viz*-Attribute global verfuegbar machen (erstklassige FHEM-Buerger:
     # Dropdown + Vervollstaendigung an jedem Geraet).
+    # Zweiter Parameter ordnet die Attribute dem Modul zu (sauberes
+    # Aufraeumen, Zuordnung in FHEMWEB) - wie im FHEM-Gemini-Modul.
     foreach my $a (@FHEMVIZ_DEV_ATTRS) {
-        addToAttrList($a);
+        addToAttrList($a, "FHEMVIZ");
     }
 }
 
@@ -212,7 +214,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"tvScenes":%s,"statusBar":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.7.16"),
+            FHEMVIZ_jsonStr("v0.7.17"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
