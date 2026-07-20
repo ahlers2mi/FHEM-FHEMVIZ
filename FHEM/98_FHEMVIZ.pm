@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.3.0
+# Version:  v0.4.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,13 +37,21 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.3.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.4.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
 # Regex-Liste (jeder Eintrag wird in der SPA als ^(?:...)$ gematcht).
 # Per "attr <name> hideRooms ..." anpassbar; leerer Wert zeigt alles.
 my $FHEMVIZ_DEFAULT_HIDEROOMS = 'System->.*,Homebridge,Alexa,FileLog,hidden';
+
+# Rausch-Filter: Geraete dieser TYPEs (Plots, Logs, Automatisierung) bzw.
+# mit diesen bedeutungslosen states werden nicht als Kacheln gezeigt.
+# Ein Geraet mit gesetztem vizWidget-Attribut wird IMMER gezeigt.
+my $FHEMVIZ_DEFAULT_HIDETYPES  =
+    'SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup';
+my $FHEMVIZ_DEFAULT_HIDESTATES =
+    '\?\?\?,unknown,initialized,defined,disabled,inactive';
 
 # Minimaler Satz eigener Attribute (Namespace-Praefix "viz"), gedacht fuer die
 # visualisierten Geraete - NICHT fuer das FHEMVIZ-Geraet selbst. Sie werden in
@@ -79,6 +87,8 @@ sub FHEMVIZ_Initialize {
           "devspec " .
           "theme:auto,light,dark " .
           "hideRooms " .
+          "hideTypes " .
+          "hideStates " .
           $readingFnAttributes;
 }
 
@@ -132,19 +142,24 @@ sub FHEMVIZ_Get {
     }
 
     if ($opt eq "manifest" || $opt eq "config") {
-        my $devspec   = AttrVal($name, "devspec", "");
-        my $theme     = AttrVal($name, "theme", "auto");
-        my $readonly  = AttrVal($name, "readonly", 0) ? "true" : "false";
-        my $hideRooms = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
+        my $devspec    = AttrVal($name, "devspec", "");
+        my $theme      = AttrVal($name, "theme", "auto");
+        my $readonly   = AttrVal($name, "readonly", 0) ? "true" : "false";
+        my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
+        my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
+        my $hideStates = AttrVal($name, "hideStates", $FHEMVIZ_DEFAULT_HIDESTATES);
 
         return sprintf(
-            '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,"hideRooms":%s}',
+            '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
+              . '"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.3.0"),
+            FHEMVIZ_jsonStr("v0.4.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
-            FHEMVIZ_jsonStr($hideRooms)
+            FHEMVIZ_jsonStr($hideRooms),
+            FHEMVIZ_jsonStr($hideTypes),
+            FHEMVIZ_jsonStr($hideStates)
         );
     }
 
@@ -253,6 +268,14 @@ sub FHEMVIZ_Attr {
         nicht als eigene Dashboard-Raeume erscheinen (Default:
         <code>System-&gt;.*,Homebridge,Alexa,FileLog,hidden</code>;
         leer = alle Raeume anzeigen)</li>
+    <li><b>hideTypes</b> &ndash; kommaseparierte Liste von FHEM-TYPEs, die
+        nicht als Kachel erscheinen (Default:
+        <code>SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup</code>)</li>
+    <li><b>hideStates</b> &ndash; kommaseparierte Regex-Liste; Geraete, deren
+        state komplett darauf matcht, werden ausgeblendet (Default:
+        <code>\?\?\?,unknown,initialized,defined,disabled,inactive</code>).
+        Ein Geraet mit gesetztem <code>vizWidget</code>-Attribut wird immer
+        angezeigt.</li>
   </ul>
   <br>
 
