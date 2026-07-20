@@ -218,9 +218,13 @@ export function renderLayout(root, store, client, opts = {}) {
     for (const [group, devices] of [...groups.entries()].sort()) {
       const groupEl = document.createElement("div");
       groupEl.className = "viz-group";
-      const h3 = document.createElement("h3");
-      h3.textContent = group;
-      groupEl.appendChild(h3);
+      // Die Default-Gruppe "Allgemein" braucht keine Ueberschrift, wenn sie
+      // die einzige Gruppe des Raums ist.
+      if (!(groups.size === 1 && group === "Allgemein")) {
+        const h3 = document.createElement("h3");
+        h3.textContent = group;
+        groupEl.appendChild(h3);
+      }
 
       const grid = document.createElement("div");
       grid.className = "viz-grid";
