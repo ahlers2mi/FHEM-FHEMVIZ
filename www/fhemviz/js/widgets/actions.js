@@ -1,9 +1,8 @@
 /*
- * FHEMVIZ - Aktions-Widget (webCmd), PoC v0.3.0.
+ * FHEMVIZ - Aktions-Widget (webCmd), v0.7.0.
  * Rendert die webCmd-Befehle eines Geraets (z. B. "Auf:Zu:Lueften:Stop")
- * als Buttons und sendet bei Klick "set <dev> <cmd>". Deckt damit generisch
- * alle Geraete ab, deren Bedienung nicht on/off/pct ist (Tore, Rollladen
- * mit Szenen, Player-Steuerung, ...).
+ * als Touch-Buttons (min. 38 px) und sendet "set <dev> <cmd>".
+ * readonly (TV-Modus): nur der Zustand, keine Buttons.
  */
 
 import { FhemvizWidget } from "./base-widget.js";
@@ -20,23 +19,21 @@ export class FhemvizActions extends FhemvizWidget {
 
   render() {
     const state = this.escape(this.plain(this.device.state));
-    const buttons = this._cmds()
-      .map(
-        (c, i) =>
-          `<button data-idx="${i}" title="set ${this.escape(
-            this.device.name
-          )} ${this.escape(c)}">${this.escape(c)}</button>`
-      )
-      .join("");
+    const buttons = this.readonly
+      ? ""
+      : `<div class="btnrow grow">${this._cmds()
+          .map(
+            (c, i) =>
+              `<button class="pill" data-idx="${i}" title="set ${this.escape(
+                this.device.name
+              )} ${this.escape(c)}">${this.escape(c)}</button>`
+          )
+          .join("")}</div>`;
     return `
       <div class="card">
-        <div class="row">
-          <span class="title">${this.escape(this.displayName())}</span>
-          <span class="sub">${state}</span>
-        </div>
-        <div class="row" style="flex-wrap:wrap;justify-content:flex-start;">
-          ${buttons}
-        </div>
+        <span class="label">${this.escape(this.displayName())}</span>
+        <div class="value" style="font-size:1.15rem;font-weight:450;">${state}</div>
+        ${buttons}
       </div>`;
   }
 

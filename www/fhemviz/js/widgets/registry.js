@@ -82,13 +82,28 @@ export function selectWidget(device) {
   return WIDGET_REGISTRY.sensor;
 }
 
-/** Erzeugt ein konfiguriertes Widget-Element fuer ein Geraet. */
-export function createWidget(device, store, client) {
+/**
+ * Erzeugt ein konfiguriertes Widget-Element fuer ein Geraet.
+ * opts: { readonly, tv } - readonly unterdrueckt Bedienelemente (TV/Gaeste),
+ * tv skaliert die Typografie (data-tv-Attribut, siehe base-widget CSS).
+ */
+export function createWidget(device, store, client, opts = {}) {
   const tag = selectWidget(device);
   const el = document.createElement(tag);
   el.device = device;
   el.store = store;
   el.client = client;
+  el.readonly = !!opts.readonly;
+  if (opts.tv) el.setAttribute("data-tv", "");
+
+  // vizSize (1x1, 2x1, 1x2, 2x2) -> Raster-Spans + groessere Typo.
+  const size = String((device.attr && device.attr.vizSize) || "");
+  const m = size.match(/^([12])x([12])$/);
+  if (m) {
+    el.setAttribute("data-size", size);
+    if (m[1] === "2") el.style.gridColumn = "span 2";
+    if (m[2] === "2") el.style.gridRow = "span 2";
+  }
   return el;
 }
 

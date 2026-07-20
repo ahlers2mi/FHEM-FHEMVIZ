@@ -1,9 +1,9 @@
 /*
- * FHEMVIZ - responsives Auto-Layout mit Raum-Tabs (v0.4.0).
- * Aufbau rein aus Attributen: room -> Tab, group -> Karte, sortby ->
- * Reihenfolge. Es ist immer nur EIN Raum sichtbar (oder "Alle"); die
- * Auswahl wird in localStorage gemerkt. Das CSS-Grid (auto-fill/minmax)
- * bricht die Kacheln automatisch um.
+ * FHEMVIZ - responsives Auto-Layout mit Raum-Tabs (v0.7.0).
+ * Aufbau rein aus Attributen: room -> Tab/Szene, group -> Karte, sortby ->
+ * Reihenfolge, vizSize -> Kachel-Spannweite. Tablet: Tabs unten, ein Raum
+ * sichtbar (oder "Alle"), Auswahl in localStorage. TV: keine Tabs, der
+ * aktive Raum kommt von der Szenen-Rotation in app.js.
  *
  * Rausch-Filter (Konfiguration via 98_FHEMVIZ.pm, get config):
  *   hideRooms  - Raeume, die nicht als Tabs/Abschnitte erscheinen
@@ -15,7 +15,7 @@
 import { createWidget } from "./widgets/registry.js";
 
 // Sentinel fuer den "Alle Raeume"-Tab (kollidiert nicht mit Raumnamen).
-const ALL_ROOMS = "*";
+export const ALL_ROOMS = "*";
 const LS_ACTIVE_ROOM = "fhemviz.activeRoom";
 
 // FHEM erlaubt mehrere Raeume/Gruppen kommasepariert an EINEM Geraet.
@@ -78,13 +78,9 @@ function saveActiveRoom(room) {
 }
 
 /**
- * Rendert Tab-Leiste + Geraete des aktiven Raums in den Container.
- * @param {HTMLElement} root
- * @param {import("./store.js").Store} store
- * @param {object} client - FhemClient (fuer set-Befehle)
- * @param {object} [opts] - { hideRooms, hideTypes, hideStates, activeRoom }
+ * Baut die gefilterte Raum-Struktur: Map(room -> Map(group -> devices[])).
  */
-export function renderLayout(root, store, client, opts = {}) {
+function buildRooms(store, opts) {
   const hideRooms = compileRegexList(opts.hideRooms, "hidden");
   const hideStates = compileRegexList(opts.hideStates, "");
   const hideTypes = new Set(
@@ -94,11 +90,11 @@ export function renderLayout(root, store, client, opts = {}) {
       .filter(Boolean)
   );
 
-  const rooms = new Map(); // room -> Map(group -> devices[])
+  const rooms = new Map();
 
   for (const dev of store.all()) {
     const attr = dev.attr || {};
-    if (attr.vizHide) continue;
+    if (/^(1|true|yes)$/i.test(String(attr.vizHide || ""))) continue;
 
     // Rausch-Filter - ausser der Nutzer erzwingt die Kachel via vizWidget.
     if (!attr.vizWidget) {
@@ -128,6 +124,25 @@ export function renderLayout(root, store, client, opts = {}) {
       }
     }
   }
+  return rooms;
+}
+
+/** Sortierte Liste der sichtbaren Raumnamen (fuer die TV-Szenen-Rotation). */
+export function collectRooms(store, opts = {}) {
+  return [...buildRooms(store, opts).keys()].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Rendert (optional Tab-Leiste +) Geraete des aktiven Raums in den Container.
+ * @param {HTMLElement} root
+ * @param {import("./store.js").Store} store
+ * @param {object} client - FhemClient (fuer set-Befehle)
+ * @param {object} [opts] - { hideRooms, hideTypes, hideStates, activeRoom,
+ *                            showTabs=true, readonly=false, tv=false }
+ */
+export function renderLayout(root, store, client, opts = {}) {
+  const showTabs = opts.showTabs !== false;
+  const rooms = buildRooms(store, opts);
 
   root.textContent = "";
 
@@ -144,21 +159,23 @@ export function renderLayout(root, store, client, opts = {}) {
   let active = opts.activeRoom ?? loadActiveRoom();
   if (active !== ALL_ROOMS && !rooms.has(active)) active = ALL_ROOMS;
 
-  // Tab-Leiste ("Alle" + ein Tab je Raum).
-  const nav = document.createElement("nav");
-  nav.className = "viz-tabs";
-  for (const name of [ALL_ROOMS, ...roomNames]) {
-    const tab = document.createElement("button");
-    tab.className = "viz-tab" + (name === active ? " active" : "");
-    tab.textContent = name === ALL_ROOMS ? "Alle" : prettyRoom(name);
-    tab.addEventListener("click", () => {
-      saveActiveRoom(name);
-      renderLayout(root, store, client, { ...opts, activeRoom: name });
-    });
-    nav.appendChild(tab);
+  if (showTabs) {
+    const nav = document.createElement("nav");
+    nav.className = "viz-tabs";
+    for (const name of [ALL_ROOMS, ...roomNames]) {
+      const tab = document.createElement("button");
+      tab.className = "viz-tab" + (name === active ? " active" : "");
+      tab.textContent = name === ALL_ROOMS ? "Alle" : prettyRoom(name);
+      tab.addEventListener("click", () => {
+        saveActiveRoom(name);
+        renderLayout(root, store, client, { ...opts, activeRoom: name });
+      });
+      nav.appendChild(tab);
+    }
+    root.appendChild(nav);
   }
-  root.appendChild(nav);
 
+  const widgetOpts = { readonly: !!opts.readonly, tv: !!opts.tv };
   const shownRooms = active === ALL_ROOMS ? roomNames : [active];
 
   for (const room of shownRooms) {
@@ -166,8 +183,8 @@ export function renderLayout(root, store, client, opts = {}) {
     const roomEl = document.createElement("section");
     roomEl.className = "viz-room";
 
-    // Raum-Ueberschrift nur in der "Alle"-Ansicht (im Einzel-Tab ist der
-    // Raumname bereits im aktiven Tab sichtbar).
+    // Raum-Ueberschrift nur, wenn mehrere Raeume zu sehen sind (im
+    // Einzel-Tab/in der TV-Szene ist der Raumname bereits im Tab/Header).
     if (active === ALL_ROOMS) {
       const h2 = document.createElement("h2");
       h2.textContent = prettyRoom(room);
@@ -185,7 +202,9 @@ export function renderLayout(root, store, client, opts = {}) {
       grid.className = "viz-grid";
       devices
         .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
-        .forEach((dev) => grid.appendChild(createWidget(dev, store, client)));
+        .forEach((dev) =>
+          grid.appendChild(createWidget(dev, store, client, widgetOpts))
+        );
 
       groupEl.appendChild(grid);
       roomEl.appendChild(groupEl);

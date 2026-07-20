@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.4.0
+# Version:  v0.7.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.4.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -53,43 +53,51 @@ my $FHEMVIZ_DEFAULT_HIDETYPES  =
 my $FHEMVIZ_DEFAULT_HIDESTATES =
     '\?\?\?,unknown,initialized,defined,disabled,inactive';
 
-# Minimaler Satz eigener Attribute (Namespace-Praefix "viz"), gedacht fuer die
-# visualisierten Geraete - NICHT fuer das FHEMVIZ-Geraet selbst. Sie werden in
-# einer spaeteren Bau-Session global registriert (addToDevAttrList) und hier
-# validiert. Siehe CONCEPT.md, Abschnitt 3b.
-#   vizWidget - Widget-Typ explizit erzwingen/ueberschreiben
-#   vizSize   - Kachelgroesse im responsiven Raster (z. B. 1x1, 2x1, 2x2)
-#   vizChart  - Readings, die als Graph/Sparkline angezeigt werden
-#   vizHide   - Geraet/Reading aus der Sicht ausblenden
-#   vizPage   - optionale Zuordnung zu einer Sicht abweichend von room
-my @FHEMVIZ_DEV_ATTRS = qw(vizWidget vizSize vizChart vizHide vizPage);
+# Geraetebezogene viz*-Attribute (an den VISUALISIERTEN Geraeten, nicht am
+# FHEMVIZ-Geraet). Werden in Initialize global registriert (addToAttrList),
+# damit sie an jedem Geraet im FHEMWEB-Dropdown auftauchen.
+#   vizWidget - Widget-Typ erzwingen (uebersteuert GDT/Heuristik/Rauschfilter)
+#   vizSize   - Kachelgroesse im Raster (1x1, 2x1, 1x2, 2x2)
+#   vizHide   - Geraet aus der Sicht ausblenden
+my @FHEMVIZ_DEV_ATTRS = (
+    "vizWidget:switch,sensor,dimmer,actions",
+    "vizSize:1x1,2x1,1x2,2x2",
+    "vizHide:1,0",
+);
 
 # ----------------------------------------------------------------------------
 # FHEMVIZ_Initialize
 #   Wird von FHEM beim Laden des Moduls aufgerufen.
-#   Registriert die Callback-Funktionen und die Attributliste des
-#   FHEMVIZ-Geraets selbst (Sicht-/Theme-Konfiguration).
+#   Registriert die Callback-Funktionen, die Attributliste des FHEMVIZ-
+#   Geraets (Sicht-/Theme-/TV-Konfiguration) und die globalen viz*-Attribute.
 # ----------------------------------------------------------------------------
 sub FHEMVIZ_Initialize {
     my ($hash) = @_;
 
     $hash->{DefFn}   = \&FHEMVIZ_Define;
     $hash->{UndefFn} = \&FHEMVIZ_Undef;
+    $hash->{SetFn}   = \&FHEMVIZ_Set;
     $hash->{GetFn}   = \&FHEMVIZ_Get;
     $hash->{AttrFn}  = \&FHEMVIZ_Attr;
 
-    # Attribute des FHEMVIZ-Geraets (die aktive Sicht). Die geraetebezogenen
-    # viz*-Attribute (@FHEMVIZ_DEV_ATTRS) werden separat registriert - TODO
-    # in spaeterer Bau-Session (addToDevAttrList).
+    # Attribute des FHEMVIZ-Geraets (die aktive Sicht).
     $hash->{AttrList} =
           "disable:1,0 " .
           "readonly:1,0 " .
           "devspec " .
           "theme:auto,light,dark " .
+          "mode:tablet,tv " .
+          "tvScenes " .
           "hideRooms " .
           "hideTypes " .
           "hideStates " .
           $readingFnAttributes;
+
+    # viz*-Attribute global verfuegbar machen (erstklassige FHEM-Buerger:
+    # Dropdown + Vervollstaendigung an jedem Geraet).
+    foreach my $a (@FHEMVIZ_DEV_ATTRS) {
+        addToAttrList($a);
+    }
 }
 
 # ----------------------------------------------------------------------------
@@ -127,6 +135,36 @@ sub FHEMVIZ_Undef {
 }
 
 # ----------------------------------------------------------------------------
+# FHEMVIZ_Set
+#   set <name> scene <szene> [dauer]
+#     Erzwingt im TV-Modus die Szene <szene> (= Raumname) fuer [dauer]
+#     Sekunden (Default 30), danach kehrt die Rotation zurueck. Die SPA
+#     empfaengt die Readings live ueber den inform-Kanal - damit koennen
+#     ganz normale notify/DOIF den Fernseher steuern, z. B.:
+#       define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
+# ----------------------------------------------------------------------------
+sub FHEMVIZ_Set {
+    my ($hash, $name, $cmd, @args) = @_;
+    return "Unknown argument, choose one of scene" if (!defined($cmd));
+
+    if ($cmd eq "scene") {
+        my $scene = $args[0];
+        return "usage: set $name scene <name> [seconds]" if (!defined($scene));
+        my $dur = defined($args[1]) && $args[1] =~ /^\d+$/ ? $args[1] : 30;
+
+        # Reihenfolge wichtig: Dauer zuerst, damit sie beim Eintreffen des
+        # scene-Events in der SPA bereits bekannt ist.
+        readingsBeginUpdate($hash);
+        readingsBulkUpdate($hash, "sceneDuration", $dur);
+        readingsBulkUpdate($hash, "scene", $scene);
+        readingsEndUpdate($hash, 1);
+        return undef;
+    }
+
+    return "Unknown argument $cmd, choose one of scene";
+}
+
+# ----------------------------------------------------------------------------
 # FHEMVIZ_Get
 #   get <name> manifest  -> spaeter: aktive Sicht als JSON (Raeume/Theme/...)
 #   get <name> config    -> spaeter: aufbereitete Konfiguration als JSON
@@ -145,18 +183,23 @@ sub FHEMVIZ_Get {
         my $devspec    = AttrVal($name, "devspec", "");
         my $theme      = AttrVal($name, "theme", "auto");
         my $readonly   = AttrVal($name, "readonly", 0) ? "true" : "false";
+        my $mode       = AttrVal($name, "mode", "tablet");
+        my $tvScenes   = AttrVal($name, "tvScenes", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
         my $hideStates = AttrVal($name, "hideStates", $FHEMVIZ_DEFAULT_HIDESTATES);
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
+              . '"mode":%s,"tvScenes":%s,'
               . '"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.4.0"),
+            FHEMVIZ_jsonStr("v0.7.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
+            FHEMVIZ_jsonStr($mode),
+            FHEMVIZ_jsonStr($tvScenes),
             FHEMVIZ_jsonStr($hideRooms),
             FHEMVIZ_jsonStr($hideTypes),
             FHEMVIZ_jsonStr($hideStates)
@@ -249,11 +292,23 @@ sub FHEMVIZ_Attr {
   </ul>
   <br>
 
+  <a name="FHEMVIZset"></a>
+  <b>Set</b>
+  <ul>
+    <li><b>scene &lt;name&gt; [sekunden]</b> &ndash; erzwingt im TV-Modus die
+        Szene <code>&lt;name&gt;</code> (= Raumname) fuer die angegebene Dauer
+        (Default 30 s), danach kehrt die Szenen-Rotation zurueck. Die SPA
+        empfaengt das live ueber den inform-Kanal &ndash; damit steuern ganz
+        normale notify/DOIF den Fernseher:<br>
+        <code>define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60</code></li>
+  </ul>
+  <br>
+
   <a name="FHEMVIZget"></a>
   <b>Get</b>
   <ul>
-    <li><b>manifest</b> &ndash; (geplant) aktive Sicht als JSON</li>
-    <li><b>config</b> &ndash; (geplant) aufbereitete Konfiguration als JSON</li>
+    <li><b>manifest</b> / <b>config</b> &ndash; aktive Sicht als JSON
+        (devspec, theme, readonly, mode, tvScenes, hide*-Filter)</li>
   </ul>
   <br>
 
@@ -261,9 +316,17 @@ sub FHEMVIZ_Attr {
   <b>Attributes</b>
   <ul>
     <li><b>disable</b> 1|0 &ndash; Deaktiviert das Geraet</li>
-    <li><b>readonly</b> 1|0 &ndash; Nur-Lese-Sicht (keine Set-Buttons)</li>
+    <li><b>readonly</b> 1|0 &ndash; Nur-Lese-Sicht (keine Bedienelemente)</li>
     <li><b>devspec</b> &ndash; Geraeteauswahl fuer diese Sicht</li>
     <li><b>theme</b> auto|light|dark &ndash; Farbschema der Oberflaeche</li>
+    <li><b>mode</b> tablet|tv &ndash; Betriebsart. <code>tablet</code>
+        (Default): bedienbar, Raum-Tabs unten. <code>tv</code>: keine
+        Bedienelemente, grosse Ziffern, automatische Szenen-Rotation.
+        Per URL uebersteuerbar: <code>?mode=tv</code></li>
+    <li><b>tvScenes</b> &ndash; Szenen-Rotation im TV-Modus als
+        kommaseparierte Liste <code>Raum:Sekunden</code>, z. B.
+        <code>Solar:30,Wohnzimmer:20,Garage:15</code>. Ohne Angabe rotieren
+        alle sichtbaren Raeume mit je 20 s.</li>
     <li><b>hideRooms</b> &ndash; kommaseparierte Regex-Liste von Raeumen, die
         nicht als eigene Dashboard-Raeume erscheinen (Default:
         <code>System-&gt;.*,Homebridge,Alexa,FileLog,hidden</code>;
@@ -280,13 +343,14 @@ sub FHEMVIZ_Attr {
   <br>
 
   <a name="FHEMVIZdevattr"></a>
-  <b>Geraete-Attribute (geplant, an den visualisierten Geraeten)</b>
+  <b>Geraete-Attribute (an den visualisierten Geraeten, global registriert)</b>
   <ul>
-    <li><b>vizWidget</b> &ndash; Widget-Typ erzwingen/ueberschreiben</li>
-    <li><b>vizSize</b> &ndash; Kachelgroesse im Raster (z. B. 1x1, 2x1, 2x2)</li>
-    <li><b>vizChart</b> &ndash; Readings als Graph/Sparkline</li>
-    <li><b>vizHide</b> &ndash; Geraet/Reading ausblenden</li>
-    <li><b>vizPage</b> &ndash; Sicht abweichend von <code>room</code></li>
+    <li><b>vizWidget</b> switch|sensor|dimmer|actions &ndash; Widget-Typ
+        erzwingen; uebersteuert genericDeviceType/Heuristik und die
+        Rausch-Filter (Geraet wird immer angezeigt)</li>
+    <li><b>vizSize</b> 1x1|2x1|1x2|2x2 &ndash; Kachelgroesse im Raster;
+        2x2 ergibt eine Hero-Kachel mit groesserer Schrift</li>
+    <li><b>vizHide</b> 1|0 &ndash; Geraet aus der Sicht ausblenden</li>
   </ul>
 </ul>
 
