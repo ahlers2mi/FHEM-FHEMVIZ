@@ -23,7 +23,7 @@ export class FhemvizSensor extends FhemvizWidget {
           <span class="title">${this.escape(this.displayName())}</span>
           ${this._okDot()}
         </div>
-        <div class="value">${this.escape(this.device.state)}</div>
+        <div class="value">${this.escape(this.plain(this.device.state))}</div>
       </div>`;
   }
 }

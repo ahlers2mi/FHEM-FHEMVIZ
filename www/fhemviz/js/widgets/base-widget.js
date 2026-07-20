@@ -74,6 +74,18 @@ export class FhemvizWidget extends HTMLElement {
     );
   }
 
+  /**
+   * Klartext eines State/Werts: entfernt HTML-Tags (devStateIcon-SVG,
+   * stateFormat mit <b>…</b>) und kollabiert Whitespace, damit nie
+   * FHEMWEB-Markup als Text in einer Kachel landet.
+   */
+  plain(s) {
+    return String(s ?? "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   /** Muss von abgeleiteten Widgets ueberschrieben werden. */
   render() {
     return `<div class="card"><div class="title">${this.escape(

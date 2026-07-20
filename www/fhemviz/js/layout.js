@@ -7,6 +7,22 @@
 
 import { createWidget } from "./widgets/registry.js";
 
+// FHEM erlaubt mehrere Raeume/Gruppen kommasepariert an EINEM Geraet.
+function splitAttr(v) {
+  return String(v || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+// FHEM-Standard: Raum "hidden" blendet aus der Ansicht aus.
+const HIDDEN_ROOMS = new Set(["hidden"]);
+
+// Anzeige der FHEM-Raumhierarchie "System->MQTT" als "System › MQTT".
+function prettyRoom(room) {
+  return room.replace(/->/g, " › ");
+}
+
 function sortKey(dev) {
   const a = dev.attr || {};
   return (a.sortby || a.alias || dev.name).toLowerCase();
@@ -24,12 +40,23 @@ export function renderLayout(root, store, client) {
   for (const dev of store.all()) {
     const attr = dev.attr || {};
     if (attr.vizHide) continue;
-    const room = attr.room || "Unsortiert";
-    const group = attr.group || "Allgemein";
-    if (!rooms.has(room)) rooms.set(room, new Map());
-    const groups = rooms.get(room);
-    if (!groups.has(group)) groups.set(group, []);
-    groups.get(group).push(dev);
+
+    // Ein Geraet kann in mehreren Raeumen UND Gruppen liegen -> es erscheint
+    // in jeder Raum/Gruppe-Kombination (wie in FHEMWEB).
+    let devRooms = splitAttr(attr.room);
+    if (devRooms.length === 0) devRooms = ["Unsortiert"];
+    let devGroups = splitAttr(attr.group);
+    if (devGroups.length === 0) devGroups = ["Allgemein"];
+
+    for (const room of devRooms) {
+      if (HIDDEN_ROOMS.has(room)) continue;
+      if (!rooms.has(room)) rooms.set(room, new Map());
+      const groups = rooms.get(room);
+      for (const group of devGroups) {
+        if (!groups.has(group)) groups.set(group, []);
+        groups.get(group).push(dev);
+      }
+    }
   }
 
   root.textContent = "";
@@ -46,7 +73,7 @@ export function renderLayout(root, store, client) {
     const roomEl = document.createElement("section");
     roomEl.className = "viz-room";
     const h2 = document.createElement("h2");
-    h2.textContent = room;
+    h2.textContent = prettyRoom(room);
     roomEl.appendChild(h2);
 
     for (const [group, devices] of [...groups.entries()].sort()) {
