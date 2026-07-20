@@ -39,6 +39,7 @@ Geräte des `devspec`, gruppiert nach `room`/`group` und aktualisiert live
 | `tvScenes` | `Raum:Sek,Raum:Sek` | Szenen-Rotation im TV-Modus, z. B. `Solar:30,Wohnzimmer:20,Garage:15`. Ohne Angabe: alle sichtbaren Räume à 20 s |
 | `theme` | `auto` (Default) / `light` / `dark` | Farbschema; `auto` folgt dem System |
 | `readonly` | `0` / `1` | Keine Bedienelemente (Gäste-/Wandmodus); im TV-Modus immer aktiv |
+| `showRooms` | Regex-Liste | **Whitelist**: nur passende Räume erscheinen, Geräte ohne passenden Raum entfallen ganz. Für ein rein kuratiertes Dashboard: `FHEMVIZ->.*` |
 | `hideRooms` | Regex-Liste | Räume ohne eigenen Tab/Abschnitt. Default: `System->.*,Homebridge,Alexa,FileLog,hidden` |
 | `hideTypes` | TYPE-Liste | Geräte-TYPEs ohne Kachel. Default: `SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup` |
 | `hideStates` | Regex-Liste | Geräte, deren state komplett matcht, werden ausgeblendet. Default: `\?\?\?,unknown,initialized,defined,disabled,inactive` |
@@ -67,7 +68,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 | Attribut | Werte | Wirkung |
 |---|---|---|
-| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
+| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `contact` = Fenster/Tür-Kontakt (Symbol + Offen/Gekippt/Zu, offen = Bernstein; wird bei state open/closed/tilted automatisch gewählt), `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
 | `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
 | `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
 | `vizReadings` | `reading[:Label[:Einheit[:Farbe]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Gesetzt = state wird ignoriert, Gerät immer angezeigt |
