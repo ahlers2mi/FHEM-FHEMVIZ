@@ -15,6 +15,10 @@ const VENT_CSS = `
   .vicon path { stroke: var(--viz-border, #262c35); }
   .vicon path.a { stroke: var(--viz-ok, #34c77b); }
   .card.cool .vicon path.a { stroke: var(--viz-action, #4c8dff); }
+  /* Stufe 1 (wenig sinnvoll): gedaempft statt gruen - klar unterscheidbar */
+  .card.lo .vicon path.a { stroke: var(--viz-muted, #77808c); }
+  .card.lo .vstate { color: var(--viz-muted, #77808c); font-weight: 450; }
+  .card.hi .vstate { font-weight: 700; }
   .vstate { font-size: 1.15rem; font-weight: 450; }
   .card.go .vstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
   .card.cool .vstate { color: var(--viz-action, #4c8dff); }
@@ -51,7 +55,9 @@ export class FhemvizVent extends FhemvizWidget {
       .join("");
     const label =
       LABELS[level] + (cool && level > 0 ? " · kühlt" : "");
-    const cls = level > 0 ? (cool ? " on cool go" : " ok go") : "";
+    let cls = "";
+    if (level === 1) cls = " lo";
+    else if (level >= 2) cls = (cool ? " on cool go" : " ok go") + (level >= 3 ? " hi" : "");
     return `
       <style>${VENT_CSS}</style>
       <div class="card${cls}">
