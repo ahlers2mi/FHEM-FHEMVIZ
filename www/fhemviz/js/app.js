@@ -9,13 +9,13 @@
 
 import { FhemClient } from "./fhem-client.js";
 import { Store } from "./store.js";
-import { renderLayout, collectRooms, ALL_ROOMS } from "./layout.js";
+import { renderLayout, collectRooms, ALL_ROOMS, VIZ_ROOM_PREFIX } from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
 
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.7.3";
+const SPA_VERSION = "v0.7.4";
 
 const el = (id) => document.getElementById(id);
 
@@ -54,6 +54,14 @@ function parseScenes(spec, fallbackRooms) {
     .filter((s) => s.room);
   if (list.length) return list;
   return fallbackRooms.map((r) => ({ room: r, sec: 20 }));
+}
+
+/** Szenen-Anzeigename: FHEMVIZ->-Praefix ausblenden, -> als Trenner. */
+function sceneLabel(room) {
+  const r = room.startsWith(VIZ_ROOM_PREFIX)
+    ? room.slice(VIZ_ROOM_PREFIX.length)
+    : room;
+  return r.replace(/->/g, " \u203a ");
 }
 
 class TvController {
@@ -108,7 +116,7 @@ class TvController {
 
   _show(scene) {
     this._render(scene.room);
-    el("viz-scene").textContent = scene.room === ALL_ROOMS ? "Alle" : scene.room;
+    el("viz-scene").textContent = scene.room === ALL_ROOMS ? "Alle" : sceneLabel(scene.room);
     this._progress(scene.sec);
     clearTimeout(this.timer);
     this.timer = setTimeout(() => this._next(), scene.sec * 1000);
@@ -125,7 +133,7 @@ class TvController {
     clearTimeout(this.eventTimer);
     document.body.classList.add("viz-alert");
     this._render(room);
-    el("viz-scene").textContent = room + " · Event";
+    el("viz-scene").textContent = sceneLabel(room) + " · Event";
     this._progress(sec);
     this.eventTimer = setTimeout(() => {
       document.body.classList.remove("viz-alert");

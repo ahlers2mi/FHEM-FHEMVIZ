@@ -43,9 +43,28 @@ function compileRegexList(spec, fallback) {
     .filter(Boolean);
 }
 
-// Anzeige der FHEM-Raumhierarchie "System->MQTT" als "System › MQTT".
-function prettyRoom(room) {
-  return room.replace(/->/g, " › ");
+// Konvention: Raeume unter "FHEMVIZ->" sind reine Dashboard-Raeume
+// (z. B. FHEMVIZ->Termine). In FHEMWEB bleiben sie als Hierarchie
+// zusammengeklappt; hier wird der Praefix in der Anzeige entfernt und
+// Kurznamen (z. B. in tvScenes) werden automatisch aufgeloest.
+export const VIZ_ROOM_PREFIX = "FHEMVIZ->";
+
+// Anzeige der FHEM-Raumhierarchie "System->MQTT" als "System › MQTT";
+// der FHEMVIZ->-Praefix wird ganz ausgeblendet.
+function displayRoom(room) {
+  const r = room.startsWith(VIZ_ROOM_PREFIX)
+    ? room.slice(VIZ_ROOM_PREFIX.length)
+    : room;
+  return r.replace(/->/g, " › ");
+}
+
+/** Loest einen (Kurz-)Namen auf einen vorhandenen Raum auf, sonst null. */
+export function resolveRoom(roomNames, name) {
+  if (!name) return null;
+  if (roomNames.includes(name)) return name;
+  const prefixed = VIZ_ROOM_PREFIX + name;
+  if (roomNames.includes(prefixed)) return prefixed;
+  return null;
 }
 
 // Klartext eines states (HTML-Markup entfernen) fuer den hideStates-Filter.
@@ -130,7 +149,9 @@ function buildRooms(store, opts) {
 
 /** Sortierte Liste der sichtbaren Raumnamen (fuer die TV-Szenen-Rotation). */
 export function collectRooms(store, opts = {}) {
-  return [...buildRooms(store, opts).keys()].sort((a, b) => a.localeCompare(b));
+  return [...buildRooms(store, opts).keys()].sort((a, b) =>
+    displayRoom(a).localeCompare(displayRoom(b))
+  );
 }
 
 /**
@@ -147,7 +168,9 @@ export function renderLayout(root, store, client, opts = {}) {
 
   root.textContent = "";
 
-  const roomNames = [...rooms.keys()].sort((a, b) => a.localeCompare(b));
+  const roomNames = [...rooms.keys()].sort((a, b) =>
+    displayRoom(a).localeCompare(displayRoom(b))
+  );
   if (roomNames.length === 0) {
     const empty = document.createElement("p");
     empty.className = "viz-status";
@@ -158,7 +181,7 @@ export function renderLayout(root, store, client, opts = {}) {
 
   // Aktiver Raum: explizit uebergeben > gemerkt > "Alle".
   let active = opts.activeRoom ?? loadActiveRoom();
-  if (active !== ALL_ROOMS && !rooms.has(active)) active = ALL_ROOMS;
+  if (active !== ALL_ROOMS) active = resolveRoom(roomNames, active) ?? ALL_ROOMS;
 
   if (showTabs) {
     const nav = document.createElement("nav");
@@ -166,7 +189,7 @@ export function renderLayout(root, store, client, opts = {}) {
     for (const name of [ALL_ROOMS, ...roomNames]) {
       const tab = document.createElement("button");
       tab.className = "viz-tab" + (name === active ? " active" : "");
-      tab.textContent = name === ALL_ROOMS ? "Alle" : prettyRoom(name);
+      tab.textContent = name === ALL_ROOMS ? "Alle" : displayRoom(name);
       tab.addEventListener("click", () => {
         saveActiveRoom(name);
         renderLayout(root, store, client, { ...opts, activeRoom: name });
@@ -188,7 +211,7 @@ export function renderLayout(root, store, client, opts = {}) {
     // Einzel-Tab/in der TV-Szene ist der Raumname bereits im Tab/Header).
     if (active === ALL_ROOMS) {
       const h2 = document.createElement("h2");
-      h2.textContent = prettyRoom(room);
+      h2.textContent = displayRoom(room);
       roomEl.appendChild(h2);
     }
 
