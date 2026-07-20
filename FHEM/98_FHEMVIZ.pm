@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.7.6
+# Version:  v0.7.7
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,13 +37,17 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.6";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.7.7";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
 # Regex-Liste (jeder Eintrag wird in der SPA als ^(?:...)$ gematcht).
 # Per "attr <name> hideRooms ..." anpassbar; leerer Wert zeigt alles.
 my $FHEMVIZ_DEFAULT_HIDEROOMS = 'System->.*,Homebridge,Alexa,FileLog,hidden';
+
+# Whitelist: ist showRooms gesetzt (kommaseparierte Regex-Liste), erscheinen
+# NUR passende Raeume; Geraete ohne passenden Raum entfallen ganz.
+# Beispiel: attr <name> showRooms FHEMVIZ->.*   -> nur die Dashboard-Raeume.
 
 # Rausch-Filter: Geraete dieser TYPEs (Plots, Logs, Automatisierung) bzw.
 # mit diesen bedeutungslosen states werden nicht als Kacheln gezeigt.
@@ -97,6 +101,7 @@ sub FHEMVIZ_Initialize {
           "theme:auto,light,dark " .
           "mode:tablet,tv " .
           "tvScenes " .
+          "showRooms " .
           "hideRooms " .
           "hideTypes " .
           "hideStates " .
@@ -194,6 +199,7 @@ sub FHEMVIZ_Get {
         my $readonly   = AttrVal($name, "readonly", 0) ? "true" : "false";
         my $mode       = AttrVal($name, "mode", "tablet");
         my $tvScenes   = AttrVal($name, "tvScenes", "");
+        my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
         my $hideStates = AttrVal($name, "hideStates", $FHEMVIZ_DEFAULT_HIDESTATES);
@@ -201,14 +207,15 @@ sub FHEMVIZ_Get {
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
               . '"mode":%s,"tvScenes":%s,'
-              . '"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
+              . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.7.6"),
+            FHEMVIZ_jsonStr("v0.7.7"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
             FHEMVIZ_jsonStr($mode),
             FHEMVIZ_jsonStr($tvScenes),
+            FHEMVIZ_jsonStr($showRooms),
             FHEMVIZ_jsonStr($hideRooms),
             FHEMVIZ_jsonStr($hideTypes),
             FHEMVIZ_jsonStr($hideStates)
@@ -336,6 +343,10 @@ sub FHEMVIZ_Attr {
         kommaseparierte Liste <code>Raum:Sekunden</code>, z. B.
         <code>Solar:30,Wohnzimmer:20,Garage:15</code>. Ohne Angabe rotieren
         alle sichtbaren Raeume mit je 20 s.</li>
+    <li><b>showRooms</b> &ndash; Whitelist: kommaseparierte Regex-Liste; ist
+        sie gesetzt, erscheinen NUR passende Raeume (z. B.
+        <code>FHEMVIZ-&gt;.*</code> fuer ein rein kuratiertes Dashboard).
+        Geraete ohne passenden Raum entfallen ganz. Leer = aus.</li>
     <li><b>hideRooms</b> &ndash; kommaseparierte Regex-Liste von Raeumen, die
         nicht als eigene Dashboard-Raeume erscheinen (Default:
         <code>System-&gt;.*,Homebridge,Alexa,FileLog,hidden</code>;

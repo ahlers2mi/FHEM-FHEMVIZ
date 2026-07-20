@@ -100,6 +100,9 @@ function saveActiveRoom(room) {
  * Baut die gefilterte Raum-Struktur: Map(room -> Map(group -> devices[])).
  */
 function buildRooms(store, opts) {
+  // Whitelist: ist showRooms gesetzt, erscheinen NUR passende Raeume und
+  // Geraete ohne passenden Raum entfallen ganz (kein "Weitere"-Fallback).
+  const showRooms = compileRegexList(opts.showRooms, "");
   const hideRooms = compileRegexList(opts.hideRooms, "hidden");
   const hideStates = compileRegexList(opts.hideStates, "");
   const hideTypes = new Set(
@@ -128,10 +131,18 @@ function buildRooms(store, opts) {
     // in jeder Raum/Gruppe-Kombination (wie in FHEMWEB).
     let devRooms = splitAttr(attr.room);
     if (devRooms.length === 0) devRooms = ["Unsortiert"];
+    if (showRooms.length) {
+      // Whitelist aktiv: nur passende Raeume, sonst Geraet komplett weg.
+      devRooms = devRooms.filter((r) => showRooms.some((re) => re.test(r)));
+      if (devRooms.length === 0) continue;
+    }
     devRooms = devRooms.filter((r) => !hideRooms.some((re) => re.test(r)));
     // Liegt das Geraet NUR in ausgeblendeten Raeumen, trotzdem zeigen:
-    // das devspec hat es explizit ausgewaehlt.
-    if (devRooms.length === 0) devRooms = ["Weitere"];
+    // das devspec hat es explizit ausgewaehlt (nur ohne Whitelist).
+    if (devRooms.length === 0) {
+      if (showRooms.length) continue;
+      devRooms = ["Weitere"];
+    }
     let devGroups = splitAttr(attr.group);
     if (devGroups.length === 0) devGroups = ["Allgemein"];
 
