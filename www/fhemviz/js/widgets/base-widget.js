@@ -43,6 +43,9 @@ const CARD_CSS = `
     font-size: 1.9rem; font-weight: 200; letter-spacing: -0.02em;
     line-height: 1.05; overflow: hidden; text-overflow: ellipsis;
   }
+  /* Lange Werte: kleiner und kraeftiger statt riesig umgebrochen. */
+  .value.md { font-size: 1.35rem; font-weight: 300; }
+  .value.sm { font-size: 1rem; font-weight: 450; line-height: 1.3; white-space: normal; }
   .unit { font-size: 0.55em; font-weight: 400; color: var(--viz-muted, #77808c); margin-left: 0.12em; }
   .sub { color: var(--viz-muted, #77808c); font-size: 0.8rem; min-width: 0;
          overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
