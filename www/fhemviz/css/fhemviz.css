@@ -1,0 +1,58 @@
+/*
+ * FHEMVIZ - Basis-Styles & Theming.
+ *
+ * GRUNDGERUEST / SCAFFOLD (v0.1.0) - nur Design-Tokens und Raster-Geruest,
+ * noch KEIN fertiges Widget-Styling.
+ *
+ * Theming ueber CSS Custom Properties (Dark-Mode ohne Framework, §6).
+ * Responsives Auto-Layout via CSS-Grid auto-fill/minmax (§4).
+ */
+
+/* Design-Tokens (Light-Default) --------------------------------------------- */
+:root {
+  --viz-bg: #f5f6f8;
+  --viz-surface: #ffffff;
+  --viz-text: #1a1c1e;
+  --viz-muted: #5f6368;
+  --viz-accent: #2f6feb;
+  --viz-ok: #2e7d32;
+  --viz-warn: #ed6c02;
+  --viz-error: #c62828;
+  --viz-radius: 12px;
+  --viz-gap: 12px;
+  --viz-tile-min: 160px; /* minmax-Basis fuer das Auto-Layout */
+}
+
+/* Dark-Mode (theme=auto folgt der Systemvorgabe) ---------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --viz-bg: #121316;
+    --viz-surface: #1e2023;
+    --viz-text: #e5e7ea;
+    --viz-muted: #9aa0a6;
+  }
+}
+
+/* Explizite Theme-Umschaltung (theme=light|dark am FHEMVIZ-Geraet) ---------- */
+[data-theme="dark"] {
+  --viz-bg: #121316;
+  --viz-surface: #1e2023;
+  --viz-text: #e5e7ea;
+  --viz-muted: #9aa0a6;
+}
+
+/* Grundlayout --------------------------------------------------------------- */
+body {
+  margin: 0;
+  background: var(--viz-bg);
+  color: var(--viz-text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Responsives Auto-Layout-Geruest (TODO: Karten/Gruppen, §4). */
+#fhemviz-app {
+  display: grid;
+  gap: var(--viz-gap);
+  grid-template-columns: repeat(auto-fill, minmax(var(--viz-tile-min), 1fr));
+  padding: var(--viz-gap);
+}
