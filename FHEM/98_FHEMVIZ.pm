@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.1.0
+# Version:  v0.2.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.1.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.2.0";
 
 # Minimaler Satz eigener Attribute (Namespace-Praefix "viz"), gedacht fuer die
 # visualisierten Geraete - NICHT fuer das FHEMVIZ-Geraet selbst. Sie werden in
@@ -113,7 +113,9 @@ sub FHEMVIZ_Undef {
 # FHEMVIZ_Get
 #   get <name> manifest  -> spaeter: aktive Sicht als JSON (Raeume/Theme/...)
 #   get <name> config    -> spaeter: aufbereitete Konfiguration als JSON
-#   GRUNDGERUEST: liefert nur einen Platzhalter, noch keine echte Logik.
+#   Liefert die aktive Sicht als JSON (devspec, theme, readonly). Die SPA
+#   ruft diesen Endpunkt beim Start auf, um zu wissen, welche Geraete sie
+#   laden soll. Die Konfiguration bleibt damit im FHEM-Standard.
 # ----------------------------------------------------------------------------
 sub FHEMVIZ_Get {
     my ($hash, $name, $opt, @args) = @_;
@@ -123,11 +125,36 @@ sub FHEMVIZ_Get {
     }
 
     if ($opt eq "manifest" || $opt eq "config") {
-        # TODO (Bau-Session): reale Sicht/Config aus Attributen erzeugen.
-        return '{"fhemviz":"scaffold","version":"v0.1.0","todo":true}';
+        my $devspec  = AttrVal($name, "devspec", "");
+        my $theme    = AttrVal($name, "theme", "auto");
+        my $readonly = AttrVal($name, "readonly", 0) ? "true" : "false";
+
+        return sprintf(
+            '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s}',
+            FHEMVIZ_jsonStr($name),
+            FHEMVIZ_jsonStr("v0.2.0"),
+            FHEMVIZ_jsonStr($devspec),
+            FHEMVIZ_jsonStr($theme),
+            $readonly
+        );
     }
 
     return "Unknown argument $opt, choose one of manifest:noArg config:noArg";
+}
+
+# ----------------------------------------------------------------------------
+# FHEMVIZ_jsonStr
+#   Minimaler JSON-String-Encoder (escaped ", \\ und Steuerzeichen).
+#   Bewusst dependency-frei, damit das Modul ohne JSON-Modul auskommt.
+# ----------------------------------------------------------------------------
+sub FHEMVIZ_jsonStr {
+    my ($s) = @_;
+    $s = "" if (!defined($s));
+    $s =~ s/([\\"])/\\$1/g;
+    $s =~ s/\n/\\n/g;
+    $s =~ s/\r/\\r/g;
+    $s =~ s/\t/\\t/g;
+    return '"' . $s . '"';
 }
 
 # ----------------------------------------------------------------------------
@@ -180,9 +207,10 @@ sub FHEMVIZ_Attr {
     of Truth".
   </p>
   <p>
-    <b>Hinweis:</b> Dies ist das Grundgeruest (v0.1.0). Die Funktionslogik
-    (Manifest/Config, Attribut-Registrierung, Validierung) wird in einer
-    spaeteren Bau-Session ergaenzt - siehe <code>CONCEPT.md</code>.
+    <b>Hinweis:</b> PoC-Stand (v0.2.0). <code>get config</code> liefert die
+    aktive Sicht (devspec/theme/readonly) als JSON; die SPA nutzt sie. Die
+    Attribut-Registrierung/-Validierung der <code>viz*</code>-Attribute folgt
+    noch - siehe <code>CONCEPT.md</code>.
   </p>
 
   <a name="FHEMVIZdefine"></a>

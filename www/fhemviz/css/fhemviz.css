@@ -1,17 +1,14 @@
 /*
- * FHEMVIZ - Basis-Styles & Theming.
- *
- * GRUNDGERUEST / SCAFFOLD (v0.1.0) - nur Design-Tokens und Raster-Geruest,
- * noch KEIN fertiges Widget-Styling.
- *
- * Theming ueber CSS Custom Properties (Dark-Mode ohne Framework, §6).
- * Responsives Auto-Layout via CSS-Grid auto-fill/minmax (§4).
+ * FHEMVIZ - Basis-Styles & Theming (PoC v0.2.0).
+ * Theming ueber CSS Custom Properties (Dark-Mode), responsives Auto-Layout
+ * via CSS-Grid auto-fill/minmax.
  */
 
 /* Design-Tokens (Light-Default) --------------------------------------------- */
 :root {
   --viz-bg: #f5f6f8;
   --viz-surface: #ffffff;
+  --viz-border: #e2e4e8;
   --viz-text: #1a1c1e;
   --viz-muted: #5f6368;
   --viz-accent: #2f6feb;
@@ -20,28 +17,37 @@
   --viz-error: #c62828;
   --viz-radius: 12px;
   --viz-gap: 12px;
-  --viz-tile-min: 160px; /* minmax-Basis fuer das Auto-Layout */
+  --viz-tile-min: 180px;
 }
 
-/* Dark-Mode (theme=auto folgt der Systemvorgabe) ---------------------------- */
 @media (prefers-color-scheme: dark) {
   :root {
     --viz-bg: #121316;
     --viz-surface: #1e2023;
+    --viz-border: #2c2f33;
     --viz-text: #e5e7ea;
     --viz-muted: #9aa0a6;
   }
 }
 
-/* Explizite Theme-Umschaltung (theme=light|dark am FHEMVIZ-Geraet) ---------- */
 [data-theme="dark"] {
   --viz-bg: #121316;
   --viz-surface: #1e2023;
+  --viz-border: #2c2f33;
   --viz-text: #e5e7ea;
   --viz-muted: #9aa0a6;
 }
+[data-theme="light"] {
+  --viz-bg: #f5f6f8;
+  --viz-surface: #ffffff;
+  --viz-border: #e2e4e8;
+  --viz-text: #1a1c1e;
+  --viz-muted: #5f6368;
+}
 
 /* Grundlayout --------------------------------------------------------------- */
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   background: var(--viz-bg);
@@ -49,10 +55,55 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Responsives Auto-Layout-Geruest (TODO: Karten/Gruppen, §4). */
-#fhemviz-app {
+#viz-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--viz-border);
+  background: var(--viz-surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+#viz-header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+}
+.viz-status {
+  font-size: 0.85rem;
+  color: var(--viz-muted);
+}
+.viz-status.viz-error { color: var(--viz-error); font-weight: 600; }
+.viz-status.viz-live  { color: var(--viz-ok); }
+
+#fhemviz-app { padding: 16px; }
+
+/* Raum -> Gruppe -> Kachelraster ------------------------------------------- */
+.viz-room { margin-bottom: 24px; }
+.viz-room > h2 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.viz-group { margin: 0 0 16px; }
+.viz-group > h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--viz-muted);
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.viz-grid {
   display: grid;
   gap: var(--viz-gap);
   grid-template-columns: repeat(auto-fill, minmax(var(--viz-tile-min), 1fr));
-  padding: var(--viz-gap);
+}
+
+/* Kachel-Grundstil (auch von Widgets via Shadow-DOM-Parts nutzbar) ---------- */
+.viz-tile,
+fhemviz-switch, fhemviz-sensor, fhemviz-dimmer {
+  display: block;
 }

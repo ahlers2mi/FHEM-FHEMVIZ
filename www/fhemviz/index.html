@@ -2,12 +2,12 @@
 <!--
   FHEMVIZ - moderne, responsive FHEM-Visualisierung (Single-Page-App).
 
-  GRUNDGERUEST / SCAFFOLD (v0.1.0) - noch KEINE Render-/Client-Logik.
-  Ausgeliefert von FHEMWEB aus www/fhemviz/:
-    http://<fhem>:<port>/fhem/fhemviz/index.html
+  PoC (v0.2.0): lädt via FHEMWEB-API echte Geräte (jsonlist2), aktualisiert
+  live (inform) und schaltet per CSRF-gesichertem set. Ausgeliefert von
+  FHEMWEB aus www/fhemviz/:  http://<fhem>:<port>/fhem/fhemviz/index.html
 
-  Buildfrei: native Web Components (ES-Module) + CSS Custom Properties,
-  kein Node/npm noetig ("Datei kopieren, fertig"). Siehe CONCEPT.md, §6.
+  Buildfrei: native Web Components (ES-Module) + CSS Custom Properties.
+  Optional: ?device=<FHEMVIZ-Gerätename>  (sonst erstes TYPE=FHEMVIZ-Gerät)
 -->
 <html lang="de">
   <head>
@@ -17,12 +17,15 @@
     <link rel="stylesheet" href="./css/fhemviz.css" />
   </head>
   <body>
-    <!-- App-Wurzel. Der Store fuellt spaeter das responsive Auto-Layout (§4). -->
-    <div id="fhemviz-app" data-state="scaffold">
-      <noscript>FHEMVIZ benoetigt JavaScript.</noscript>
-    </div>
+    <header id="viz-header">
+      <h1>FHEMVIZ</h1>
+      <span id="viz-status" class="viz-status">initialisiere…</span>
+    </header>
 
-    <!-- Einstiegspunkt als ES-Modul (buildfrei). -->
+    <main id="fhemviz-app">
+      <noscript>FHEMVIZ benoetigt JavaScript.</noscript>
+    </main>
+
     <script type="module" src="./js/app.js"></script>
   </body>
 </html>
