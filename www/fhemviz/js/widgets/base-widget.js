@@ -88,6 +88,13 @@ const CARD_CSS = `
   .dot.ok  { background: var(--viz-ok, #34c77b); }
   .dot.bad { background: var(--viz-error, #ff5d5d); }
 
+  /* Mehrzeiliger Klartext (vizWidget text, z. B. Terminlisten). */
+  .text {
+    white-space: pre-line; font-size: 0.85rem; line-height: 1.55;
+    color: var(--viz-text, #e8eaed); overflow: hidden;
+  }
+  :host([data-tv]) .text { font-size: 1.05rem; }
+
   /* Groessere Kacheln (vizSize) und TV-Modus skalieren die Typo ------------- */
   :host([data-size="2x1"]) .value { font-size: 2.3rem; }
   :host([data-size="1x2"]) .value { font-size: 2.3rem; }
@@ -153,6 +160,23 @@ export class FhemvizWidget extends HTMLElement {
       .replace(/<[^>]*>/g, " ")
       .replace(/\s+/g, " ")
       .trim();
+  }
+
+  /**
+   * Semantischer Farbname (aus vizReadings) -> CSS-Custom-Property.
+   * Erlaubt: ok/gruen/green, warn/orange, bad/rot/red, accent/amber,
+   * blau/blue. Unbekannte Namen -> "" (Standardfarbe).
+   */
+  colorVar(name) {
+    const map = {
+      ok: "--viz-ok", gruen: "--viz-ok", green: "--viz-ok",
+      warn: "--viz-warn", orange: "--viz-warn",
+      bad: "--viz-error", rot: "--viz-error", red: "--viz-error",
+      accent: "--viz-accent", amber: "--viz-accent",
+      blau: "--viz-action", blue: "--viz-action",
+    };
+    const v = map[String(name || "").toLowerCase()];
+    return v ? `var(${v})` : "";
   }
 
   /** Muss von abgeleiteten Widgets ueberschrieben werden. */

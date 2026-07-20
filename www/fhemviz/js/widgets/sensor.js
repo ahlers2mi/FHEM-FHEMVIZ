@@ -53,6 +53,33 @@ export class FhemvizSensor extends FhemvizWidget {
       });
   }
 
+  /**
+   * vizReadings-Attribut: "reading[:Label[:Einheit[:Farbe]]]" kommasepariert.
+   * Liefert die Kachel-Komponenten direkt aus den Readings - praezise
+   * Live-Updates, kein state-Parsing. null wenn nicht gesetzt.
+   */
+  _configuredParts() {
+    const spec = this.device.attr && this.device.attr.vizReadings;
+    if (!spec) return null;
+    const readings = this.device.readings || {};
+    const items = String(spec)
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .map((t) => {
+        const [reading, label, unit, color] = t.split(":").map((x) => (x || "").trim());
+        if (!reading) return null;
+        const raw = readings[reading];
+        const value =
+          (raw === undefined || raw === null || raw === ""
+            ? "–"
+            : this.plain(raw)) + (unit ? " " + unit : "");
+        return { label: label || reading, value, color: this.colorVar(color) };
+      })
+      .filter(Boolean);
+    return items.length ? items : null;
+  }
+
   /** Schriftgroessen-Klasse: lange Hauptwerte werden kleiner statt zu wrappen. */
   _sizeClass(v) {
     if (v.length > 18) return " sm";
@@ -62,14 +89,18 @@ export class FhemvizSensor extends FhemvizWidget {
 
   render() {
     const ok = this._okState();
-    const parts = this._parts();
+    // vizReadings hat Vorrang vor dem state-Parsing.
+    const configured = this._configuredParts();
+    const parts = configured ?? this._parts();
     const main = parts.shift() ?? { label: "", value: "" };
+    const mainColor = main.color ? ` style="color:${main.color};"` : "";
     const mainHtml = `
-      <div class="value${this._sizeClass(main.value)}">${this.escape(main.value)}</div>
+      <div class="value${this._sizeClass(main.value)}"${mainColor}>${this.escape(main.value)}</div>
       ${main.label ? `<span class="sub">${this.escape(main.label)}</span>` : ""}`;
 
-    // Zeilen-Deckel gegen Monster-Kacheln (z. B. BMS mit 9 Komponenten).
-    const MAX_ROWS = 5;
+    // Zeilen-Deckel gegen Monster-Kacheln (z. B. BMS mit 9 Komponenten) -
+    // bei vizReadings zeigt die Kachel exakt, was konfiguriert wurde.
+    const MAX_ROWS = configured ? parts.length : 5;
     const shown = parts.slice(0, MAX_ROWS);
     const more = parts.length - shown.length;
     const rest =
@@ -78,9 +109,9 @@ export class FhemvizSensor extends FhemvizWidget {
           (p) =>
             `<div class="row"><span class="sub">${this.escape(
               p.label || " "
-            )}</span><span class="sub" style="color:var(--viz-text);">${this.escape(
-              p.value
-            )}</span></div>`
+            )}</span><span class="sub" style="color:${
+              p.color || "var(--viz-text)"
+            };">${this.escape(p.value)}</span></div>`
         )
         .join("") +
       (more > 0 ? `<div class="sub">+${more} weitere</div>` : "");

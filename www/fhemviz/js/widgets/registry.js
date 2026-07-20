@@ -11,13 +11,15 @@ import { FhemvizSwitch } from "./switch.js";
 import { FhemvizSensor } from "./sensor.js";
 import { FhemvizDimmer } from "./dimmer.js";
 import { FhemvizActions } from "./actions.js";
+import { FhemvizText } from "./text.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
   sensor: "fhemviz-sensor",
   dimmer: "fhemviz-dimmer",
   actions: "fhemviz-actions",
-  // TODO: thermostat, blind/shutter, chart, media, text/status.
+  text: "fhemviz-text",
+  // TODO: thermostat, blind/shutter, chart, media.
 };
 
 // genericDeviceType -> Widget-Schluessel (PoC-Teilmenge).
@@ -37,6 +39,7 @@ export function registerCoreWidgets() {
     ["fhemviz-sensor", FhemvizSensor],
     ["fhemviz-dimmer", FhemvizDimmer],
     ["fhemviz-actions", FhemvizActions],
+    ["fhemviz-text", FhemvizText],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -51,6 +54,10 @@ export function selectWidget(device) {
   if (attr.vizWidget && WIDGET_REGISTRY[attr.vizWidget]) {
     return WIDGET_REGISTRY[attr.vizWidget];
   }
+  // 1b. vizReadings konfiguriert -> Readings-Kachel (Sensor), ausser
+  //     vizWidget sagt explizit etwas anderes.
+  if (attr.vizReadings) return WIDGET_REGISTRY.sensor;
+
   // 2. genericDeviceType
   const gdt = attr.genericDeviceType || attr.gdt;
   if (gdt && GDT_MAP[gdt]) return WIDGET_REGISTRY[GDT_MAP[gdt]];

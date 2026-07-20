@@ -96,8 +96,9 @@ function buildRooms(store, opts) {
     const attr = dev.attr || {};
     if (/^(1|true|yes)$/i.test(String(attr.vizHide || ""))) continue;
 
-    // Rausch-Filter - ausser der Nutzer erzwingt die Kachel via vizWidget.
-    if (!attr.vizWidget) {
+    // Rausch-Filter - ausser der Nutzer erzwingt die Kachel via
+    // vizWidget oder hat den Inhalt via vizReadings konfiguriert.
+    if (!attr.vizWidget && !attr.vizReadings) {
       const type = (dev.internals && dev.internals.TYPE) || "";
       if (hideTypes.has(type)) continue;
       const st = plainState(dev.state);
