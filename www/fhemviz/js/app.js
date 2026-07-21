@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.8.0";
+const SPA_VERSION = "v0.8.2";
 
 const el = (id) => document.getElementById(id);
 
@@ -76,6 +76,13 @@ function computePageOffsets(container) {
   const H = container.clientHeight;
   if (container.scrollHeight <= H + 4) return [0];
 
+  // ?zoom= skaliert die Seite: getBoundingClientRect liefert dann visuelle
+  // (skalierte) Pixel, scrollTop/clientHeight aber lokale CSS-Pixel.
+  // Der Faktor rechnet die Rects zurueck, damit beide Welten zusammenpassen.
+  const scale = container.offsetWidth
+    ? cRect.width / container.offsetWidth
+    : 1;
+
   // Zeilen ermitteln: Elemente mit gleicher Oberkante = eine Zeile;
   // Zeilen-Unterkante = groesste Unterkante (deckt vizSize-Spans ab).
   const rows = new Map();
@@ -85,8 +92,8 @@ function computePageOffsets(container) {
   for (const item of items) {
     const r = item.getBoundingClientRect();
     if (!r.height) continue;
-    const top = Math.round(r.top - cRect.top + base);
-    const bottom = Math.ceil(r.bottom - cRect.top + base);
+    const top = Math.round((r.top - cRect.top) / scale + base);
+    const bottom = Math.ceil((r.bottom - cRect.top) / scale + base);
     rows.set(top, Math.max(rows.get(top) || 0, bottom));
   }
 
@@ -202,6 +209,7 @@ class TvController {
     this.timer = null;
     this.eventTimer = null;
     this.pageTimers = [];
+    this.pinned = null; // set <viz> page <raum> - Rotation pausiert
   }
 
   start() {
@@ -306,7 +314,55 @@ class TvController {
     this._progress(sec);
     this.eventTimer = setTimeout(() => {
       document.body.classList.remove("viz-alert");
-      this._show(this.scenes[this.idx]); // Rotation dort fortsetzen
+      // Nach dem Event zurueck: zur gepinnten Seite oder in die Rotation.
+      if (this.pinned) this._showPinned();
+      else this._show(this.scenes[this.idx]);
+    }, sec * 1000);
+  }
+
+  /**
+   * set <viz> page <raum>: Seite DAUERHAFT anzeigen (kein Timeout).
+   * Die Rotation pausiert; laeuft die Seite ueber, blaettert das
+   * Auto-Paging zyklisch weiter (auf dem TV wird nie gescrollt).
+   */
+  pin(room) {
+    const resolved = resolveRoom(collectRooms(this.store, this.baseOpts), room);
+    if (!resolved) {
+      // eslint-disable-next-line no-console
+      console.warn(`FHEMVIZ: Seite "${room}" nicht in der Sicht - ignoriert`);
+      return;
+    }
+    clearTimeout(this.timer);
+    clearTimeout(this.eventTimer);
+    document.body.classList.remove("viz-alert");
+    this.pinned = resolved;
+    this._showPinned();
+  }
+
+  /** set <viz> page auto: Pin aufheben, Rotation laeuft weiter. */
+  unpin() {
+    if (!this.pinned) return;
+    this.pinned = null;
+    clearTimeout(this.timer);
+    this._show(this.scenes[this.idx]);
+  }
+
+  _showPinned() {
+    // Blaettertakt aus tvScenes uebernehmen, sonst 20 s pro Durchlauf.
+    const sc = this.scenes.find((s) => s.room === this.pinned);
+    const sec = sc ? sc.sec : 20;
+    this._render(this.pinned);
+    // Kein Fortschrittsbalken: die Seite laeuft nicht ab.
+    el("viz-progress").classList.remove("run");
+    this._cyclePinned(sec);
+  }
+
+  /** Blaetter-Schleife der gepinnten Seite - OHNE Re-Render (kein Flackern). */
+  _cyclePinned(sec) {
+    this._page(sec, sceneLabel(this.pinned) + " · \u{1F4CC}");
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      if (this.pinned) this._cyclePinned(sec);
     }, sec * 1000);
   }
 }
@@ -324,6 +380,17 @@ async function main() {
 
     // FHEMVIZ-Gerät bestimmen (?device=… oder erstes TYPE=FHEMVIZ).
     const params = new URLSearchParams(window.location.search);
+
+    // ?zoom=1.3 (oder 130 als Prozent): Oberflaeche pro Geraet skalieren,
+    // z. B. groesser fuer den entfernten TV, kleiner fuers kleine Tablet.
+    // Gilt nur fuer diese URL - nichts wird am Server konfiguriert.
+    let zoom = parseFloat(String(params.get("zoom") || "").replace(",", "."));
+    if (!isNaN(zoom) && zoom > 0) {
+      if (zoom > 5) zoom = zoom / 100; // 130 -> 1.3
+      zoom = Math.min(3, Math.max(0.5, zoom));
+      document.body.style.zoom = zoom;
+    }
+
     const vizDevice = params.get("device") || (await client.findVizDevice());
     if (!vizDevice) {
       setStatus(
@@ -385,6 +452,16 @@ async function main() {
         renderLayout(root, store, client, { ...baseOpts, activeRoom: room }),
     });
 
+    // ?room=Solar (alias ?scene=): Startseite. TV beginnt die Rotation mit
+    // diesem Raum, Tablet oeffnet den Tab (statt des zuletzt gemerkten).
+    // Kurzname reicht - FHEMVIZ-> wird automatisch probiert.
+    const startRoom = params.get("room") || params.get("scene") || "";
+    // Gepinnte Seite (Reading "page" via set <viz> page <raum>): gilt fuer
+    // neu verbundene Browser als Startseite; die URL geht vor.
+    const pagePin = /^(auto|off|none)?$/i.test(String(cfg.page || "").trim())
+      ? ""
+      : String(cfg.page).trim();
+
     // Rendern: TV startet die Szenen-Rotation, Tablet die Tab-Ansicht.
     let tvc = null;
     if (tv) {
@@ -406,9 +483,37 @@ async function main() {
         scenes.push(...roomsAvail.map((r) => ({ room: r, sec: 20 })));
       }
       tvc = new TvController(root, store, client, baseOpts, scenes);
+      if (startRoom) {
+        const r = resolveRoom(roomsAvail, startRoom);
+        if (!r) {
+          configWarn = [configWarn, `Startraum "${startRoom}" nicht in der Sicht`]
+            .filter(Boolean)
+            .join(" · ");
+        } else {
+          const i = scenes.findIndex((s) => s.room === r);
+          // Teil der Rotation -> dort einsteigen, sonst einmalig vorn einreihen.
+          if (i >= 0) tvc.idx = i;
+          else scenes.unshift({ room: r, sec: 20 });
+        }
+      }
       tvc.start();
+      // Gepinnte Seite wiederherstellen (URL-?room= geht vor).
+      if (!startRoom && pagePin) tvc.pin(pagePin);
     } else {
-      renderLayout(root, store, client, baseOpts);
+      let activeRoom = null;
+      const want = startRoom || pagePin;
+      if (want) {
+        activeRoom = resolveRoom(collectRooms(store, baseOpts), want);
+        if (!activeRoom && startRoom) {
+          configWarn = `Startraum "${startRoom}" nicht in der Sicht`;
+        }
+      }
+      renderLayout(
+        root,
+        store,
+        client,
+        activeRoom ? { ...baseOpts, activeRoom } : baseOpts
+      );
     }
     setStatus(`${count} Gerät(e)`);
 
@@ -427,6 +532,21 @@ async function main() {
         }
         if (id === vizDevice + "-scene") {
           if (tvc) tvc.forceScene(value, sceneDuration);
+          return;
+        }
+        // set <viz> page <raum>|auto: dauerhafte Umschaltung. TV pinnt die
+        // Seite (bzw. kehrt bei "auto" zur Rotation zurueck), das Tablet
+        // wechselt den Tab.
+        if (id === vizDevice + "-page") {
+          const v = String(value).trim();
+          const off = !v || /^(auto|off|none)$/i.test(v);
+          if (tvc) {
+            if (off) tvc.unpin();
+            else tvc.pin(v);
+          } else if (!off) {
+            const r = resolveRoom(collectRooms(store, baseOpts), v);
+            if (r) renderLayout(root, store, client, { ...baseOpts, activeRoom: r });
+          }
           return;
         }
         if (id === vizDevice || id.startsWith(vizDevice + "-")) return;

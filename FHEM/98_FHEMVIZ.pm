@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.8.0
+# Version:  v0.8.2
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.8.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.8.2";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -161,10 +161,16 @@ sub FHEMVIZ_Undef {
 #     empfaengt die Readings live ueber den inform-Kanal - damit koennen
 #     ganz normale notify/DOIF den Fernseher steuern, z. B.:
 #       define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
+#   set <name> page <raum>|auto
+#     Schaltet die Anzeige DAUERHAFT auf <raum> um (kein Timeout): der TV
+#     pinnt die Seite (Rotation pausiert, Auto-Blaettern laeuft weiter),
+#     das Tablet wechselt den Tab. "auto" hebt das Pinnen auf, der TV
+#     kehrt zur Szenen-Rotation zurueck. Das Reading bleibt erhalten und
+#     dient neu verbundenen Browsern als Startseite.
 # ----------------------------------------------------------------------------
 sub FHEMVIZ_Set {
     my ($hash, $name, $cmd, @args) = @_;
-    return "Unknown argument, choose one of scene" if (!defined($cmd));
+    return "Unknown argument, choose one of scene page" if (!defined($cmd));
 
     if ($cmd eq "scene") {
         my $scene = $args[0];
@@ -180,7 +186,14 @@ sub FHEMVIZ_Set {
         return undef;
     }
 
-    return "Unknown argument $cmd, choose one of scene";
+    if ($cmd eq "page") {
+        my $page = $args[0];
+        return "usage: set $name page <raum>|auto" if (!defined($page));
+        readingsSingleUpdate($hash, "page", $page, 1);
+        return undef;
+    }
+
+    return "Unknown argument $cmd, choose one of scene page";
 }
 
 # ----------------------------------------------------------------------------
@@ -209,19 +222,23 @@ sub FHEMVIZ_Get {
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
         my $hideStates = AttrVal($name, "hideStates", $FHEMVIZ_DEFAULT_HIDESTATES);
+        # Gepinnte Seite (set <name> page ...) - Startseite fuer neu
+        # verbundene Browser; live kommt sie ueber den inform-Kanal.
+        my $page       = ReadingsVal($name, "page", "");
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"tvScenes":%s,"statusBar":%s,'
+              . '"mode":%s,"tvScenes":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.8.0"),
+            FHEMVIZ_jsonStr("v0.8.2"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
             FHEMVIZ_jsonStr($mode),
             FHEMVIZ_jsonStr($tvScenes),
             FHEMVIZ_jsonStr($statusBar),
+            FHEMVIZ_jsonStr($page),
             FHEMVIZ_jsonStr($showRooms),
             FHEMVIZ_jsonStr($hideRooms),
             FHEMVIZ_jsonStr($hideTypes),
@@ -324,6 +341,13 @@ sub FHEMVIZ_Attr {
         empfaengt das live ueber den inform-Kanal &ndash; damit steuern ganz
         normale notify/DOIF den Fernseher:<br>
         <code>define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60</code></li>
+    <li><b>page &lt;raum&gt;|auto</b> &ndash; schaltet die Anzeige
+        <i>dauerhaft</i> auf den Raum um (kein Timeout): der TV pinnt die
+        Seite (Rotation pausiert, Auto-Blaettern laeuft weiter), das Tablet
+        wechselt den Tab. <code>auto</code> hebt das Pinnen auf. Das Reading
+        <code>page</code> dient neu verbundenen Browsern als Startseite.
+        Kurzname genuegt (<code>FHEMVIZ-&gt;</code> wird ergaenzt):<br>
+        <code>set myViz page Solar</code></li>
   </ul>
   <br>
 
