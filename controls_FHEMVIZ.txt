@@ -1,4 +1,4 @@
-UPD 2026-07-21_05:40:47 19266 FHEM/98_FHEMVIZ.pm
+UPD 2026-07-21_05:41:32 19547 FHEM/98_FHEMVIZ.pm
 UPD 2026-07-20_20:59:19 7801 www/fhemviz/css/fhemviz.css
 UPD 2026-07-20_20:37:07 1235 www/fhemviz/index.html
 UPD 2026-07-21_05:40:47 19868 www/fhemviz/js/app.js

@@ -117,6 +117,11 @@ sub FHEMVIZ_Initialize {
     foreach my $a (@FHEMVIZ_DEV_ATTRS) {
         addToAttrList($a, "FHEMVIZ");
     }
+
+    # FHEMWEB-Menueeintrag schon beim Modul-Laden registrieren, damit er
+    # nach "reload 98_FHEMVIZ" sofort da ist (Define laeuft dabei nicht neu).
+    $data{FWEXT}{"/fhemviz/index.html"}{LINK} = "fhemviz/index.html";
+    $data{FWEXT}{"/fhemviz/index.html"}{NAME} = "FHEMVIZ";
 }
 
 # ----------------------------------------------------------------------------
