@@ -17,23 +17,32 @@ import { FhemvizWidget } from "./base-widget.js";
 
 const FLOW_CSS = `
   .fgrid { display: flex; flex-direction: column; align-items: center;
-           gap: 2px; flex: 1; justify-content: center; }
+           gap: 4px; flex: 1; justify-content: center; }
   .frow { display: flex; align-items: center; gap: 6px; width: 100%;
           justify-content: center; }
   .fnode { text-align: center; min-width: 0; }
-  .fnode .fv { font-size: 1.25rem; font-weight: 250; font-variant-numeric: tabular-nums; }
-  .fnode .fl { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em;
+  .fnode .fv { font-size: 1.6rem; font-weight: 250; font-variant-numeric: tabular-nums;
+               line-height: 1.05; }
+  .fnode .fl { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em;
                text-transform: uppercase; color: var(--viz-muted, #77808c); }
   .fcenter {
     border: 1px solid var(--viz-border, #262c35); border-radius: 12px;
     background: var(--viz-raised, #1c212a); padding: 8px 16px;
   }
-  .fcenter .fv { font-size: 1.6rem; }
+  .fcenter .fv { font-size: 2rem; }
+  /* Groessere Kacheln (auto-Span oder vizSize) -> deutlich groessere
+   * Ziffern, damit die Grafik aus der Ferne lesbar ist statt in der
+   * grossen Flaeche zu schwimmen. */
+  :host([data-size="2x1"]) .fnode .fv, :host([data-size="1x2"]) .fnode .fv { font-size: 2rem; }
+  :host([data-size="2x1"]) .fcenter .fv, :host([data-size="1x2"]) .fcenter .fv { font-size: 2.6rem; }
+  :host([data-size="2x2"]) .fnode .fv { font-size: 2.4rem; }
+  :host([data-size="2x2"]) .fcenter .fv { font-size: 3.2rem; }
+  :host([data-size="2x2"]) .fnode .fl { font-size: 0.72rem; }
   /* Laufpunkt-Kette (nach myhome.css animateDot) */
   .chain { display: flex; gap: 7px; align-items: center; }
   .chain.v { flex-direction: column; }
   .dot {
-    width: 7px; height: 7px; border-radius: 35%;
+    width: 8px; height: 8px; border-radius: 35%;
     background: var(--colour, var(--viz-ok, #34c77b));
     box-shadow: 0 0 6px var(--colour, var(--viz-ok, #34c77b)),
                 0 0 12px var(--colour, var(--viz-ok, #34c77b));
@@ -50,9 +59,17 @@ const FLOW_CSS = `
     10% { transform: scale(1); }
     50%, 100% { transform: scale(0.15); }
   }
-  :host([data-tv]) .fnode .fv { font-size: 1.7rem; }
-  :host([data-tv]) .fcenter .fv { font-size: 2.2rem; }
-  :host([data-tv]) .dot { width: 9px; height: 9px; }
+  /* TV-Modus: nochmals groesser (wird zusaetzlich per ?zoom skaliert). */
+  :host([data-tv]) .fnode .fv { font-size: 2.2rem; }
+  :host([data-tv]) .fcenter .fv { font-size: 2.8rem; }
+  :host([data-tv]) .fnode .fl { font-size: 0.74rem; }
+  :host([data-tv][data-size="2x1"]) .fnode .fv, :host([data-tv][data-size="1x2"]) .fnode .fv { font-size: 2.7rem; }
+  :host([data-tv][data-size="2x1"]) .fcenter .fv, :host([data-tv][data-size="1x2"]) .fcenter .fv { font-size: 3.4rem; }
+  :host([data-tv][data-size="2x2"]) .fnode .fv { font-size: 3.2rem; }
+  :host([data-tv][data-size="2x2"]) .fcenter .fv { font-size: 4.2rem; }
+  :host([data-tv][data-size="2x2"]) .fnode .fl { font-size: 0.9rem; }
+  :host([data-tv]) .dot { width: 11px; height: 11px; }
+  :host([data-tv][data-size="2x2"]) .dot { width: 13px; height: 13px; }
   @media (prefers-reduced-motion: reduce) {
     .dot { animation: none; transform: scale(0.6); }
   }
