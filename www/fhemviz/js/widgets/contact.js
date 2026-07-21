@@ -25,6 +25,27 @@ const CONTACT_CSS = `
   .members .cicon { width: 20px; height: 20px; }
   .members .cicon.open, .members .cicon.tilted { color: var(--viz-accent, #ffb020); }
   :host([data-tv]) .members .cicon { width: 26px; height: 26px; }
+
+  /* Grosse Gruppenkachel (vizSize 2x…): Raster Symbol + Name darunter -
+   * wie das klassische Fenster-Panel, aus der Ferne lesbar. */
+  .mgrid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+    gap: 10px 6px; margin-top: 6px; overflow: hidden;
+  }
+  .mg { text-align: center; min-width: 0; }
+  .mg .cicon { width: 28px; height: 28px; }
+  .mg.open .cicon, .mg.tilted .cicon { color: var(--viz-accent, #ffb020); }
+  .mg .mname {
+    display: block; margin-top: 2px; font-size: 0.62rem;
+    color: var(--viz-muted, #77808c);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mg.open .mname, .mg.tilted .mname {
+    color: var(--viz-accent, #ffb020); font-weight: 600;
+  }
+  :host([data-tv]) .mgrid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+  :host([data-tv]) .mg .cicon { width: 36px; height: 36px; }
+  :host([data-tv]) .mg .mname { font-size: 0.78rem; }
 `;
 
 // Einfache Stroke-Symbole (24x24): Fenster/Tuer, je zu/gekippt/offen.
@@ -115,13 +136,22 @@ export class FhemvizContact extends FhemvizWidget {
     return /t(ü|ue|u)r|door|tor\b/i.test(name);
   }
 
-  /** Gruppen-Kachel: "2 offen · 1 gekippt" bzw. "Alles zu" + Mini-Symbole. */
+  /**
+   * Gruppen-Kachel: "2 offen · 1 gekippt" bzw. "Alles zu". Kompakt nur
+   * Mini-Symbole; auf grossen Kacheln (vizSize 2x…) ein Raster mit Namen
+   * unter den Symbolen (wie das klassische Fenster-Panel).
+   */
   _renderGroup(members) {
-    const infos = members.map((m) => ({
-      state: this._stateOf(m.state),
-      door: this._looksLikeDoor(`${(m.attr && m.attr.alias) || ""} ${m.name}`),
-      title: (m.attr && m.attr.alias) || m.name,
-    }));
+    const infos = members.map((m) => {
+      const title = (m.attr && m.attr.alias) || m.name;
+      return {
+        state: this._stateOf(m.state),
+        door: this._looksLikeDoor(`${(m.attr && m.attr.alias) || ""} ${m.name}`),
+        title,
+        // Kurzname fuers Raster: "Fenster Wohnzimmer" -> "Wohnzimmer".
+        short: title.replace(/^(fenster|t(ü|ue)r(e|en)?|door|window|kontakt)\s+/i, ""),
+      };
+    });
     const open = infos.filter((i) => i.state === "open").length;
     const tilted = infos.filter((i) => i.state === "tilted").length;
 
@@ -131,21 +161,32 @@ export class FhemvizContact extends FhemvizWidget {
     const head = headParts.length ? headParts.join(" · ") : "Alles zu";
     const attention = open + tilted > 0;
 
-    const minis = infos
-      .map((i) =>
-        this._icon(i.state, i.door, i.state).replace(
-          "<svg ",
-          `<svg data-title="${this.escape(i.title)}" `
-        )
-      )
-      .join("");
+    const big = /^2/.test(this.getAttribute("data-size") || "");
+    const body = big
+      ? `<div class="mgrid">${infos
+          .map(
+            (i) => `
+          <div class="mg ${i.state}" title="${this.escape(i.title)}">
+            ${this._icon(i.state, i.door)}
+            <span class="mname">${this.escape(i.short)}</span>
+          </div>`
+          )
+          .join("")}</div>`
+      : `<div class="members">${infos
+          .map((i) =>
+            this._icon(i.state, i.door, i.state).replace(
+              "<svg ",
+              `<svg data-title="${this.escape(i.title)}" `
+            )
+          )
+          .join("")}</div>`;
 
     return `
       <style>${CONTACT_CSS}</style>
       <div class="card${attention ? " on open" : " closed"}">
         <span class="label">${this.escape(this.displayName())}</span>
         <span class="cstate">${this.escape(head)}</span>
-        <div class="members">${minis}</div>
+        ${body}
       </div>`;
   }
 
