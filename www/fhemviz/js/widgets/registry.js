@@ -18,6 +18,7 @@ import { FhemvizShutter } from "./shutter.js";
 import { FhemvizVent } from "./vent.js";
 import { FhemvizFlow } from "./flow.js";
 import { FhemvizForecast } from "./forecast.js";
+import { FhemvizWeather } from "./weather.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -31,6 +32,7 @@ export const WIDGET_REGISTRY = {
   vent: "fhemviz-vent",
   flow: "fhemviz-flow",
   forecast: "fhemviz-forecast",
+  weather: "fhemviz-weather",
   // TODO: thermostat, chart, media.
 };
 
@@ -61,6 +63,7 @@ export function registerCoreWidgets() {
     ["fhemviz-vent", FhemvizVent],
     ["fhemviz-flow", FhemvizFlow],
     ["fhemviz-forecast", FhemvizForecast],
+    ["fhemviz-weather", FhemvizWeather],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -95,6 +98,12 @@ export function selectWidget(device) {
   //     Mitglieder-Zustaenden oft nur "undefined".
   if ((device.internals || {}).TYPE === "structure") {
     return WIDGET_REGISTRY.contact;
+  }
+  // 2d. Wetterstation (Ecowitt & Co.): metrische Kern-Readings vorhanden
+  //     -> Wetter-Widget mit Windrose und Glance-Zeilen.
+  const rd = device.readings || {};
+  if (rd.temp_C !== undefined && rd.winddir !== undefined && rd.rainrate_mm !== undefined) {
+    return WIDGET_REGISTRY.weather;
   }
 
   // 3. webCmd: bewusst konfigurierte Bedienung hat Vorrang vor der
