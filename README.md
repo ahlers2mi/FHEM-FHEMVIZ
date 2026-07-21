@@ -137,6 +137,25 @@ define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
 Der rote Rahmen signalisiert die Event-Übernahme; nach Ablauf kehrt die
 Rotation automatisch zurück.
 
+### Seite dauerhaft umschalten: `set myViz page`
+
+Während `set myViz scene <Raum> [Sek]` den Schirm nur **vorübergehend** kapert,
+schaltet `set myViz page <Raum>` die Anzeige **dauerhaft** um — ideal aus
+notify/DOIF oder von Hand:
+
+```
+set myViz page Solar     # TV pinnt die Seite (📌 im Header), Tablet wechselt den Tab
+set myViz page auto      # Pin aufheben, TV kehrt zur Szenen-Rotation zurück
+```
+
+- Die Rotation pausiert; läuft die Seite über, blättert das Auto-Paging
+  zyklisch weiter (auf dem TV wird nie gescrollt)
+- Ein `scene`-Event unterbricht auch eine gepinnte Seite und kehrt danach
+  zu ihr zurück
+- Das Reading `page` bleibt erhalten: neu verbundene Browser starten direkt
+  auf dieser Seite (die URL-Parameter `?room=` gehen vor)
+- Kurzname genügt, `FHEMVIZ->` wird automatisch probiert
+
 ## URL-Parameter
 
 | Parameter | Wirkung |
