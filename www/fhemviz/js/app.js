@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.11.2";
+const SPA_VERSION = "v0.11.3";
 
 const el = (id) => document.getElementById(id);
 
@@ -506,6 +506,14 @@ async function main() {
         b.overflowY = "auto";
       } else {
         document.body.style.zoom = zoom;
+        // Aeltere Engines (WebView im Desktop-Mode) skalieren 100%-Breiten
+        // nicht mit -> Kacheln rechts abgeschnitten. Nachmessen und die
+        // Breite kompensieren; moderne Browser brauchen das nicht (Messung
+        // ergibt dort bereits die Viewport-Breite).
+        const vis = document.body.getBoundingClientRect().width;
+        if (vis > window.innerWidth + 2) {
+          document.body.style.width = `calc(100% / ${zoom})`;
+        }
       }
     }
     // Sichtbarkeit fuer die Diagnose: aktiver Zoom erscheint in der
