@@ -80,6 +80,7 @@ export class FhemvizSensor extends FhemvizWidget {
     const mainColor = main.color ? ` style="color:${main.color};"` : "";
     const mainHtml = `
       <div class="value${this._sizeClass(main.value)}"${mainColor}>${this.escape(main.value)}</div>
+      ${this.barHtml(main)}
       ${main.label ? `<span class="sub">${this.escape(main.label)}</span>` : ""}`;
 
     // Zeilen-Deckel gegen Monster-Kacheln (z. B. BMS mit 9 Komponenten) -
@@ -95,7 +96,7 @@ export class FhemvizSensor extends FhemvizWidget {
               p.label || " "
             )}</span><span class="sub" style="color:${
               p.color || "var(--viz-text)"
-            };">${this.escape(p.value)}</span></div>`
+            };">${this.escape(p.value)}</span></div>` + this.barHtml(p)
         )
         .join("") +
       (more > 0 ? `<div class="sub">+${more} weitere</div>` : "");

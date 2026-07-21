@@ -96,6 +96,13 @@ const CARD_CSS = `
   .ctlrow > .sub:last-child { flex: 0 0 2.8em; text-align: right; }
   .ctlrow input[type=range] { flex: 1; margin: 0; min-width: 0; }
 
+  /* Fortschrittsbalken (vizReadings-Flag "bar", Skala 0-100). */
+  .vbar {
+    height: 6px; border-radius: 3px; overflow: hidden;
+    background: var(--viz-raised, #1c212a); margin: 4px 0 2px;
+  }
+  .vbar > div { height: 100%; border-radius: 3px; background: var(--viz-accent, #ffb020); }
+
   .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .dot.ok  { background: var(--viz-ok, #34c77b); }
   .dot.bad { background: var(--viz-error, #ff5d5d); }
@@ -192,9 +199,10 @@ export class FhemvizWidget extends HTMLElement {
   }
 
   /**
-   * vizReadings-Attribut parsen: "reading[:Label[:Einheit[:Farbe]]]".
-   * Liefert [{label,value,color}] direkt aus den Readings, null wenn
-   * nicht gesetzt. Von ALLEN Widgets nutzbar (Info-Zeilen).
+   * vizReadings-Attribut parsen: "reading[:Label[:Einheit[:Farbe[:bar]]]]".
+   * Liefert [{label,value,color,bar,num}] direkt aus den Readings, null
+   * wenn nicht gesetzt. Von ALLEN Widgets nutzbar (Info-Zeilen).
+   * Flag "bar": zusaetzlich ein Fortschrittsbalken (Skala 0-100).
    */
   vizReadingParts() {
     const spec = this.device.attr && this.device.attr.vizReadings;
@@ -205,7 +213,9 @@ export class FhemvizWidget extends HTMLElement {
       .map((t) => t.trim())
       .filter(Boolean)
       .map((t) => {
-        const [reading, label, unit, color] = t.split(":").map((x) => (x || "").trim());
+        const [reading, label, unit, color, flag] = t
+          .split(":")
+          .map((x) => (x || "").trim());
         if (!reading) return null;
         const raw = readings[reading];
         const v =
@@ -216,10 +226,24 @@ export class FhemvizWidget extends HTMLElement {
           unit && !v.toLowerCase().endsWith(unit.toLowerCase())
             ? v + " " + unit
             : v;
-        return { label: label || reading, value, color: this.colorVar(color) };
+        return {
+          label: label || reading,
+          value,
+          color: this.colorVar(color),
+          bar: /^bar$/i.test(flag || ""),
+          num: parseFloat(v),
+        };
       })
       .filter(Boolean);
     return items.length ? items : null;
+  }
+
+  /** Fortschrittsbalken-HTML fuer einen vizReadings-Eintrag (Flag "bar"). */
+  barHtml(p) {
+    if (!p || !p.bar || isNaN(p.num)) return "";
+    const w = Math.max(0, Math.min(100, p.num));
+    const bg = p.color ? `background:${p.color};` : "";
+    return `<div class="vbar"><div style="width:${w}%;${bg}"></div></div>`;
   }
 
   /** vizReadings als kompakte Label/Wert-Zeilen (fuer Nicht-Sensor-Widgets). */
@@ -233,7 +257,7 @@ export class FhemvizWidget extends HTMLElement {
             p.label || " "
           )}</span><span class="sub" style="color:${
             p.color || "var(--viz-text)"
-          };">${this.escape(p.value)}</span></div>`
+          };">${this.escape(p.value)}</span></div>` + this.barHtml(p)
       )
       .join("");
   }

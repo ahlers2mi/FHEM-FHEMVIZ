@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.9.2
+# Version:  v0.9.3
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.9.2";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.9.3";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -244,7 +244,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"tvScenes":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.9.2"),
+            FHEMVIZ_jsonStr("v0.9.3"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -460,14 +460,16 @@ sub FHEMVIZ_Attr {
         Gerät aus der Sicht ausblenden.</li>
     <li><a id="FHEMVIZ-attr-vizReadings"></a><b>vizReadings</b><br>
         Typ: textField-long. Kachelinhalt direkt aus Readings statt
-        state-Parsing: <code>reading[:Label[:Einheit[:Farbe]]]</code>
+        state-Parsing: <code>reading[:Label[:Einheit[:Farbe[:bar]]]]</code>
         kommasepariert; erster Eintrag = Hauptwert (groß). Die Einheit wird
         nicht verdoppelt, wenn der Wert sie schon trägt. Farben sind
         semantische Namen: <code>ok</code>/<code>gruen</code>,
         <code>warn</code>/<code>orange</code>, <code>bad</code>/<code>rot</code>,
-        <code>accent</code>, <code>blau</code>. Bei Widgets mit eigener
+        <code>accent</code>, <code>blau</code>. Das Flag <code>bar</code>
+        ergänzt einen Fortschrittsbalken in der Eintragsfarbe (Skala 0&ndash;100,
+        z. B. Autarkie- oder Akku-Prozent). Bei Widgets mit eigener
         Darstellung erscheinen die Einträge als Info-Zeilen. Beispiel:<br>
-        <code>attr d_Wechselrichter_all vizReadings soc:Ladung:%:accent,pv_leistung:PV:W:ok</code></li>
+        <code>attr d_autark vizReadings percent:Autark heute:%:accent:bar</code></li>
     <li><a id="FHEMVIZ-attr-vizStates"></a><b>vizStates</b><br>
         Typ: textField-long. Übersetzt technische Status-Codes in Klartext +
         Farbe: <code>pattern:Label[:Farbe]</code> kommasepariert, pattern =
