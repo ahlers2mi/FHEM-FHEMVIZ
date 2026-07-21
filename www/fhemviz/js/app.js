@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.15.3";
+const SPA_VERSION = "v0.15.5";
 
 const el = (id) => document.getElementById(id);
 
@@ -325,11 +325,31 @@ class TvController {
     pages.slice(1).forEach((top, i) => {
       this.pageTimers.push(
         setTimeout(() => {
-          this.root.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+          if (reduce) this.root.scrollTop = top;
+          else this._smoothScroll(top, 1600); // sanft ueber 1,6 s blaettern
           el("viz-scene").textContent = `${labelBase} · ${i + 2}/${pages.length}`;
         }, step * (i + 1))
       );
     });
+  }
+
+  /**
+   * Eigenes, ruhiges Runterblaettern (statt des schnellen nativen
+   * behavior:smooth). easeInOutCubic ueber <ms> Millisekunden.
+   */
+  _smoothScroll(target, ms) {
+    cancelAnimationFrame(this._scrollRaf);
+    const start = this.root.scrollTop;
+    const dist = target - start;
+    if (Math.abs(dist) < 1) return;
+    const t0 = performance.now();
+    const ease = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / ms);
+      this.root.scrollTop = start + dist * ease(p);
+      if (p < 1) this._scrollRaf = requestAnimationFrame(tick);
+    };
+    this._scrollRaf = requestAnimationFrame(tick);
   }
 
   _show(scene) {
