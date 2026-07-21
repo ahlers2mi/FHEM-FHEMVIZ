@@ -1,8 +1,8 @@
-UPD 2026-07-21_19:21:02 28745 FHEM/98_FHEMVIZ.pm
+UPD 2026-07-21_19:28:57 28745 FHEM/98_FHEMVIZ.pm
 UPD 2026-07-21_11:39:08 9015 www/fhemviz/css/fhemviz.css
 UPD 2026-07-21_13:43:26 729 www/fhemviz/favicon.svg
 UPD 2026-07-21_13:43:26 1408 www/fhemviz/index.html
-UPD 2026-07-21_19:21:02 28184 www/fhemviz/js/app.js
+UPD 2026-07-21_19:28:57 28184 www/fhemviz/js/app.js
 UPD 2026-07-20_07:40:17 5298 www/fhemviz/js/fhem-client.js
 UPD 2026-07-21_18:54:39 13097 www/fhemviz/js/layout.js
 UPD 2026-07-20_06:28:11 2583 www/fhemviz/js/store.js
@@ -18,5 +18,5 @@ UPD 2026-07-21_06:21:39 3887 www/fhemviz/js/widgets/sensor.js
 UPD 2026-07-20_20:57:13 4039 www/fhemviz/js/widgets/shutter.js
 UPD 2026-07-21_17:57:18 6062 www/fhemviz/js/widgets/switch.js
 UPD 2026-07-20_12:12:47 1256 www/fhemviz/js/widgets/text.js
-UPD 2026-07-21_19:19:00 3291 www/fhemviz/js/widgets/vent.js
+UPD 2026-07-21_19:28:57 3470 www/fhemviz/js/widgets/vent.js
 UPD 2026-07-21_17:49:51 6596 www/fhemviz/js/widgets/weather.js
