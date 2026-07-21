@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.8.2
+# Version:  v0.8.3
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.8.2";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.8.3";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -117,6 +117,11 @@ sub FHEMVIZ_Initialize {
     foreach my $a (@FHEMVIZ_DEV_ATTRS) {
         addToAttrList($a, "FHEMVIZ");
     }
+
+    # FHEMWEB-Menueeintrag schon beim Modul-Laden registrieren, damit er
+    # nach "reload 98_FHEMVIZ" sofort da ist (Define laeuft dabei nicht neu).
+    $data{FWEXT}{"/fhemviz/index.html"}{LINK} = "fhemviz/index.html";
+    $data{FWEXT}{"/fhemviz/index.html"}{NAME} = "FHEMVIZ";
 }
 
 # ----------------------------------------------------------------------------
@@ -137,19 +142,27 @@ sub FHEMVIZ_Define {
     $hash->{name}  = $param[0];
     $hash->{STATE} = "Initialized";
 
-    # TODO (Bau-Session): devspec auswerten, Sicht-Modell aufbauen,
-    # Attribut-Registrierung (viz*) und get-Endpunkte aktivieren.
+    # FHEMWEB-Menueeintrag (wie "Floorplans"): Link auf die SPA im linken
+    # Menue aller FHEMWEB-Instanzen. LINK ist relativ zu $FW_ME (/fhem).
+    $data{FWEXT}{"/fhemviz/index.html"}{LINK} = "fhemviz/index.html";
+    $data{FWEXT}{"/fhemviz/index.html"}{NAME} = "FHEMVIZ";
 
     return undef;
 }
 
 # ----------------------------------------------------------------------------
 # FHEMVIZ_Undef
-#   Wird beim Loeschen des Geraets aufgerufen. Aktuell keine Ressourcen
-#   zu bereinigen (Grundgeruest).
+#   Wird beim Loeschen des Geraets aufgerufen. Entfernt den FHEMWEB-
+#   Menueeintrag, wenn das letzte FHEMVIZ-Geraet geloescht wird.
 # ----------------------------------------------------------------------------
 sub FHEMVIZ_Undef {
     my ($hash, $arg) = @_;
+    my @rest = grep {
+        defined($defs{$_}{TYPE})
+          && $defs{$_}{TYPE} eq "FHEMVIZ"
+          && $_ ne $hash->{NAME}
+    } keys %defs;
+    delete $data{FWEXT}{"/fhemviz/index.html"} if (!@rest);
     return undef;
 }
 
@@ -231,7 +244,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"tvScenes":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.8.2"),
+            FHEMVIZ_jsonStr("v0.8.3"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,

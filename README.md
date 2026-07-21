@@ -30,6 +30,9 @@ Mehr ist nicht nötig – die SPA findet das Gerät automatisch, lädt alle
 Geräte des `devspec`, gruppiert nach `room`/`group` und aktualisiert live
 (kein Polling). Alles Weitere ist optional.
 
+Sobald ein FHEMVIZ-Gerät definiert ist, erscheint im linken FHEMWEB-Menü
+ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet.
+
 ## Konfiguration: das FHEMVIZ-Gerät
 
 | Attribut | Werte | Wirkung |
