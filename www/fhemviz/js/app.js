@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.9.3";
+const SPA_VERSION = "v0.9.4";
 
 const el = (id) => document.getElementById(id);
 
@@ -219,14 +219,35 @@ class TvController {
     el("viz-clock").hidden = false;
     el("viz-progress").hidden = false;
     el("viz-scene").hidden = false;
-    // Feste TV-Flaeche: Hoehe des Headers als CSS-Variable bereitstellen.
+    this._fit();
+    // Bei Groessenaenderung neu messen und die aktuelle Ansicht neu
+    // blaettern (Seitenoffsets haengen an der Flaechenhoehe).
+    window.addEventListener("resize", () => {
+      this._fit();
+      if (this.pinned) this._showPinned();
+      else this._show(this.scenes[this.idx]);
+    });
+    this._tickClock();
+    this._clockTimer = setInterval(() => this._tickClock(), 1000);
+    this._show(this.scenes[this.idx]);
+  }
+
+  /**
+   * Feste TV-Flaeche vermessen: Viewport-Hoehe in LOKALEN CSS-Pixeln
+   * (innerHeight ist zoom-unabhaengig, der Inhalt skaliert aber mit
+   * ?zoom= - deshalb teilen) plus Header-Hoehe als CSS-Variablen.
+   * 100vh alleine skaliert unter zoom nicht mit -> Flaeche waere zu hoch.
+   */
+  _fit() {
+    const zoom = parseFloat(document.body.style.zoom) || 1;
+    document.documentElement.style.setProperty(
+      "--viz-vh",
+      Math.floor(window.innerHeight / zoom) + "px"
+    );
     document.documentElement.style.setProperty(
       "--viz-header-h",
       el("viz-header").offsetHeight + "px"
     );
-    this._tickClock();
-    this._clockTimer = setInterval(() => this._tickClock(), 1000);
-    this._show(this.scenes[this.idx]);
   }
 
   _tickClock() {
