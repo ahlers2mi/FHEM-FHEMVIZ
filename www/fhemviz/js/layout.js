@@ -296,13 +296,23 @@ export function renderLayout(root, store, client, opts = {}) {
   // kompakte bleiben klein, grid-auto-flow:dense packt sie in die Luecken.
   const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 104;
   for (const grid of root.querySelectorAll(".viz-grid")) {
-    const tiles = [...grid.children].filter((t) => !t.style.gridRow); // vizSize 1x2/2x2 bleibt
+    const tiles = [...grid.children];
+    // vizSize-Spans (1x2/2x2) gelten als MINIMUM - waechst der Inhalt
+    // darueber hinaus, wird der Span erhoeht, statt dass die Rasterzeile
+    // aufblaeht und alle Nachbarn mitstreckt.
+    const minSpan = tiles.map((t) => {
+      const m = String(t.style.gridRow || "").match(/span\s+(\d+)/);
+      return m ? parseInt(m[1], 10) : 1;
+    });
     // Messmodus: Stretching aufheben UND die 100%-Hoehe der Hosts
     // aussetzen, sonst liefert die Messung wieder die Zeilenhoehe.
     grid.style.alignItems = "start";
     for (const t of tiles) t.style.height = "auto";
-    const spans = tiles.map((t) =>
-      Math.min(4, Math.max(1, Math.ceil((t.offsetHeight + gap) / (rowH + gap))))
+    const spans = tiles.map((t, i) =>
+      Math.max(
+        minSpan[i],
+        Math.min(6, Math.ceil((t.offsetHeight + gap) / (rowH + gap)))
+      )
     );
     grid.style.alignItems = "";
     tiles.forEach((t, i) => {
