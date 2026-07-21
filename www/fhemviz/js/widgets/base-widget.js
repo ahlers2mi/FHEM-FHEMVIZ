@@ -107,12 +107,17 @@ const CARD_CSS = `
   .dot.ok  { background: var(--viz-ok, #34c77b); }
   .dot.bad { background: var(--viz-error, #ff5d5d); }
 
-  /* Mehrzeiliger Klartext (vizWidget text, z. B. Terminlisten). */
+  /* Mehrzeiliger Klartext (vizWidget text, z. B. Terminlisten). Skaliert
+   * wie die uebrigen Werte mit Kachelgroesse und TV-Modus mit. */
   .text {
-    white-space: pre-line; font-size: 0.85rem; line-height: 1.55;
+    white-space: pre-line; font-size: 0.95rem; line-height: 1.5;
     color: var(--viz-text, #e8eaed); overflow: hidden;
   }
-  :host([data-tv]) .text { font-size: 1.05rem; }
+  :host([data-size="2x1"]) .text, :host([data-size="1x2"]) .text { font-size: 1.2rem; }
+  :host([data-size="2x2"]) .text { font-size: 1.4rem; }
+  :host([data-tv]) .text { font-size: 1.4rem; }
+  :host([data-tv][data-size="2x1"]) .text, :host([data-tv][data-size="1x2"]) .text { font-size: 1.8rem; }
+  :host([data-tv][data-size="2x2"]) .text { font-size: 2.1rem; }
 
   /* Groessere Kacheln (vizSize) und TV-Modus skalieren die Typo ------------- */
   :host([data-size="2x1"]) .value { font-size: 2.3rem; }
