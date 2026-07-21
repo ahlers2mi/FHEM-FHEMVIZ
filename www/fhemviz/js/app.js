@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.12.1";
+const SPA_VERSION = "v0.12.3";
 
 const el = (id) => document.getElementById(id);
 
@@ -452,9 +452,14 @@ function applyZoom(urlValue, cfgValue) {
   b.transformOrigin = "0 0";
   b.width = `calc(100% / ${zoom})`;
   b.height = `calc(100% / ${zoom})`;
-  // Sichtbarkeit fuer die Diagnose: aktiver Zoom erscheint in der
-  // Statuszeile - fehlt er dort, kommt weder URL- noch attr-Zoom an.
-  return ` · Zoom ${zoom}`;
+  // Diagnose fuer die Statuszeile: kommt der Wert an UND rendert die
+  // Engine die Skalierung? Nach dem Anwenden nachmessen: mit wirksamem
+  // transform ist der body visuell wieder viewportbreit; hat die Engine
+  // transform verworfen, bleibt er auf 100%/zoom stehen.
+  const applied =
+    getComputedStyle(document.body).transform !== "none" &&
+    Math.abs(document.body.getBoundingClientRect().width - window.innerWidth) < 4;
+  return ` · Zoom ${zoom} ${applied ? "✓" : "✗"}`;
 }
 
 /* ------------------------------ Show-Overlay -------------------------------
