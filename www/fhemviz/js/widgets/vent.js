@@ -22,22 +22,19 @@ const VENT_CSS = `
   /* Negative Stufen: Lueften waere kontraproduktiv -> rot */
   .card.neg .vicon path.a { stroke: var(--viz-error, #ff5d5d); }
   .card.neg .vstate { color: var(--viz-error, #ff5d5d); }
-  .vstate { font-size: 1.15rem; font-weight: 450; min-width: 0;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vstate { font-size: 1.15rem; font-weight: 450; }
   .card.go .vstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
   .card.cool .vstate { color: var(--viz-action, #4c8dff); }
   :host([data-tv]) .vicon { width: 56px; height: 56px; }
   :host([data-tv]) .vstate { font-size: 1.5rem; }
 `;
 
-// Kurze, einzeilige Empfehlungen - damit alle Lueften-Kacheln gleich hoch
-// bleiben (lange Saetze brachen um und rissen eine Kachel aus der Reihe).
-// Bedeutung/Ampel wie in my_lueften().
+// Wortlaut aus my_lueften() (lueftentext-Readings) uebernommen.
 const LABELS = {
-  "4": "Unbedingt lüften!", "3": "Bitte lüften",
-  "2": "Lüften möglich", "1": "Bei Bedarf lüften",
-  "0": "Eher nicht lüften", "-1": "Besser nicht", "-2": "Nicht lüften!",
-  "-3": "Nicht lüften!",
+  "4": "Bitte unbedingt lüften", "3": "Bitte lüften",
+  "2": "Kann gelüftet werden", "1": "Bei Bedarf lüften",
+  "0": "Eher nicht lüften", "-1": "Besser nicht lüften",
+  "-2": "Auf keinen Fall lüften", "-3": "Auf keinen Fall lüften",
 };
 
 export class FhemvizVent extends FhemvizWidget {
