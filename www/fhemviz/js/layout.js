@@ -287,4 +287,27 @@ export function renderLayout(root, store, client, opts = {}) {
     }
     root.appendChild(roomEl);
   }
+
+  // Zeilen-Spannweite an den INHALT anpassen: bisher wuchs die ganze
+  // Rasterzeile auf die hoechste Kachel und streckte alle Nachbarn mit
+  // (leere Riesen-Kacheln neben einem Regler). Jetzt wird die natuerliche
+  // Hoehe jeder Kachel gemessen (align-items:start hebt das Stretching
+  // kurz auf) und inhaltsreiche Kacheln spannen mehrere Rasterzeilen -
+  // kompakte bleiben klein, grid-auto-flow:dense packt sie in die Luecken.
+  const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 104;
+  for (const grid of root.querySelectorAll(".viz-grid")) {
+    const tiles = [...grid.children].filter((t) => !t.style.gridRow); // vizSize 1x2/2x2 bleibt
+    // Messmodus: Stretching aufheben UND die 100%-Hoehe der Hosts
+    // aussetzen, sonst liefert die Messung wieder die Zeilenhoehe.
+    grid.style.alignItems = "start";
+    for (const t of tiles) t.style.height = "auto";
+    const spans = tiles.map((t) =>
+      Math.min(4, Math.max(1, Math.ceil((t.offsetHeight + gap) / (rowH + gap))))
+    );
+    grid.style.alignItems = "";
+    tiles.forEach((t, i) => {
+      t.style.height = "";
+      if (spans[i] > 1) t.style.gridRow = `span ${spans[i]}`;
+    });
+  }
 }
