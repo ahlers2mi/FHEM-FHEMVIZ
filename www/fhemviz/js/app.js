@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.9.5";
+const SPA_VERSION = "v0.11.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -213,23 +213,48 @@ class TvController {
     this.eventTimer = null;
     this.pageTimers = [];
     this.pinned = null; // set <viz> page <raum> - Rotation pausiert
+    this.active = false; // false = Touch-Uebernahme (Tablet-Ansicht)
+    this._resizeBound = false;
   }
 
+  /** Startet (oder setzt fort, z. B. nach Touch-Uebernahme). */
   start() {
+    this.active = true;
     el("viz-clock").hidden = false;
     el("viz-progress").hidden = false;
     el("viz-scene").hidden = false;
     this._fit();
     // Bei Groessenaenderung neu messen und die aktuelle Ansicht neu
     // blaettern (Seitenoffsets haengen an der Flaechenhoehe).
-    window.addEventListener("resize", () => {
-      this._fit();
-      if (this.pinned) this._showPinned();
-      else this._show(this.scenes[this.idx]);
-    });
+    if (!this._resizeBound) {
+      this._resizeBound = true;
+      window.addEventListener("resize", () => {
+        if (!this.active) return;
+        this._fit();
+        if (this.pinned) this._showPinned();
+        else this._show(this.scenes[this.idx]);
+      });
+    }
     this._tickClock();
+    clearInterval(this._clockTimer);
     this._clockTimer = setInterval(() => this._tickClock(), 1000);
-    this._show(this.scenes[this.idx]);
+    if (this.pinned) this._showPinned();
+    else this._show(this.scenes[this.idx]);
+  }
+
+  /** Haelt die Rotation an und raeumt die TV-Header-Elemente weg. */
+  stop() {
+    this.active = false;
+    clearTimeout(this.timer);
+    clearTimeout(this.eventTimer);
+    this.pageTimers.forEach(clearTimeout);
+    this.pageTimers = [];
+    clearInterval(this._clockTimer);
+    document.body.classList.remove("viz-alert");
+    el("viz-clock").hidden = true;
+    el("viz-progress").hidden = true;
+    el("viz-scene").hidden = true;
+    el("viz-title").textContent = "FHEMVIZ";
   }
 
   /**
@@ -323,6 +348,9 @@ class TvController {
 
   /** Geraete-Event: Szene uebernimmt fuer <sec> Sekunden den Schirm. */
   forceScene(room, sec) {
+    // Waehrend der Touch-Uebernahme bedient gerade jemand das Geraet -
+    // Event nicht dazwischenrendern.
+    if (!this.active) return;
     // Unbekannte Szene: Event ignorieren statt "Alle" zu zeigen.
     const resolved = resolveRoom(collectRooms(this.store, this.baseOpts), room);
     if (!resolved) {
@@ -356,10 +384,12 @@ class TvController {
       console.warn(`FHEMVIZ: Seite "${room}" nicht in der Sicht - ignoriert`);
       return;
     }
+    this.pinned = resolved;
+    // Touch-Uebernahme aktiv: nur merken, gezeigt wird bei der Rueckkehr.
+    if (!this.active) return;
     clearTimeout(this.timer);
     clearTimeout(this.eventTimer);
     document.body.classList.remove("viz-alert");
-    this.pinned = resolved;
     this._showPinned();
   }
 
@@ -367,6 +397,7 @@ class TvController {
   unpin() {
     if (!this.pinned) return;
     this.pinned = null;
+    if (!this.active) return;
     clearTimeout(this.timer);
     this._show(this.scenes[this.idx]);
   }
@@ -389,6 +420,50 @@ class TvController {
       if (this.pinned) this._cyclePinned(sec);
     }, sec * 1000);
   }
+}
+
+/* ------------------------------ Show-Overlay -------------------------------
+ * set <viz> show <url> [sek]: blendet eine Webseite oder ein Bild (Kamera-
+ * Snapshot) als Vollbild-Overlay UEBER dem Dashboard ein - die SPA laeuft
+ * darunter weiter (kein Reload, Live-Verbindung bleibt). Nach Ablauf oder
+ * per Tipp verschwindet das Overlay. "set <viz> show off" schliesst sofort.
+ * Hinweis: Fremdseiten koennen das Einbetten per X-Frame-Options verbieten;
+ * Bilder und FHEM-eigene Seiten funktionieren immer.
+ */
+
+let overlayTimer = null;
+
+function hideOverlay() {
+  clearTimeout(overlayTimer);
+  const o = el("viz-overlay");
+  if (o) o.remove();
+}
+
+function showOverlay(url, sec) {
+  hideOverlay();
+  if (!/^https?:\/\/|^\//i.test(url)) {
+    // eslint-disable-next-line no-console
+    console.warn(`FHEMVIZ: show "${url}" ist keine URL - ignoriert`);
+    return;
+  }
+  const o = document.createElement("div");
+  o.id = "viz-overlay";
+  const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)([?#].*)?$/i.test(url);
+  const child = document.createElement(isImg ? "img" : "iframe");
+  child.src = url;
+  o.appendChild(child);
+  const hint = document.createElement("div");
+  hint.className = "viz-overlay-hint";
+  hint.textContent = "Tippen zum Schließen";
+  o.appendChild(hint);
+  // stopPropagation: der Schliess-Tipp darf nicht gleichzeitig die
+  // tvTouch-Uebernahme ausloesen.
+  o.addEventListener("click", (e) => {
+    e.stopPropagation();
+    hideOverlay();
+  });
+  document.body.appendChild(o);
+  overlayTimer = setTimeout(hideOverlay, Math.max(3, sec) * 1000);
 }
 
 /* --------------------------------- Start ----------------------------------- */
@@ -523,6 +598,47 @@ async function main() {
       tvc.start();
       // Gepinnte Seite wiederherstellen (URL-?room= geht vor).
       if (!startRoom && pagePin) tvc.pin(pagePin);
+
+      // Touch-Uebernahme (attr tvTouch, Default 30 s, 0 = aus): ein Tipp
+      // auf den Schirm wechselt in die bedienbare Tablet-Ansicht, nach
+      // tvTouch Sekunden ohne Aktion laeuft die Rotation weiter - damit
+      // taugt der TV-Modus als "Bildschirmschoner" fuer Tablets.
+      const touchSec = (() => {
+        const n = parseInt(cfg.tvTouch, 10);
+        return isNaN(n) ? 30 : Math.max(0, n);
+      })();
+      if (touchSec > 0) {
+        const tabletOpts = { ...baseOpts, readonly: cfg.readonly === true, tv: false };
+        let idleTimer = null;
+        const armIdle = () => {
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(() => {
+            if (tvc.active) return;
+            document.documentElement.dataset.vizmode = "tv";
+            tvc.start();
+          }, touchSec * 1000);
+        };
+        // "click" statt pointerdown: feuert nach abgeschlossenem Tipp,
+        // damit derselbe Tipp nicht versehentlich einen Schalter der
+        // frisch gerenderten Tablet-Ansicht trifft.
+        window.addEventListener("click", () => {
+          if (!tvc.active) return;
+          tvc.stop();
+          document.documentElement.dataset.vizmode = "tablet";
+          renderLayout(root, store, client, tabletOpts);
+          armIdle();
+        });
+        // Jede Interaktion in der Tablet-Ansicht verlaengert die Frist.
+        for (const ev of ["pointerdown", "wheel", "keydown", "touchmove"]) {
+          window.addEventListener(
+            ev,
+            () => {
+              if (!tvc.active) armIdle();
+            },
+            { passive: true }
+          );
+        }
+      }
     } else {
       let activeRoom = null;
       const want = startRoom || pagePin;
@@ -544,6 +660,7 @@ async function main() {
     // Live-Kanal: Geraete der Sicht + das FHEMVIZ-Geraet selbst
     // (dessen scene-Readings steuern die TV-Szenen).
     let sceneDuration = 30;
+    let showDuration = 30;
     const names = store.all().map((d) => d.name);
     const filter = [...names, vizDevice].join("|") || ".*";
     client.connectInform({
@@ -556,6 +673,18 @@ async function main() {
         }
         if (id === vizDevice + "-scene") {
           if (tvc) tvc.forceScene(value, sceneDuration);
+          return;
+        }
+        // set <viz> show <url> [sek]: Vollbild-Overlay (Kamera/Webseite).
+        if (id === vizDevice + "-showDuration") {
+          const n = parseInt(value, 10);
+          if (!isNaN(n) && n > 0) showDuration = n;
+          return;
+        }
+        if (id === vizDevice + "-show") {
+          const v = String(value).trim();
+          if (!v || /^(off|none|auto)$/i.test(v)) hideOverlay();
+          else showOverlay(v, showDuration);
           return;
         }
         // set <viz> page <raum>|auto: dauerhafte Umschaltung. TV pinnt die

@@ -216,6 +216,24 @@ body.viz-alert::after {
   border: 3px solid var(--viz-error); pointer-events: none;
 }
 
+/* set <viz> show <url>: Vollbild-Overlay ueber dem Dashboard
+ * (Kamerabild als <img>, Webseite als <iframe>). Tippen schliesst. */
+#viz-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(5, 7, 10, 0.96);
+  display: flex; align-items: center; justify-content: center;
+}
+#viz-overlay img, #viz-overlay iframe {
+  width: 100%; height: 100%; border: 0; object-fit: contain;
+  background: transparent;
+}
+#viz-overlay .viz-overlay-hint {
+  position: absolute; right: 18px; bottom: 12px;
+  color: var(--viz-muted, #77808c); font-size: 0.75rem;
+  background: var(--viz-surface, #151920); border-radius: 999px;
+  padding: 4px 12px; opacity: 0.85; pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   #viz-progress.run i { animation: none; transform: scaleX(1); }
   .viz-tabs { backdrop-filter: none; }

@@ -40,6 +40,7 @@ ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet
 | `devspec` | FHEM-devspec | **Pflicht.** Welche Geräte in der Sicht sind, z. B. `room=Dashboard.*` oder `d_garage_neu,mySolar.*` |
 | `mode` | `tablet` (Default) / `tv` | Betriebsart; per URL übersteuerbar (`?mode=tv`) |
 | `tvScenes` | `Raum:Sek,Raum:Sek` | Szenen-Rotation im TV-Modus, z. B. `Solar:30,Wohnzimmer:20,Garage:15`. Ohne Angabe: alle sichtbaren Räume à 20 s |
+| `tvTouch` | Sekunden (Default 30, `0` = aus) | Touch-Übernahme im TV-Modus: Tipp auf den Schirm → bedienbare Tablet-Ansicht; nach `tvTouch` s ohne Aktion läuft die Rotation weiter (TV-Modus als Tablet-Bildschirmschoner) |
 | `theme` | `auto` (Default) / `light` / `dark` | Farbschema; `auto` folgt dem System |
 | `readonly` | `0` / `1` | Keine Bedienelemente (Gäste-/Wandmodus); im TV-Modus immer aktiv |
 | `showRooms` | Regex-Liste | **Whitelist**: nur passende Räume erscheinen, Geräte ohne passenden Raum entfallen ganz. Für ein rein kuratiertes Dashboard: `FHEMVIZ->.*` |
@@ -149,6 +150,25 @@ define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
 
 Der rote Rahmen signalisiert die Event-Übernahme; nach Ablauf kehrt die
 Rotation automatisch zurück.
+
+### Webseite/Kamerabild einblenden: `set myViz show`
+
+Blendet eine URL als **Vollbild-Overlay über dem Dashboard** ein — ohne die
+SPA zu verlassen (kein Reload, Live-Verbindung läuft weiter). Nach Ablauf
+oder per Tipp verschwindet das Overlay:
+
+```
+set myViz show http://kamera/snapshot.jpg 20    # Kamerabild für 20 s
+set myViz show http://<fhem>:8086/fhem/floorplan/WetterDash 60
+set myViz show off                              # sofort schließen
+
+# Türklingel blendet das Kamerabild auf allen Displays ein:
+define n_klingel_tv notify MQTT2_DOORBELL:motion:.* set myViz show http://kamera/snapshot.jpg 20
+```
+
+Bild-URLs (`.jpg`/`.png`/…) werden als Bild gerendert, alles andere als
+iframe. Hinweis: Fremdseiten können das Einbetten per `X-Frame-Options`
+verbieten — Bilder und FHEM-eigene Seiten funktionieren immer.
 
 ### Seite dauerhaft umschalten: `set myViz page`
 
