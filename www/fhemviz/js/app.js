@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.11.0";
+const SPA_VERSION = "v0.11.1";
 
 const el = (id) => document.getElementById(id);
 
@@ -487,7 +487,20 @@ async function main() {
     if (!isNaN(zoom) && zoom > 0) {
       if (zoom > 5) zoom = zoom / 100; // 130 -> 1.3
       zoom = Math.min(3, Math.max(0.5, zoom));
-      document.body.style.zoom = zoom;
+      const vp = document.querySelector('meta[name="viewport"]');
+      if (/Android/i.test(navigator.userAgent) && vp) {
+        // Android-WebViews (Fully Kiosk & Co.) ignorieren CSS zoom teils -
+        // dort skaliert die native Viewport-Skala. innerHeight liefert dann
+        // bereits lokale CSS-Pixel, _fit() teilt NICHT nochmal (body.zoom
+        // bleibt leer -> Faktor 1).
+        vp.setAttribute(
+          "content",
+          `width=device-width, initial-scale=${zoom}, minimum-scale=${zoom},` +
+            ` maximum-scale=${zoom}, user-scalable=no`
+        );
+      } else {
+        document.body.style.zoom = zoom;
+      }
     }
 
     const vizDevice = params.get("device") || (await client.findVizDevice());
