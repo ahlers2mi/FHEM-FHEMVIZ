@@ -14,7 +14,10 @@ import { FhemvizWidget } from "./base-widget.js";
 const CONTACT_CSS = `
   .cwrap { display: flex; align-items: center; gap: 14px; flex: 1; }
   .cicon { flex-shrink: 0; width: 42px; height: 42px; color: var(--viz-muted, #77808c); }
-  .card.open .cicon, .card.tilted .cicon { color: var(--viz-accent, #ffb020); }
+  /* Nur das grosse Einzel-Symbol (in .cwrap) faerben - im Gruppen-Raster
+   * bekommt jedes Mitglied seine Farbe einzeln (.mg.open/.mg.tilted),
+   * sonst wuerden in einer offenen Gruppe ALLE Symbole amber. */
+  .card.open .cwrap .cicon, .card.tilted .cwrap .cicon { color: var(--viz-accent, #ffb020); }
   .cstate { font-size: 1.25rem; font-weight: 450; }
   .card.open .cstate, .card.tilted .cstate { color: var(--viz-accent, #ffb020); font-weight: 600; }
   :host([data-tv]) .cicon { width: 56px; height: 56px; }
