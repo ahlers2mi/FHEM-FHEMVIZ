@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.9.5
+# Version:  v0.10.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.9.5";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.10.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -103,6 +103,7 @@ sub FHEMVIZ_Initialize {
           "theme:auto,light,dark " .
           "mode:tablet,tv " .
           "tvScenes " .
+          "tvTouch " .
           "statusBar:textField-long " .
           "showRooms " .
           "hideRooms " .
@@ -230,6 +231,7 @@ sub FHEMVIZ_Get {
         my $readonly   = AttrVal($name, "readonly", 0) ? "true" : "false";
         my $mode       = AttrVal($name, "mode", "tablet");
         my $tvScenes   = AttrVal($name, "tvScenes", "");
+        my $tvTouch    = AttrVal($name, "tvTouch", "");
         my $statusBar  = AttrVal($name, "statusBar", "");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
@@ -241,15 +243,16 @@ sub FHEMVIZ_Get {
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"tvScenes":%s,"statusBar":%s,"page":%s,'
+              . '"mode":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.9.5"),
+            FHEMVIZ_jsonStr("v0.10.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
             FHEMVIZ_jsonStr($mode),
             FHEMVIZ_jsonStr($tvScenes),
+            FHEMVIZ_jsonStr($tvTouch),
             FHEMVIZ_jsonStr($statusBar),
             FHEMVIZ_jsonStr($page),
             FHEMVIZ_jsonStr($showRooms),
@@ -403,6 +406,12 @@ sub FHEMVIZ_Attr {
         Kachelzeilen ausgerichtet weitergeblättert. Ohne Angabe rotieren alle
         sichtbaren Räume mit je 20 s. Unbekannte Räume werden übersprungen
         und in der Statuszeile gemeldet.</li>
+    <li><a id="FHEMVIZ-attr-tvTouch"></a><b>tvTouch</b><br>
+        Typ: textField (Sekunden). Touch-Übernahme im TV-Modus: ein Tipp auf
+        den Schirm wechselt in die bedienbare Tablet-Ansicht; nach
+        <code>tvTouch</code> Sekunden ohne Aktion läuft die Szenen-Rotation
+        weiter (Default 30, <code>0</code> = aus). Damit taugt der TV-Modus
+        als Bildschirmschoner für Wand-Tablets.</li>
     <li><a id="FHEMVIZ-attr-statusBar"></a><b>statusBar</b><br>
         Typ: textField-long. Immer sichtbare Status-Chips im Kopf:
         kommaseparierte Liste <code>gerät[:reading[:einheit]]</code>.

@@ -40,6 +40,7 @@ ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet
 | `devspec` | FHEM-devspec | **Pflicht.** Welche Geräte in der Sicht sind, z. B. `room=Dashboard.*` oder `d_garage_neu,mySolar.*` |
 | `mode` | `tablet` (Default) / `tv` | Betriebsart; per URL übersteuerbar (`?mode=tv`) |
 | `tvScenes` | `Raum:Sek,Raum:Sek` | Szenen-Rotation im TV-Modus, z. B. `Solar:30,Wohnzimmer:20,Garage:15`. Ohne Angabe: alle sichtbaren Räume à 20 s |
+| `tvTouch` | Sekunden (Default 30, `0` = aus) | Touch-Übernahme im TV-Modus: Tipp auf den Schirm → bedienbare Tablet-Ansicht; nach `tvTouch` s ohne Aktion läuft die Rotation weiter (TV-Modus als Tablet-Bildschirmschoner) |
 | `theme` | `auto` (Default) / `light` / `dark` | Farbschema; `auto` folgt dem System |
 | `readonly` | `0` / `1` | Keine Bedienelemente (Gäste-/Wandmodus); im TV-Modus immer aktiv |
 | `showRooms` | Regex-Liste | **Whitelist**: nur passende Räume erscheinen, Geräte ohne passenden Raum entfallen ganz. Für ein rein kuratiertes Dashboard: `FHEMVIZ->.*` |
