@@ -18,8 +18,8 @@ export class FhemvizSwitch extends FhemvizWidget {
   _switchState() {
     const check = (v) => {
       const s = this.plain(v).toLowerCase();
-      if (/^(on|true|an|open|ge(ö|oe)ffnet)\b/.test(s) || s === "1") return "on";
-      if (/^(off|false|aus|closed|geschlossen)\b/.test(s) || s === "0") return "off";
+      if (/^(on|true|an|open(ed)?|ge(ö|oe)ffnet)\b/.test(s) || s === "1") return "on";
+      if (/^(off|false|aus|closed|geschlossen|zu)\b/.test(s) || s === "0") return "off";
       return null;
     };
     const own = check(this.device.state);

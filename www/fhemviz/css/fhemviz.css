@@ -187,8 +187,11 @@ html[data-vizmode="tv"] body { overflow: hidden; }
 html[data-vizmode="tv"] #fhemviz-app {
   padding: 26px 34px 30px;
   /* Fernseher scrollen nie: feste Flaeche, Ueberlauf blaettert die
-   * Szenen-Rotation automatisch seitenweise (app.js, Auto-Paging). */
-  height: calc(100vh - var(--viz-header-h, 58px));
+   * Szenen-Rotation automatisch seitenweise (app.js, Auto-Paging).
+   * --viz-vh wird in app.js per JS gemessen (innerHeight/zoom), weil
+   * 100vh unter ?zoom= nicht mitskaliert und die Flaeche sonst zu hoch
+   * wird (Seitenende ragt unter den Bildschirmrand). */
+  height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px));
   overflow: hidden;
   display: flex; flex-direction: column;
   justify-content: safe center; /* wenige Kacheln mittig, Ueberlauf oben */
