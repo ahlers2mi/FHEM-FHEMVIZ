@@ -17,6 +17,7 @@ import { FhemvizContact } from "./contact.js";
 import { FhemvizShutter } from "./shutter.js";
 import { FhemvizVent } from "./vent.js";
 import { FhemvizFlow } from "./flow.js";
+import { FhemvizForecast } from "./forecast.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -29,7 +30,8 @@ export const WIDGET_REGISTRY = {
   shutter: "fhemviz-shutter",
   vent: "fhemviz-vent",
   flow: "fhemviz-flow",
-  // TODO: thermostat, blind/shutter, chart, media.
+  forecast: "fhemviz-forecast",
+  // TODO: thermostat, chart, media.
 };
 
 // genericDeviceType -> Widget-Schluessel (PoC-Teilmenge).
@@ -58,6 +60,7 @@ export function registerCoreWidgets() {
     ["fhemviz-shutter", FhemvizShutter],
     ["fhemviz-vent", FhemvizVent],
     ["fhemviz-flow", FhemvizFlow],
+    ["fhemviz-forecast", FhemvizForecast],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -81,6 +84,17 @@ export function selectWidget(device) {
       key = "dimmer";
     }
     return WIDGET_REGISTRY[key];
+  }
+
+  // 2b. SolarForecast bekommt automatisch das Prognose-Widget.
+  if ((device.internals || {}).TYPE === "SolarForecast") {
+    return WIDGET_REGISTRY.forecast;
+  }
+  // 2c. structure-Geraete -> Gruppen-Kachel. Der Zustand wird dort aus den
+  //     Mitgliedern berechnet - der eigene state ist bei gemischten
+  //     Mitglieder-Zustaenden oft nur "undefined".
+  if ((device.internals || {}).TYPE === "structure") {
+    return WIDGET_REGISTRY.contact;
   }
 
   // 3. webCmd: bewusst konfigurierte Bedienung hat Vorrang vor der
