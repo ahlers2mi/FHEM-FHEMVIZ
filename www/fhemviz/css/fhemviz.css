@@ -64,6 +64,12 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Zoom (transform-Pfad, app.js setzt data-vizzoom): der body ist der
+ * Scroller, damit fixe Elemente (Tab-Leiste) am SICHTBAREN Rand haengen.
+ * Die TV-Regel (overflow hidden) weiter unten gewinnt im TV-Modus. */
+html[data-vizzoom] { overflow: hidden; height: 100%; }
+html[data-vizzoom] body { overflow-y: auto; }
+
 /* Kopfzeile ------------------------------------------------------------------ */
 #viz-header {
   position: sticky; top: 0; z-index: 10;

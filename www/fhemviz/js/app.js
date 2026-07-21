@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.12.0";
+const SPA_VERSION = "v0.12.1";
 
 const el = (id) => document.getElementById(id);
 
@@ -425,9 +425,15 @@ class TvController {
 /* --------------------------------- Zoom -------------------------------------
  * Skalierung der Oberflaeche: attr zoom am FHEMVIZ-Geraet ist der Default,
  * ?zoom= in der URL geht vor (fuer abweichende Einzelgeraete). Werte 0.5-3,
- * auch als Prozent (130). Android-WebViews (Fully Kiosk) skalieren per
- * transform (CSS zoom wird dort teils ignoriert), Desktop per CSS zoom mit
- * Breiten-Nachmessung fuer alte Engines.
+ * auch als Prozent (130).
+ *
+ * Bewusst NUR transform:scale - fuer alle Browser gleich. CSS zoom wird
+ * von WebViews teils ignoriert oder ohne Breiten-/Hoehen-Anpassung
+ * gerendert (Kacheln rechts/unten abgeschnitten), und die Engines melden
+ * das unterschiedlich zurueck. transform ist reines Rendering: der body
+ * wird auf Viewport/zoom verkleinert und hochskaliert - deterministisch
+ * in jeder Engine. Er scrollt selbst (CSS: html[data-vizzoom]), damit
+ * fixe Elemente (Tab-Leiste) am sichtbaren Rand haengen.
  */
 function applyZoom(urlValue, cfgValue) {
   const parse = (s) => {
@@ -438,32 +444,14 @@ function applyZoom(urlValue, cfgValue) {
   };
   const zoom = parse(urlValue) ?? parse(cfgValue);
   if (!zoom || zoom === 1) return "";
-  // Faktor fuer die TV-Flaechenmessung (_fit) merken.
+  // Faktor fuer die TV-Flaechenmessung (_fit) merken; das data-Attribut
+  // aktiviert zugleich die Scroll-Regeln in fhemviz.css.
   document.documentElement.dataset.vizzoom = String(zoom);
-  if (/Android/i.test(navigator.userAgent)) {
-    // transform:scale ist reines Rendering und wirkt in jedem WebView.
-    // Der body wird auf Viewport/zoom verkleinert und hochskaliert; er
-    // scrollt selbst (statt html), damit fixe Elemente (Tab-Leiste) am
-    // sichtbaren Rand haengen.
-    const de = document.documentElement.style;
-    de.overflow = "hidden";
-    de.height = "100%";
-    const b = document.body.style;
-    b.transform = `scale(${zoom})`;
-    b.transformOrigin = "0 0";
-    b.width = `calc(100% / ${zoom})`;
-    b.height = `calc(100% / ${zoom})`;
-    b.overflowY = "auto";
-  } else {
-    document.body.style.zoom = zoom;
-    // Aeltere Engines (WebView im Desktop-Mode) skalieren 100%-Breiten
-    // nicht mit -> Kacheln rechts abgeschnitten. Nachmessen und
-    // kompensieren; moderne Browser messen bereits passend.
-    const vis = document.body.getBoundingClientRect().width;
-    if (vis > window.innerWidth + 2) {
-      document.body.style.width = `calc(100% / ${zoom})`;
-    }
-  }
+  const b = document.body.style;
+  b.transform = `scale(${zoom})`;
+  b.transformOrigin = "0 0";
+  b.width = `calc(100% / ${zoom})`;
+  b.height = `calc(100% / ${zoom})`;
   // Sichtbarkeit fuer die Diagnose: aktiver Zoom erscheint in der
   // Statuszeile - fehlt er dort, kommt weder URL- noch attr-Zoom an.
   return ` · Zoom ${zoom}`;
