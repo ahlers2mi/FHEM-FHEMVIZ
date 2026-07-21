@@ -143,7 +143,16 @@ function buildRooms(store, opts) {
       if (showRooms.length) continue;
       devRooms = ["Weitere"];
     }
-    let devGroups = splitAttr(attr.group);
+    // vizGroup uebersteuert group NUR im Dashboard (FHEMWEB bleibt wie es
+    // ist). "-" oder "keine" loest die Gruppierung auf -> "Allgemein".
+    const vizGroup = String(attr.vizGroup || "").trim();
+    let devGroups;
+    if (/^(-|keine|none)$/i.test(vizGroup)) {
+      devGroups = [];
+    } else {
+      const vg = splitAttr(vizGroup);
+      devGroups = vg.length ? vg : splitAttr(attr.group);
+    }
     if (devGroups.length === 0) devGroups = ["Allgemein"];
 
     for (const room of devRooms) {

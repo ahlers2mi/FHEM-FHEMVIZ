@@ -77,6 +77,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 | `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
 | `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
 | `vizIcon` | `lampe` / `steckdose` / `lautsprecher` / `luefter` / `pumpe` / `tv` / `heizung` / `power` | **Symbol-Modus** für Schalter: großes Icon mittig, Name darunter, bernstein = an — aus der Ferne lesbar; Tippen auf die Kachel schaltet |
+| `vizGroup` | Gruppenname(n), `-` = keine | Übersteuert `group` **nur im Dashboard** (FHEMWEB unberührt) — steuert, welche Kacheln zusammenstehen; `-` löst die Gruppe auf („Allgemein") |
 | `vizReadings` | `reading[:Label[:Einheit[:Farbe[:bar]]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Flag `bar` = zusätzlicher Fortschrittsbalken (Skala 0–100, z. B. Autarkie-/Akku-Prozent). Gesetzt = state wird ignoriert, Gerät immer angezeigt |
 
 **Beispiel Wechselrichter** (Readings statt stateFormat-Raten, mit Farben
