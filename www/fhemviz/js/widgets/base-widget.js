@@ -227,6 +227,7 @@ export class FhemvizWidget extends HTMLElement {
             ? v + " " + unit
             : v;
         return {
+          reading,
           label: label || reading,
           value,
           color: this.colorVar(color),
@@ -247,9 +248,8 @@ export class FhemvizWidget extends HTMLElement {
   }
 
   /** vizReadings als kompakte Label/Wert-Zeilen (fuer Nicht-Sensor-Widgets). */
-  readingRowsHtml() {
-    const parts = this.vizReadingParts();
-    if (!parts) return "";
+  readingRowsHtml(parts = this.vizReadingParts()) {
+    if (!parts || !parts.length) return "";
     return parts
       .map(
         (p) =>

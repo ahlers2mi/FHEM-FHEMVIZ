@@ -133,7 +133,28 @@ export class FhemvizForecast extends FhemvizWidget {
           <span class="sub">Ertrag bisher ${this.escape(this._kwh(real))}</span>
           <span class="sub">morgen ${this.escape(this._kwh(tomorrow))}</span>
         </div>
-        ${this.readingRowsHtml()}
+        ${this._extraRows()}
       </div>`;
+  }
+
+  /**
+   * vizReadings-Zeilen NUR fuer Werte, die das Widget nicht selbst zeigt -
+   * sonst stehen Prognose/Ertrag doppelt da (kWh oben, Wh unten).
+   */
+  _extraRows() {
+    const parts = this.vizReadingParts();
+    if (!parts) return "";
+    const builtin = new Set([
+      "Today_PVforecast",
+      "Today_PVreal",
+      "Tomorrow_PVforecast",
+      "Current_PV",
+      "Today_MaxPVforecast",
+      "Today_MaxPVforecastTime",
+      "Today_SunRise",
+      "Today_SunSet",
+      "RestOfDayPVforecast",
+    ]);
+    return this.readingRowsHtml(parts.filter((p) => !builtin.has(p.reading)));
   }
 }
