@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.10.0";
+const SPA_VERSION = "v0.11.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -422,6 +422,50 @@ class TvController {
   }
 }
 
+/* ------------------------------ Show-Overlay -------------------------------
+ * set <viz> show <url> [sek]: blendet eine Webseite oder ein Bild (Kamera-
+ * Snapshot) als Vollbild-Overlay UEBER dem Dashboard ein - die SPA laeuft
+ * darunter weiter (kein Reload, Live-Verbindung bleibt). Nach Ablauf oder
+ * per Tipp verschwindet das Overlay. "set <viz> show off" schliesst sofort.
+ * Hinweis: Fremdseiten koennen das Einbetten per X-Frame-Options verbieten;
+ * Bilder und FHEM-eigene Seiten funktionieren immer.
+ */
+
+let overlayTimer = null;
+
+function hideOverlay() {
+  clearTimeout(overlayTimer);
+  const o = el("viz-overlay");
+  if (o) o.remove();
+}
+
+function showOverlay(url, sec) {
+  hideOverlay();
+  if (!/^https?:\/\/|^\//i.test(url)) {
+    // eslint-disable-next-line no-console
+    console.warn(`FHEMVIZ: show "${url}" ist keine URL - ignoriert`);
+    return;
+  }
+  const o = document.createElement("div");
+  o.id = "viz-overlay";
+  const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)([?#].*)?$/i.test(url);
+  const child = document.createElement(isImg ? "img" : "iframe");
+  child.src = url;
+  o.appendChild(child);
+  const hint = document.createElement("div");
+  hint.className = "viz-overlay-hint";
+  hint.textContent = "Tippen zum Schließen";
+  o.appendChild(hint);
+  // stopPropagation: der Schliess-Tipp darf nicht gleichzeitig die
+  // tvTouch-Uebernahme ausloesen.
+  o.addEventListener("click", (e) => {
+    e.stopPropagation();
+    hideOverlay();
+  });
+  document.body.appendChild(o);
+  overlayTimer = setTimeout(hideOverlay, Math.max(3, sec) * 1000);
+}
+
 /* --------------------------------- Start ----------------------------------- */
 
 async function main() {
@@ -616,6 +660,7 @@ async function main() {
     // Live-Kanal: Geraete der Sicht + das FHEMVIZ-Geraet selbst
     // (dessen scene-Readings steuern die TV-Szenen).
     let sceneDuration = 30;
+    let showDuration = 30;
     const names = store.all().map((d) => d.name);
     const filter = [...names, vizDevice].join("|") || ".*";
     client.connectInform({
@@ -628,6 +673,18 @@ async function main() {
         }
         if (id === vizDevice + "-scene") {
           if (tvc) tvc.forceScene(value, sceneDuration);
+          return;
+        }
+        // set <viz> show <url> [sek]: Vollbild-Overlay (Kamera/Webseite).
+        if (id === vizDevice + "-showDuration") {
+          const n = parseInt(value, 10);
+          if (!isNaN(n) && n > 0) showDuration = n;
+          return;
+        }
+        if (id === vizDevice + "-show") {
+          const v = String(value).trim();
+          if (!v || /^(off|none|auto)$/i.test(v)) hideOverlay();
+          else showOverlay(v, showDuration);
           return;
         }
         // set <viz> page <raum>|auto: dauerhafte Umschaltung. TV pinnt die

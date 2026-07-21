@@ -151,6 +151,25 @@ define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
 Der rote Rahmen signalisiert die Event-Übernahme; nach Ablauf kehrt die
 Rotation automatisch zurück.
 
+### Webseite/Kamerabild einblenden: `set myViz show`
+
+Blendet eine URL als **Vollbild-Overlay über dem Dashboard** ein — ohne die
+SPA zu verlassen (kein Reload, Live-Verbindung läuft weiter). Nach Ablauf
+oder per Tipp verschwindet das Overlay:
+
+```
+set myViz show http://kamera/snapshot.jpg 20    # Kamerabild für 20 s
+set myViz show http://<fhem>:8086/fhem/floorplan/WetterDash 60
+set myViz show off                              # sofort schließen
+
+# Türklingel blendet das Kamerabild auf allen Displays ein:
+define n_klingel_tv notify MQTT2_DOORBELL:motion:.* set myViz show http://kamera/snapshot.jpg 20
+```
+
+Bild-URLs (`.jpg`/`.png`/…) werden als Bild gerendert, alles andere als
+iframe. Hinweis: Fremdseiten können das Einbetten per `X-Frame-Options`
+verbieten — Bilder und FHEM-eigene Seiten funktionieren immer.
+
 ### Seite dauerhaft umschalten: `set myViz page`
 
 Während `set myViz scene <Raum> [Sek]` den Schirm nur **vorübergehend** kapert,

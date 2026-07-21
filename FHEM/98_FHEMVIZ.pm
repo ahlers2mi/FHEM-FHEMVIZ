@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.10.0
+# Version:  v0.11.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.10.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.11.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -184,7 +184,7 @@ sub FHEMVIZ_Undef {
 # ----------------------------------------------------------------------------
 sub FHEMVIZ_Set {
     my ($hash, $name, $cmd, @args) = @_;
-    return "Unknown argument, choose one of scene page" if (!defined($cmd));
+    return "Unknown argument, choose one of scene page show" if (!defined($cmd));
 
     if ($cmd eq "scene") {
         my $scene = $args[0];
@@ -207,7 +207,20 @@ sub FHEMVIZ_Set {
         return undef;
     }
 
-    return "Unknown argument $cmd, choose one of scene page";
+    if ($cmd eq "show") {
+        my $url = $args[0];
+        return "usage: set $name show <url>|off [seconds]" if (!defined($url));
+        my $dur = defined($args[1]) && $args[1] =~ /^\d+$/ ? $args[1] : 30;
+
+        # Reihenfolge wichtig: Dauer zuerst (wie bei scene).
+        readingsBeginUpdate($hash);
+        readingsBulkUpdate($hash, "showDuration", $dur);
+        readingsBulkUpdate($hash, "show", $url);
+        readingsEndUpdate($hash, 1);
+        return undef;
+    }
+
+    return "Unknown argument $cmd, choose one of scene page show";
 }
 
 # ----------------------------------------------------------------------------
@@ -246,7 +259,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.10.0"),
+            FHEMVIZ_jsonStr("v0.11.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -366,6 +379,16 @@ sub FHEMVIZ_Attr {
         dient neu verbundenen Browsern als Startseite (URL-Parameter
         <code>?room=</code> geht vor). Kurzname genügt:<br>
         <code>set myViz page Solar</code></li>
+    <li><a id="FHEMVIZ-set-show"></a><b>show</b> &lt;url&gt;|off [sekunden] &ndash;
+        blendet eine Webseite oder ein Bild (z. B. Kamera-Snapshot) als
+        Vollbild-Overlay ÜBER dem Dashboard ein &ndash; ohne Reload, die
+        Live-Verbindung läuft darunter weiter. Nach Ablauf (Default 30 s)
+        oder per Tipp verschwindet das Overlay; <code>off</code> schließt
+        sofort. Bild-URLs (.jpg/.png/…) werden als Bild gerendert, alles
+        andere als iframe (Fremdseiten können das Einbetten per
+        X-Frame-Options verbieten; FHEM-eigene Seiten und Bilder gehen
+        immer). Beispiel Türklingel:<br>
+        <code>define n_klingel_tv notify MQTT2_DOORBELL:motion:.* set myViz show http://kamera/snapshot.jpg 20</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-get"></a>
@@ -502,6 +525,8 @@ sub FHEMVIZ_Attr {
     <li><b>page</b> &ndash; aktuell gepinnte Seite (<code>set page</code>);
         dient neu verbundenen Browsern als Startseite, <code>auto</code> =
         keine.</li>
+    <li><b>show</b> / <b>showDuration</b> &ndash; letzte per
+        <code>set show</code> eingeblendete URL und ihre Dauer.</li>
   </ul><br>
 
   <a id="FHEMVIZ-url"></a>
