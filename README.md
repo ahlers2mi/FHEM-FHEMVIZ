@@ -71,7 +71,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 | Attribut | Werte | Wirkung |
 |---|---|---|
-| `vizWidget` | `switch` / `sensor` / `dimmer` / `actions` / `text` / `agenda` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `contact` = Fenster/Tür-Kontakt (Symbol + Offen/Gekippt/Zu, offen = Bernstein; wird bei state open/closed/tilted automatisch gewählt; `structure`-Geräte wie `st_fenster` werden zur Gruppen-Kachel: „2 offen · 1 gekippt" + ein Mini-Symbol je Mitglied, live), `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
+| `vizWidget` | `switch` / `sensor` / `dimmer` / `shutter` / `actions` / `text` / `agenda` / `contact` / `vent` / `flow` / `forecast` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `contact` = Fenster/Tür-Kontakt (Symbol + Offen/Gekippt/Zu, offen = Bernstein; wird bei state open/closed/tilted automatisch gewählt; `structure`-Geräte wie `st_fenster` werden zur Gruppen-Kachel: „2 offen · 1 gekippt" + ein Mini-Symbol je Mitglied, live), `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
 | `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
 | `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
 | `vizReadings` | `reading[:Label[:Einheit[:Farbe]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Gesetzt = state wird ignoriert, Gerät immer angezeigt |
@@ -91,6 +91,16 @@ hervorgehoben):
 attr rem_d_cal_muell vizWidget agenda
 attr rem_d_cal_muell alias Termine
 attr rem_d_cal_muell vizSize 2x2
+```
+
+**Beispiel PV-Prognose** (`TYPE=SolarForecast` wird automatisch erkannt,
+`vizWidget forecast` ist nur für andere Gerätetypen nötig): Stunden-Balkenchart
+des Tages — IST-Ertrag kräftig vor der blassen Prognose, Marker unter der
+laufenden Stunde — plus Sonnenzeiten, Peak-Stunde, aktuelle Leistung und
+Morgen-Prognose:
+
+```
+attr Forecast vizSize 2x1
 ```
 
 ## Raum-Konvention `FHEMVIZ-><Name>`

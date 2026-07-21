@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.8.3
+# Version:  v0.9.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.8.3";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.9.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -72,7 +72,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow",
+    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHide:1,0",
     "vizReadings:textField-long",
@@ -244,7 +244,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"tvScenes":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.8.3"),
+            FHEMVIZ_jsonStr("v0.9.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -305,136 +305,211 @@ sub FHEMVIZ_Attr {
 
 =pod
 =item helper
-=item summary Moderne, responsive FHEM-Visualisierung (Konfiguration im FHEM-Standard)
-=item summary_DE Moderne, responsive FHEM-Visualisierung (Konfiguration im FHEM-Standard)
+=item summary Modern responsive FHEM visualization (tablet + TV/kiosk mode)
+=item summary_DE Moderne, responsive FHEM-Visualisierung (Tablet + TV-/Kiosk-Modus)
 =begin html
 
-<a name="FHEMVIZ"></a>
+<a id="FHEMVIZ"></a>
 <h3>FHEMVIZ</h3>
 <ul>
-  <p>
-    <b>FHEMVIZ</b> ist das schlanke Helfer-Modul einer modernen, responsiven
-    FHEM-Visualisierung. Die eigentliche Oberflaeche ist eine statische
-    Single-Page-App, die FHEMWEB aus <code>www/fhemviz/</code> ausliefert
-    (<code>http://&lt;fhem&gt;:&lt;port&gt;/fhem/fhemviz/index.html</code>) -
-    es wird <b>kein</b> zusaetzlicher Webserver benoetigt.
-  </p>
-  <p>
-    Das Modul rendert nichts. Seine Aufgabe ist es, die Zusatz-Attribute
-    (<code>viz*</code>) als erstklassige FHEM-Buerger bereitzustellen und
-    spaeter die aktive Sicht als JSON auszuliefern. Die gesamte Konfiguration
-    bleibt damit im FHEM-Standard (Attribute am Geraet) - die "Single Source
-    of Truth".
-  </p>
-  <p>
-    <b>Hinweis:</b> PoC-Stand (v0.2.0). <code>get config</code> liefert die
-    aktive Sicht (devspec/theme/readonly) als JSON; die SPA nutzt sie. Die
-    Attribut-Registrierung/-Validierung der <code>viz*</code>-Attribute folgt
-    noch - siehe <code>CONCEPT.md</code>.
-  </p>
+  <b>FHEMVIZ</b> ist eine moderne, responsive FHEM-Visualisierung für Tablet
+  und Fernseher. Die Oberfläche ist eine buildfreie Single-Page-App, die
+  FHEMWEB direkt aus <code>www/fhemviz/</code> ausliefert
+  (<code>http://&lt;fhem&gt;:&lt;port&gt;/fhem/fhemviz/index.html</code>,
+  auch über den Menüeintrag <b>FHEMVIZ</b> im linken FHEMWEB-Menü erreichbar) &ndash;
+  es wird <b>kein</b> zusätzlicher Webserver benötigt. Live-Updates kommen
+  über den FHEMWEB-longpoll (inform), Bedienung läuft CSRF-geschützt über
+  <code>set</code>-Befehle.
+  <br><br>
+  Das Modul selbst rendert nichts: es registriert die
+  <code>viz*</code>-Geräte-Attribute, liefert der SPA die aktive Sicht als
+  JSON (<code>get config</code>) und nimmt Szenen-/Seitenbefehle entgegen.
+  Die gesamte Konfiguration bleibt im FHEM-Standard (Attribute am Gerät).
+  <br><br>
+  <b>Betriebsarten:</b> <code>tablet</code> (bedienbar, Raum-Tabs unten) und
+  <code>tv</code> (keine Bedienelemente, große Ziffern, automatische
+  Szenen-Rotation mit Auto-Blättern &ndash; es wird nie gescrollt; Geräte-Events
+  können per <code>set scene</code> den Schirm übernehmen).
+  <br><br>
+  <b>Raum-Konvention:</b> Reine Dashboard-Räume werden als Unterräume
+  <code>FHEMVIZ-&gt;&lt;Name&gt;</code> angelegt; im Dashboard erscheint nur
+  der Kurzname, und in <code>tvScenes</code>, <code>set scene/page</code> und
+  <code>?room=</code> genügt der Kurzname.
+  <br><br>
 
-  <a name="FHEMVIZdefine"></a>
+  <a id="FHEMVIZ-define"></a>
   <b>Define</b>
   <ul>
-    <code>define &lt;name&gt; FHEMVIZ [&lt;devspec&gt;]</code>
-    <br><br>
-    <ul>
-      <li><b>devspec</b> &ndash; (optional) FHEM-Geraeteauswahl fuer diese
-          Sicht (z. B. <code>room=Dashboard.*</code>)</li>
-    </ul>
-  </ul>
-  <br>
+    <code>define &lt;name&gt; FHEMVIZ [&lt;devspec&gt;]</code><br>
+    Die Geräteauswahl wird über das Attribut <code>devspec</code> gepflegt;
+    der Define-Parameter ist optional.
+  </ul><br>
 
-  <a name="FHEMVIZset"></a>
+  <a id="FHEMVIZ-set"></a>
   <b>Set</b>
   <ul>
-    <li><b>scene &lt;name&gt; [sekunden]</b> &ndash; erzwingt im TV-Modus die
-        Szene <code>&lt;name&gt;</code> (= Raumname) fuer die angegebene Dauer
-        (Default 30 s), danach kehrt die Szenen-Rotation zurueck. Die SPA
-        empfaengt das live ueber den inform-Kanal &ndash; damit steuern ganz
-        normale notify/DOIF den Fernseher:<br>
+    <li><a id="FHEMVIZ-set-scene"></a><b>scene</b> &lt;raum&gt; [sekunden] &ndash;
+        erzwingt im TV-Modus die Szene <code>&lt;raum&gt;</code> für die
+        angegebene Dauer (Default 30 s, roter Rahmen), danach kehrt die
+        Rotation (bzw. eine gepinnte Seite) zurück. Die SPA empfängt das live
+        über den inform-Kanal &ndash; damit steuern ganz normale notify/DOIF den
+        Fernseher:<br>
         <code>define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60</code></li>
-    <li><b>page &lt;raum&gt;|auto</b> &ndash; schaltet die Anzeige
-        <i>dauerhaft</i> auf den Raum um (kein Timeout): der TV pinnt die
-        Seite (Rotation pausiert, Auto-Blaettern laeuft weiter), das Tablet
-        wechselt den Tab. <code>auto</code> hebt das Pinnen auf. Das Reading
-        <code>page</code> dient neu verbundenen Browsern als Startseite.
-        Kurzname genuegt (<code>FHEMVIZ-&gt;</code> wird ergaenzt):<br>
+    <li><a id="FHEMVIZ-set-page"></a><b>page</b> &lt;raum&gt;|auto &ndash;
+        schaltet die Anzeige <i>dauerhaft</i> auf den Raum um (kein Timeout):
+        der TV pinnt die Seite (Rotation pausiert, Auto-Blättern läuft
+        zyklisch weiter), das Tablet wechselt den Tab. <code>auto</code> hebt
+        das Pinnen auf. Das Reading <code>page</code> bleibt erhalten und
+        dient neu verbundenen Browsern als Startseite (URL-Parameter
+        <code>?room=</code> geht vor). Kurzname genügt:<br>
         <code>set myViz page Solar</code></li>
-  </ul>
-  <br>
+  </ul><br>
 
-  <a name="FHEMVIZget"></a>
+  <a id="FHEMVIZ-get"></a>
   <b>Get</b>
   <ul>
-    <li><b>manifest</b> / <b>config</b> &ndash; aktive Sicht als JSON
-        (devspec, theme, readonly, mode, tvScenes, hide*-Filter)</li>
-  </ul>
-  <br>
+    <li><a id="FHEMVIZ-get-config"></a><b>config</b> (Alias <b>manifest</b>) &ndash;
+        aktive Sicht als JSON: Name, Modul-Version, devspec, theme, readonly,
+        mode, tvScenes, statusBar, page, showRooms/hide*-Filter. Wird von der
+        SPA beim Start abgerufen; die Version dient als Cache-Wächter
+        (Versionskonflikt-Hinweis in der Statuszeile).</li>
+  </ul><br>
 
-  <a name="FHEMVIZattr"></a>
-  <b>Attributes</b>
+  <a id="FHEMVIZ-attr"></a>
+  <b>Attribute</b>
   <ul>
-    <li><b>disable</b> 1|0 &ndash; Deaktiviert das Geraet</li>
-    <li><b>readonly</b> 1|0 &ndash; Nur-Lese-Sicht (keine Bedienelemente)</li>
-    <li><b>devspec</b> &ndash; Geraeteauswahl fuer diese Sicht</li>
-    <li><b>theme</b> auto|light|dark &ndash; Farbschema der Oberflaeche</li>
-    <li><b>mode</b> tablet|tv &ndash; Betriebsart. <code>tablet</code>
-        (Default): bedienbar, Raum-Tabs unten. <code>tv</code>: keine
-        Bedienelemente, grosse Ziffern, automatische Szenen-Rotation.
-        Per URL uebersteuerbar: <code>?mode=tv</code></li>
-    <li><b>statusBar</b> &ndash; immer sichtbare Status-Chips im Kopf:
-        kommaseparierte Liste <code>geraet[:reading[:einheit]]</code>.
-        structure-Geraete werden zu "Alias: n offen", Readings zu
-        Wert-Chips. Tablet: Chip tippen springt zum FHEMVIZ-Raum.</li>
-    <li><b>tvScenes</b> &ndash; Szenen-Rotation im TV-Modus als
-        kommaseparierte Liste <code>Raum:Sekunden</code>, z. B.
-        <code>Solar:30,Wohnzimmer:20,Garage:15</code>. Ohne Angabe rotieren
-        alle sichtbaren Raeume mit je 20 s.</li>
-    <li><b>showRooms</b> &ndash; Whitelist: kommaseparierte Regex-Liste; ist
-        sie gesetzt, erscheinen NUR passende Raeume (z. B.
-        <code>FHEMVIZ-&gt;.*</code> fuer ein rein kuratiertes Dashboard).
-        Geraete ohne passenden Raum entfallen ganz. Leer = aus.</li>
-    <li><b>hideRooms</b> &ndash; kommaseparierte Regex-Liste von Raeumen, die
-        nicht als eigene Dashboard-Raeume erscheinen (Default:
-        <code>System-&gt;.*,Homebridge,Alexa,FileLog,hidden</code>;
-        leer = alle Raeume anzeigen)</li>
-    <li><b>hideTypes</b> &ndash; kommaseparierte Liste von FHEM-TYPEs, die
-        nicht als Kachel erscheinen (Default:
-        <code>SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup</code>)</li>
-    <li><b>hideStates</b> &ndash; kommaseparierte Regex-Liste; Geraete, deren
-        state komplett darauf matcht, werden ausgeblendet (Default:
+    <p><b>Sicht / Verhalten</b></p>
+    <li><a id="FHEMVIZ-attr-devspec"></a><b>devspec</b><br>
+        Typ: textField. <b>Pflicht.</b> FHEM-Geräteauswahl der Sicht, z. B.
+        <code>room=FHEMVIZ-&gt;.*</code> oder <code>d_garage_neu,mySolar.*</code>.
+        Nur diese Geräte werden geladen und live aktualisiert.</li>
+    <li><a id="FHEMVIZ-attr-mode"></a><b>mode</b> tablet|tv<br>
+        Betriebsart (Default <code>tablet</code>). Per URL übersteuerbar:
+        <code>?mode=tv</code> bzw. <code>?mode=tablet</code>.</li>
+    <li><a id="FHEMVIZ-attr-theme"></a><b>theme</b> auto|light|dark<br>
+        Farbschema (Default <code>auto</code> = Systemvorgabe des Geräts).</li>
+    <li><a id="FHEMVIZ-attr-readonly"></a><b>readonly</b> 0|1<br>
+        Nur-Lese-Sicht ohne Bedienelemente (Gäste-/Wandmodus). Im TV-Modus
+        immer aktiv.</li>
+    <li><a id="FHEMVIZ-attr-disable"></a><b>disable</b> 0|1<br>
+        Gerät deaktivieren.</li>
+
+    <p><b>TV-Modus</b></p>
+    <li><a id="FHEMVIZ-attr-tvScenes"></a><b>tvScenes</b><br>
+        Typ: textField. Szenen-Rotation als kommaseparierte Liste
+        <code>Raum:Sekunden</code>, z. B.
+        <code>Solar:30,Wohnzimmer:20,Termine:15</code> (Kurznamen erlaubt).
+        Läuft eine Szene über, wird die Szenenzeit auf Seiten verteilt und an
+        Kachelzeilen ausgerichtet weitergeblättert. Ohne Angabe rotieren alle
+        sichtbaren Räume mit je 20 s. Unbekannte Räume werden übersprungen
+        und in der Statuszeile gemeldet.</li>
+    <li><a id="FHEMVIZ-attr-statusBar"></a><b>statusBar</b><br>
+        Typ: textField-long. Immer sichtbare Status-Chips im Kopf:
+        kommaseparierte Liste <code>gerät[:reading[:einheit]]</code>.
+        structure-Geräte werden zu "Alias: n offen · m gekippt" (Warnfarbe),
+        Readings zu Wert-Chips, sonst Zustands-Chip. Auf dem Tablet springt
+        ein Tipp auf den Chip zum FHEMVIZ-Raum des Geräts. Beispiel:<br>
+        <code>attr myViz statusBar st_fenster,st_tuer,d_Wechselrichter_all:pv_leistung:W</code></li>
+
+    <p><b>Raum-Filter</b></p>
+    <li><a id="FHEMVIZ-attr-showRooms"></a><b>showRooms</b><br>
+        Typ: textField. <b>Whitelist</b> (kommaseparierte Regex-Liste): ist
+        sie gesetzt, erscheinen NUR passende Räume; Geräte ohne passenden
+        Raum entfallen ganz. Für ein rein kuratiertes Dashboard:
+        <code>FHEMVIZ-&gt;.*</code>. Leer = aus.</li>
+    <li><a id="FHEMVIZ-attr-hideRooms"></a><b>hideRooms</b><br>
+        Typ: textField. Kommaseparierte Regex-Liste von Räumen ohne eigenen
+        Tab/Abschnitt (Default
+        <code>System-&gt;.*,Homebridge,Alexa,FileLog,hidden</code>).</li>
+    <li><a id="FHEMVIZ-attr-hideTypes"></a><b>hideTypes</b><br>
+        Typ: textField. FHEM-TYPEs ohne Kachel (Default
+        <code>SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup</code>).</li>
+    <li><a id="FHEMVIZ-attr-hideStates"></a><b>hideStates</b><br>
+        Typ: textField. Kommaseparierte Regex-Liste; Geräte, deren state
+        komplett darauf matcht, werden ausgeblendet (Default
         <code>\?\?\?,unknown,initialized,defined,disabled,inactive</code>).
-        Ein Geraet mit gesetztem <code>vizWidget</code>-Attribut wird immer
-        angezeigt.</li>
-  </ul>
-  <br>
+        Ein Gerät mit gesetztem <code>vizWidget</code> oder
+        <code>vizReadings</code> wird immer angezeigt.</li>
+  </ul><br>
 
-  <a name="FHEMVIZdevattr"></a>
-  <b>Geraete-Attribute (an den visualisierten Geraeten, global registriert)</b>
+  <a id="FHEMVIZ-devattr"></a>
+  <b>Geräte-Attribute</b> (an den <i>visualisierten</i> Geräten; global
+  registriert, erscheinen im Attribut-Dropdown jedes Geräts)
   <ul>
-    <li><b>vizWidget</b> switch|sensor|dimmer|shutter|actions|text|agenda|contact &ndash; Widget-Typ
-        erzwingen; uebersteuert genericDeviceType/Heuristik und die
-        Rausch-Filter (Geraet wird immer angezeigt). <code>text</code> zeigt
-        mehrzeiligen Klartext (z. B. Kalender-/Terminlisten) mit erhaltenen
-        Zeilenumbruechen.</li>
-    <li><b>vizSize</b> 1x1|2x1|1x2|2x2 &ndash; Kachelgroesse im Raster;
-        2x2 ergibt eine Hero-Kachel mit groesserer Schrift</li>
-    <li><b>vizHide</b> 1|0 &ndash; Geraet aus der Sicht ausblenden</li>
-    <li><b>vizStates</b> &ndash; uebersetzt technische Status-Codes in
-        Klartext + Farbe: <code>pattern:Label[:Farbe]</code> kommasepariert,
-        pattern = Regex (Volltreffer). Beispiel:
-        <code>attr rem_SILENO vizStates ok_cutting:Maeht:ok,ok_charging:Laedt:accent,ok_searching:Sucht:ok,parked.*:Geparkt</code></li>
-    <li><b>vizReadings</b> &ndash; Kachelinhalt direkt aus Readings statt
-        state-Parsing: <code>reading[:Label[:Einheit[:Farbe]]]</code>,
-        kommasepariert; erster Eintrag = Hauptwert (gross). Farben sind
+    <li><a id="FHEMVIZ-attr-vizWidget"></a><b>vizWidget</b>
+        switch|sensor|dimmer|shutter|actions|text|agenda|contact|vent|flow|forecast<br>
+        Widget-Typ erzwingen; übersteuert genericDeviceType/webCmd/Heuristik
+        und die Rausch-Filter (Gerät wird immer angezeigt). Automatisch
+        erkannt werden u. a. <code>genericDeviceType</code>
+        (blind/shutter/light/window/door), <code>TYPE=SolarForecast</code>
+        (&rarr; forecast), <code>TYPE=structure</code> (&rarr; Gruppen-Kachel)
+        und Kontakt-Zustände (open/closed/tilted). Besondere Widgets:
+        <code>text</code> = mehrzeiliger Klartext,
+        <code>agenda</code> = Terminliste (<code>DD.MM.YYYY HH:MM Text</code>-Zeilen)
+        mit Wochentag und hervorgehobenem nächstem Termin,
+        <code>contact</code> = Fenster/Tür (offen = Bernstein; structure =
+        Gruppen-Kachel "2 offen · 1 gekippt" mit Mini-Symbolen),
+        <code>vent</code> = Lüftungsempfehlung (Skala &minus;3..+4),
+        <code>flow</code> = Energiefluss mit Laufpunkt-Animation,
+        <code>forecast</code> = PV-Prognose mit Stunden-Balkenchart
+        (IST vor Prognose), Sonnenzeiten, Peak und Morgen-Wert.</li>
+    <li><a id="FHEMVIZ-attr-vizSize"></a><b>vizSize</b> 1x1|2x1|1x2|2x2<br>
+        Kachelgröße im Raster; 2x2 ergibt eine Hero-Kachel mit größerer
+        Schrift.</li>
+    <li><a id="FHEMVIZ-attr-vizHide"></a><b>vizHide</b> 1|0<br>
+        Gerät aus der Sicht ausblenden.</li>
+    <li><a id="FHEMVIZ-attr-vizReadings"></a><b>vizReadings</b><br>
+        Typ: textField-long. Kachelinhalt direkt aus Readings statt
+        state-Parsing: <code>reading[:Label[:Einheit[:Farbe]]]</code>
+        kommasepariert; erster Eintrag = Hauptwert (groß). Die Einheit wird
+        nicht verdoppelt, wenn der Wert sie schon trägt. Farben sind
         semantische Namen: <code>ok</code>/<code>gruen</code>,
         <code>warn</code>/<code>orange</code>, <code>bad</code>/<code>rot</code>,
-        <code>accent</code>, <code>blau</code>. Ist das Attribut gesetzt, wird
-        state ignoriert und das Geraet immer angezeigt. Beispiel:<br>
-        <code>attr d_Wechselrichter_all vizReadings
-        soc:Ladung:%:accent,pv_leistung:PV:W:ok,out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,batterie_leistung:Batterie:W:warn</code></li>
-  </ul>
+        <code>accent</code>, <code>blau</code>. Bei Widgets mit eigener
+        Darstellung erscheinen die Einträge als Info-Zeilen. Beispiel:<br>
+        <code>attr d_Wechselrichter_all vizReadings soc:Ladung:%:accent,pv_leistung:PV:W:ok</code></li>
+    <li><a id="FHEMVIZ-attr-vizStates"></a><b>vizStates</b><br>
+        Typ: textField-long. Übersetzt technische Status-Codes in Klartext +
+        Farbe: <code>pattern:Label[:Farbe]</code> kommasepariert, pattern =
+        Regex (Volltreffer, case-insensitiv). Beispiel:<br>
+        <code>attr rem_SILENO vizStates ok_cutting:Mäht:ok,ok_charging:Lädt:accent,parked.*:Geparkt</code></li>
+    <li><a id="FHEMVIZ-attr-vizFlow"></a><b>vizFlow</b><br>
+        Typ: textField-long. Readings-Zuordnung des flow-Widgets als
+        <code>rolle=reading</code>-Liste; Rollen: <code>pv</code>,
+        <code>haus</code>, <code>netz</code>, <code>batterie</code>,
+        <code>soc</code>. Vorzeichen: Netz &gt; 0 = Bezug, &lt; 0 =
+        Einspeisung; Batterie &gt; 0 = laden, &lt; 0 = entladen. Default:<br>
+        <code>pv=pv_leistung,haus=out_leistung,netz=netzleistung_all,batterie=batterie_leistung,soc=soc</code></li>
+  </ul><br>
+
+  <a id="FHEMVIZ-readings"></a>
+  <b>Readings</b>
+  <ul>
+    <li><b>scene</b> / <b>sceneDuration</b> &ndash; letzte per
+        <code>set scene</code> erzwungene Szene und ihre Dauer (werden von
+        der SPA live ausgewertet).</li>
+    <li><b>page</b> &ndash; aktuell gepinnte Seite (<code>set page</code>);
+        dient neu verbundenen Browsern als Startseite, <code>auto</code> =
+        keine.</li>
+  </ul><br>
+
+  <a id="FHEMVIZ-url"></a>
+  <b>URL-Parameter der Oberfläche</b>
+  <ul>
+    <li><code>?device=&lt;name&gt;</code> &ndash; bestimmtes FHEMVIZ-Gerät
+        (sonst: erstes <code>TYPE=FHEMVIZ</code>)</li>
+    <li><code>?mode=tv|tablet</code> &ndash; Betriebsart übersteuern (für
+        Kiosk-Start-URLs)</li>
+    <li><code>?zoom=1.3</code> &ndash; Oberfläche skalieren (0.5&ndash;3,
+        auch <code>130</code> als Prozent), pro Gerät in der Start-URL</li>
+    <li><code>?room=Solar</code> &ndash; Startseite: TV beginnt die Rotation
+        mit diesem Raum, Tablet öffnet den Tab; geht vor dem Reading
+        <code>page</code></li>
+  </ul><br>
+
+  Ausführliche Beispiele (Installation per <code>update add</code>,
+  TV-Einrichtung, Plugin-API für eigene Widgets) stehen im README des
+  Projekts: <a href="https://github.com/ahlers2mi/FHEM-FHEMVIZ">github.com/ahlers2mi/FHEM-FHEMVIZ</a>
 </ul>
 
 =end html

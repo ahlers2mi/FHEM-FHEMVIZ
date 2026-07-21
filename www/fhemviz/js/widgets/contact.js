@@ -70,12 +70,15 @@ export class FhemvizContact extends FhemvizWidget {
       .filter(Boolean);
   }
 
-  /** open | tilted | closed | unknown (fuer beliebige state-Strings) */
+  /**
+   * open | tilted | closed | unknown (fuer beliebige state-Strings).
+   * Praefix-tolerant: "closed (battery low)" u. ae. zaehlen als closed.
+   */
   _stateOf(raw) {
     const st = this.plain(raw).toLowerCase();
-    if (/^(open|opened|auf|offen|ge(ö|oe)ffnet|on)$/.test(st)) return "open";
-    if (/^(tilted|gekippt|kipp(en|stellung)?)$/.test(st)) return "tilted";
-    if (/^(closed|zu|geschlossen|off)$/.test(st)) return "closed";
+    if (/^(open|opened|auf|offen|ge(ö|oe)ffnet|on)\b/.test(st)) return "open";
+    if (/^(tilted|gekippt|kipp(en|stellung)?)\b/.test(st)) return "tilted";
+    if (/^(closed|zu|geschlossen|off)\b/.test(st)) return "closed";
     return "unknown";
   }
 
@@ -103,7 +106,9 @@ export class FhemvizContact extends FhemvizWidget {
     if (state === "open") return "Offen";
     if (state === "tilted") return "Gekippt";
     if (state === "closed") return "Zu";
-    return this.plain(this.device.state); // unbekannter Zustand: roh anzeigen
+    // Unbekannter Zustand: roh anzeigen, aber nie "undefined"/"???".
+    const raw = this.plain(this.device.state);
+    return /^(undefined|unknown|\?+)?$/i.test(raw) ? "–" : raw;
   }
 
   _looksLikeDoor(name) {

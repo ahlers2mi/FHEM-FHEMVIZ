@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.8.3";
+const SPA_VERSION = "v0.9.1";
 
 const el = (id) => document.getElementById(id);
 
@@ -128,10 +128,11 @@ function setupStatusBar(store, spec, opts) {
   if (!entries.length) return;
   bar.hidden = false;
 
+  // Praefix-tolerant: "closed (battery low)" u. ae. zaehlen als closed.
   const contactState = (st) => {
     st = plain(st).toLowerCase();
-    if (/^(open|opened|auf|offen|on)$/.test(st)) return "open";
-    if (/^(tilted|gekippt)$/.test(st)) return "tilted";
+    if (/^(open|opened|auf|offen|on)\b/.test(st)) return "open";
+    if (/^(tilted|gekippt)\b/.test(st)) return "tilted";
     return "closed";
   };
   const members = (d) =>
@@ -163,6 +164,8 @@ function setupStatusBar(store, spec, opts) {
         : { text: `${alias} zu`, warn: false };
     }
     const st = plain(c.device.state);
+    // Nichtssagende Zustaende (structure "undefined" u. ae.) nicht anzeigen.
+    if (/^(undefined|unknown|\?+)?$/i.test(st)) return { text: `${alias} –`, warn: false };
     const warn = /^(on|an|open|offen|auf|true|running|l(ä|ae)uft|1)$/i.test(st);
     return { text: `${alias} ${st}`, warn };
   }
