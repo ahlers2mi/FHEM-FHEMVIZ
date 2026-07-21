@@ -213,6 +213,19 @@ export function renderLayout(root, store, client, opts = {}) {
   const widgetOpts = { readonly: !!opts.readonly, tv: !!opts.tv };
   const shownRooms = active === ALL_ROOMS ? roomNames : [active];
 
+  // Wie viele Spalten passen tatsaechlich in die Containerbreite?
+  // (Mindest-Kachelbreite + Luecke aus den CSS-Variablen). Unter ?zoom=
+  // ist die Layout-Breite Bildschirm/Zoom - ohne diesen Deckel wuerde ein
+  // breites Raster rechts ueberstehen.
+  const cs = getComputedStyle(root);
+  const tileMin = parseFloat(cs.getPropertyValue("--viz-tile-min")) || 220;
+  const gap = parseFloat(cs.getPropertyValue("--viz-gap")) || 14;
+  const avail =
+    root.clientWidth -
+    (parseFloat(cs.paddingLeft) || 0) -
+    (parseFloat(cs.paddingRight) || 0);
+  const fitCols = Math.max(1, Math.floor((avail + gap) / (tileMin + gap)));
+
   for (const room of shownRooms) {
     const groups = rooms.get(room);
     const roomEl = document.createElement("section");
@@ -236,13 +249,21 @@ export function renderLayout(root, store, client, opts = {}) {
     for (const [group, devices] of [...groups.entries()].sort()) {
       const groupEl = document.createElement("div");
       groupEl.className = "viz-group";
-      const cols = Math.min(
-        devices.reduce(
-          (a, d) =>
-            a + (/^2/.test(String((d.attr || {}).vizSize || "")) ? 2 : 1),
-          0
-        ),
-        opts.tv ? 4 : 6
+      const hasWide = devices.some((d) =>
+        /^2/.test(String((d.attr || {}).vizSize || ""))
+      );
+      const cols = Math.max(
+        // Doppelt breite Kacheln brauchen mindestens 2 Spalten.
+        hasWide ? 2 : 1,
+        Math.min(
+          devices.reduce(
+            (a, d) =>
+              a + (/^2/.test(String((d.attr || {}).vizSize || "")) ? 2 : 1),
+            0
+          ),
+          opts.tv ? 4 : 6,
+          fitCols // nie mehr Spalten, als in die Breite passen
+        )
       );
       groupEl.style.setProperty("--viz-group-cols", cols);
       // Die Default-Gruppe "Allgemein" braucht keine Ueberschrift, wenn sie
