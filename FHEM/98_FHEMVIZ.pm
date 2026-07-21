@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.11.3
+# Version:  v0.12.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.11.3";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.12.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -102,6 +102,7 @@ sub FHEMVIZ_Initialize {
           "devspec " .
           "theme:auto,light,dark " .
           "mode:tablet,tv " .
+          "zoom " .
           "tvScenes " .
           "tvTouch " .
           "statusBar:textField-long " .
@@ -245,6 +246,7 @@ sub FHEMVIZ_Get {
         my $mode       = AttrVal($name, "mode", "tablet");
         my $tvScenes   = AttrVal($name, "tvScenes", "");
         my $tvTouch    = AttrVal($name, "tvTouch", "");
+        my $zoomAttr   = AttrVal($name, "zoom", "");
         my $statusBar  = AttrVal($name, "statusBar", "");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
@@ -256,14 +258,15 @@ sub FHEMVIZ_Get {
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
+              . '"mode":%s,"zoom":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.11.3"),
+            FHEMVIZ_jsonStr("v0.12.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
             FHEMVIZ_jsonStr($mode),
+            FHEMVIZ_jsonStr($zoomAttr),
             FHEMVIZ_jsonStr($tvScenes),
             FHEMVIZ_jsonStr($tvTouch),
             FHEMVIZ_jsonStr($statusBar),
@@ -305,6 +308,16 @@ sub FHEMVIZ_Attr {
         if ($attr_name eq "disable" || $attr_name eq "readonly") {
             if (!defined($attr_value) || $attr_value !~ /^(0|1)$/) {
                 my $err = "Invalid argument for $attr_name. Must be 0 or 1.";
+                Log3($name, 3, "$name: $err");
+                return $err;
+            }
+        }
+        if ($attr_name eq "zoom") {
+            # 0.5-3 (auch Komma), oder Prozent 50-300.
+            my $v = defined($attr_value) ? $attr_value : "";
+            $v =~ s/,/./;
+            if ($v !~ /^\d+(\.\d+)?$/ || $v <= 0) {
+                my $err = "Invalid argument for zoom. Use 0.5-3 (e.g. 1.3) or percent (130).";
                 Log3($name, 3, "$name: $err");
                 return $err;
             }
@@ -414,6 +427,13 @@ sub FHEMVIZ_Attr {
         <code>?mode=tv</code> bzw. <code>?mode=tablet</code>.</li>
     <li><a id="FHEMVIZ-attr-theme"></a><b>theme</b> auto|light|dark<br>
         Farbschema (Default <code>auto</code> = Systemvorgabe des Geräts).</li>
+    <li><a id="FHEMVIZ-attr-zoom"></a><b>zoom</b><br>
+        Typ: textField. Standard-Skalierung der Oberfläche für alle Browser
+        dieses Geräts: 0.5&ndash;3 (z. B. <code>1.3</code>) oder Prozent
+        (<code>130</code>). Der URL-Parameter <code>?zoom=</code> geht vor
+        (für abweichende Einzelgeräte). Praktisch für Kiosk-Browser wie
+        Fully, die URL-Parameter verschlucken. Der aktive Zoom wird in der
+        Statuszeile angezeigt.</li>
     <li><a id="FHEMVIZ-attr-readonly"></a><b>readonly</b> 0|1<br>
         Nur-Lese-Sicht ohne Bedienelemente (Gäste-/Wandmodus). Im TV-Modus
         immer aktiv.</li>
