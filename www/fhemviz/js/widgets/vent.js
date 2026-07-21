@@ -22,11 +22,20 @@ const VENT_CSS = `
   /* Negative Stufen: Lueften waere kontraproduktiv -> rot */
   .card.neg .vicon path.a { stroke: var(--viz-error, #ff5d5d); }
   .card.neg .vstate { color: var(--viz-error, #ff5d5d); }
-  .vstate { font-size: 1.15rem; font-weight: 450; }
+  .vstate { font-size: 1.35rem; font-weight: 450; line-height: 1.15; }
   .card.go .vstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
   .card.cool .vstate { color: var(--viz-action, #4c8dff); }
-  :host([data-tv]) .vicon { width: 56px; height: 56px; }
-  :host([data-tv]) .vstate { font-size: 1.5rem; }
+  /* Groessere Kacheln: Symbol + Empfehlung wachsen mit. */
+  :host([data-size="2x1"]) .vstate, :host([data-size="1x2"]) .vstate,
+  :host([data-size="2x2"]) .vstate { font-size: 1.7rem; }
+  :host([data-size="2x1"]) .vicon, :host([data-size="1x2"]) .vicon,
+  :host([data-size="2x2"]) .vicon { width: 60px; height: 60px; }
+  /* TV-Modus: aus der Ferne lesbar (zusaetzlich mal ?zoom). */
+  :host([data-tv]) .vicon { width: 72px; height: 72px; }
+  :host([data-tv]) .vstate { font-size: 2rem; }
+  :host([data-tv][data-size="2x1"]) .vstate, :host([data-tv][data-size="1x2"]) .vstate,
+  :host([data-tv][data-size="2x2"]) .vstate { font-size: 2.5rem; }
+  :host([data-tv][data-size="2x2"]) .vicon { width: 92px; height: 92px; }
 `;
 
 // Wortlaut aus my_lueften() (lueftentext-Readings) uebernommen.

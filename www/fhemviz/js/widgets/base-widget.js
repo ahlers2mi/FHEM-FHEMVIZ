@@ -130,6 +130,21 @@ const CARD_CSS = `
   :host([data-tv][data-size="2x1"]) .sub, :host([data-tv][data-size="1x2"]) .sub { font-size: 1.2rem; }
   :host([data-tv][data-size="2x2"]) .sub { font-size: 1.35rem; }
 
+  /* Lange Werte (.md/.sm, z. B. Wetter-Text) muessen EXPLIZIT mitskaliert
+   * werden: die :host()-Regeln fuer .value setzen sich in manchen WebViews
+   * nicht gegen die 2-Klassen-Regel .value.sm durch. Diese Selektoren sind
+   * spezifischer und greifen daher zuverlaessig. */
+  :host([data-size="2x1"]) .value.md, :host([data-size="1x2"]) .value.md { font-size: 1.7rem; }
+  :host([data-size="2x2"]) .value.md { font-size: 2.2rem; }
+  :host([data-size="2x1"]) .value.sm, :host([data-size="1x2"]) .value.sm { font-size: 1.3rem; }
+  :host([data-size="2x2"]) .value.sm { font-size: 1.6rem; }
+  :host([data-tv]) .value.md { font-size: 2.2rem; }
+  :host([data-tv]) .value.sm { font-size: 1.7rem; }
+  :host([data-tv][data-size="2x1"]) .value.md, :host([data-tv][data-size="1x2"]) .value.md { font-size: 2.6rem; }
+  :host([data-tv][data-size="2x1"]) .value.sm, :host([data-tv][data-size="1x2"]) .value.sm { font-size: 2rem; }
+  :host([data-tv][data-size="2x2"]) .value.md { font-size: 3rem; }
+  :host([data-tv][data-size="2x2"]) .value.sm { font-size: 2.3rem; }
+
   @media (prefers-reduced-motion: reduce) {
     button.toggle, button.toggle::after { transition: none; }
   }
