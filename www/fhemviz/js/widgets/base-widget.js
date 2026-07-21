@@ -90,8 +90,11 @@ const CARD_CSS = `
     background: var(--viz-raised, #1c212a); color: var(--viz-text, #e8eaed);
   }
   .ctlrow { display: flex; align-items: center; gap: 10px; }
-  .ctlrow .sub { flex-shrink: 0; }
-  .ctlrow input[type=range] { flex: 1; margin: 0; }
+  /* Feste Label-/Wert-Spalten: alle Slider einer Kachel laufen buendig,
+   * gleicher Wert = gleiche Knopfposition. */
+  .ctlrow > .sub:first-child { flex: 0 0 5.5em; }
+  .ctlrow > .sub:last-child { flex: 0 0 2.8em; text-align: right; }
+  .ctlrow input[type=range] { flex: 1; margin: 0; min-width: 0; }
 
   .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .dot.ok  { background: var(--viz-ok, #34c77b); }
