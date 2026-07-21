@@ -8,8 +8,34 @@
 import { FhemvizWidget } from "./base-widget.js";
 
 export class FhemvizSwitch extends FhemvizWidget {
+  /**
+   * Schaltzustand "on" | "off" | null. Reihenfolge:
+   * 1. state selbst (praefix-tolerant, "on 23 W" zaehlt als an),
+   * 2. Readings POWER / POWER1 / state - ein stateFormat macht aus state
+   *    oft reinen Anzeigetext ohne on/off (Tasmota & Co. fuehren das
+   *    echte Ein/Aus im Reading POWER).
+   */
+  _switchState() {
+    const check = (v) => {
+      const s = this.plain(v).toLowerCase();
+      if (/^(on|true|an|open|ge(ö|oe)ffnet)\b/.test(s) || s === "1") return "on";
+      if (/^(off|false|aus|closed|geschlossen)\b/.test(s) || s === "0") return "off";
+      return null;
+    };
+    const own = check(this.device.state);
+    if (own) return own;
+    const rd = this.device.readings || {};
+    for (const r of ["POWER", "POWER1", "state"]) {
+      if (rd[r] !== undefined) {
+        const m = check(rd[r]);
+        if (m) return m;
+      }
+    }
+    return null;
+  }
+
   _isOn() {
-    return /^(on|1|true|open|ge?offnet|an)$/i.test(this.plain(this.device.state));
+    return this._switchState() === "on";
   }
 
   _stateText() {
@@ -18,6 +44,10 @@ export class FhemvizSwitch extends FhemvizWidget {
     const st = this.plain(this.device.state);
     if (/^on$/i.test(st)) return "An";
     if (/^off$/i.test(st)) return "Aus";
+    // state ist Anzeigetext (stateFormat): auf den ermittelten
+    // Schaltzustand zurueckfallen statt den Textblock zu zeigen.
+    const sw = this._switchState();
+    if (sw) return sw === "on" ? "An" : "Aus";
     return st;
   }
 
