@@ -315,17 +315,37 @@ export function renderLayout(root, store, client, opts = {}) {
     });
     // Messmodus: Stretching aufheben UND die 100%-Hoehe der Hosts
     // aussetzen, sonst liefert die Messung wieder die Zeilenhoehe.
-    grid.style.alignItems = "start";
-    for (const t of tiles) t.style.height = "auto";
-    const spans = tiles.map((t, i) =>
-      Math.max(
-        minSpan[i],
-        Math.min(6, Math.ceil((t.offsetHeight + gap) / (rowH + gap)))
-      )
-    );
-    grid.style.alignItems = "";
+    const measure = () => {
+      grid.style.alignItems = "start";
+      for (const t of tiles) t.style.height = "auto";
+      const spans = tiles.map((t, i) =>
+        Math.max(
+          minSpan[i],
+          Math.min(6, Math.ceil((t.offsetHeight + gap) / (rowH + gap)))
+        )
+      );
+      grid.style.alignItems = "";
+      for (const t of tiles) t.style.height = "";
+      return spans;
+    };
+
+    // Durchgang 1: Span + Groessenstufe (Typografie) setzen.
+    let spans = measure();
     tiles.forEach((t, i) => {
-      t.style.height = "";
+      if (spans[i] > 1) t.style.gridRow = `span ${spans[i]}`;
+      // Typografie an die tatsaechliche Kachelgroesse koppeln: auto
+      // vergroesserte Kacheln skalieren wie manuell gesetzte vizSize
+      // (grosse Ziffern/Zeilen statt kleiner Text in grosser Flaeche).
+      if (!t.getAttribute("data-size")) {
+        const c = /span\s*2/.test(t.style.gridColumn || "") ? 2 : 1;
+        const r = spans[i] >= 2 ? 2 : 1;
+        if (c === 2 || r === 2) t.setAttribute("data-size", `${c}x${r}`);
+      }
+    });
+    // Durchgang 2: die groessere Typografie braucht ggf. mehr Hoehe -
+    // Spans nur noch nach OBEN korrigieren (stabil, kein Flackern).
+    spans = measure().map((s, i) => Math.max(s, spans[i]));
+    tiles.forEach((t, i) => {
       if (spans[i] > 1) t.style.gridRow = `span ${spans[i]}`;
     });
   }
