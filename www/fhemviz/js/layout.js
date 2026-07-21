@@ -287,4 +287,37 @@ export function renderLayout(root, store, client, opts = {}) {
     }
     root.appendChild(roomEl);
   }
+
+  // Zeilen-Spannweite an den INHALT anpassen: bisher wuchs die ganze
+  // Rasterzeile auf die hoechste Kachel und streckte alle Nachbarn mit
+  // (leere Riesen-Kacheln neben einem Regler). Jetzt wird die natuerliche
+  // Hoehe jeder Kachel gemessen (align-items:start hebt das Stretching
+  // kurz auf) und inhaltsreiche Kacheln spannen mehrere Rasterzeilen -
+  // kompakte bleiben klein, grid-auto-flow:dense packt sie in die Luecken.
+  const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 104;
+  for (const grid of root.querySelectorAll(".viz-grid")) {
+    const tiles = [...grid.children];
+    // vizSize-Spans (1x2/2x2) gelten als MINIMUM - waechst der Inhalt
+    // darueber hinaus, wird der Span erhoeht, statt dass die Rasterzeile
+    // aufblaeht und alle Nachbarn mitstreckt.
+    const minSpan = tiles.map((t) => {
+      const m = String(t.style.gridRow || "").match(/span\s+(\d+)/);
+      return m ? parseInt(m[1], 10) : 1;
+    });
+    // Messmodus: Stretching aufheben UND die 100%-Hoehe der Hosts
+    // aussetzen, sonst liefert die Messung wieder die Zeilenhoehe.
+    grid.style.alignItems = "start";
+    for (const t of tiles) t.style.height = "auto";
+    const spans = tiles.map((t, i) =>
+      Math.max(
+        minSpan[i],
+        Math.min(6, Math.ceil((t.offsetHeight + gap) / (rowH + gap)))
+      )
+    );
+    grid.style.alignItems = "";
+    tiles.forEach((t, i) => {
+      t.style.height = "";
+      if (spans[i] > 1) t.style.gridRow = `span ${spans[i]}`;
+    });
+  }
 }
