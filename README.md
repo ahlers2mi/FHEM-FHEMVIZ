@@ -195,7 +195,7 @@ set myViz page auto      # Pin aufheben, TV kehrt zur Szenen-Rotation zurück
 |---|---|
 | `?device=<name>` | Bestimmtes FHEMVIZ-Gerät (sonst: erstes `TYPE=FHEMVIZ`) |
 | `?mode=tv` / `?mode=tablet` | Betriebsart übersteuern (für Kiosk-Start-URLs) |
-| `?zoom=1.3` | Oberfläche skalieren (0.5–3, auch `130` als Prozent) — pro Gerät in der Start-URL, z. B. größer für den TV, kleiner fürs kleine Tablet |
+| `?zoom=1.3` | Oberfläche skalieren (0.5–3, auch `130` als Prozent) — pro Gerät in der Start-URL, z. B. größer für den TV, kleiner fürs kleine Tablet. Auf Android/Fully Kiosk wird automatisch die native Viewport-Skalierung genutzt (CSS-zoom wird dort teils ignoriert) |
 | `?room=Solar` | Startseite: TV beginnt die Szenen-Rotation mit diesem Raum (steht er nicht in `tvScenes`, läuft er einmalig zuerst), Tablet öffnet den Tab. Kurzname genügt, `FHEMVIZ->` wird automatisch probiert |
 
 ## Eigene Widgets (Plugin-API)
