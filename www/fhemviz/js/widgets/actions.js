@@ -60,6 +60,14 @@ export class FhemvizActions extends FhemvizWidget {
     const mapped = this.vizStateInfo();
     const state = this.escape(mapped ? mapped.text : this.plain(this.device.state));
     const stColor = mapped && mapped.color ? `color:${mapped.color};` : "";
+    // Statusleiste der Kachel folgt der vizStates-Farbe (gruen = ok-Leiste,
+    // rot = Alarm, accent/orange = aktiv) - Zustand hat eine Form.
+    let cardCls = "";
+    if (mapped && mapped.color) {
+      if (mapped.color.includes("--viz-ok")) cardCls = " ok";
+      else if (mapped.color.includes("--viz-error")) cardCls = " bad";
+      else cardCls = " on";
+    }
     let body = "";
     if (!this.readonly) {
       const parts = [];
@@ -98,7 +106,7 @@ export class FhemvizActions extends FhemvizWidget {
       body = parts.join("");
     }
     return `
-      <div class="card">
+      <div class="card${cardCls}">
         <span class="label">${this.escape(this.displayName())}</span>
         <div class="value" style="font-size:1.15rem;font-weight:450;${stColor}">${state}</div>
         ${body}
