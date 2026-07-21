@@ -119,10 +119,16 @@ const CARD_CSS = `
   :host([data-size="1x2"]) .value { font-size: 2.3rem; }
   :host([data-size="2x2"]) .value { font-size: 3rem; }
   :host([data-size="2x2"]) .card { padding: 18px 20px 18px 24px; gap: 10px; }
+  /* Info-Zeilen wachsen mit der Kachel mit - kein Kleingedrucktes in
+   * grossen Flaechen (Lesbarkeit aus der Ferne). */
+  :host([data-size="2x1"]) .sub, :host([data-size="1x2"]) .sub { font-size: 0.95rem; }
+  :host([data-size="2x2"]) .sub { font-size: 1.1rem; }
   :host([data-tv]) .value { font-size: 2.7rem; }
   :host([data-tv][data-size="2x2"]) .value { font-size: 3.8rem; }
   :host([data-tv]) .label { font-size: 0.74rem; }
-  :host([data-tv]) .sub { font-size: 0.95rem; }
+  :host([data-tv]) .sub { font-size: 1.05rem; }
+  :host([data-tv][data-size="2x1"]) .sub, :host([data-tv][data-size="1x2"]) .sub { font-size: 1.2rem; }
+  :host([data-tv][data-size="2x2"]) .sub { font-size: 1.35rem; }
 
   @media (prefers-reduced-motion: reduce) {
     button.toggle, button.toggle::after { transition: none; }
