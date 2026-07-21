@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.11.3";
+const SPA_VERSION = "v0.12.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -422,6 +422,53 @@ class TvController {
   }
 }
 
+/* --------------------------------- Zoom -------------------------------------
+ * Skalierung der Oberflaeche: attr zoom am FHEMVIZ-Geraet ist der Default,
+ * ?zoom= in der URL geht vor (fuer abweichende Einzelgeraete). Werte 0.5-3,
+ * auch als Prozent (130). Android-WebViews (Fully Kiosk) skalieren per
+ * transform (CSS zoom wird dort teils ignoriert), Desktop per CSS zoom mit
+ * Breiten-Nachmessung fuer alte Engines.
+ */
+function applyZoom(urlValue, cfgValue) {
+  const parse = (s) => {
+    let z = parseFloat(String(s ?? "").replace(",", "."));
+    if (isNaN(z) || z <= 0) return null;
+    if (z > 5) z = z / 100; // 130 -> 1.3
+    return Math.min(3, Math.max(0.5, z));
+  };
+  const zoom = parse(urlValue) ?? parse(cfgValue);
+  if (!zoom || zoom === 1) return "";
+  // Faktor fuer die TV-Flaechenmessung (_fit) merken.
+  document.documentElement.dataset.vizzoom = String(zoom);
+  if (/Android/i.test(navigator.userAgent)) {
+    // transform:scale ist reines Rendering und wirkt in jedem WebView.
+    // Der body wird auf Viewport/zoom verkleinert und hochskaliert; er
+    // scrollt selbst (statt html), damit fixe Elemente (Tab-Leiste) am
+    // sichtbaren Rand haengen.
+    const de = document.documentElement.style;
+    de.overflow = "hidden";
+    de.height = "100%";
+    const b = document.body.style;
+    b.transform = `scale(${zoom})`;
+    b.transformOrigin = "0 0";
+    b.width = `calc(100% / ${zoom})`;
+    b.height = `calc(100% / ${zoom})`;
+    b.overflowY = "auto";
+  } else {
+    document.body.style.zoom = zoom;
+    // Aeltere Engines (WebView im Desktop-Mode) skalieren 100%-Breiten
+    // nicht mit -> Kacheln rechts abgeschnitten. Nachmessen und
+    // kompensieren; moderne Browser messen bereits passend.
+    const vis = document.body.getBoundingClientRect().width;
+    if (vis > window.innerWidth + 2) {
+      document.body.style.width = `calc(100% / ${zoom})`;
+    }
+  }
+  // Sichtbarkeit fuer die Diagnose: aktiver Zoom erscheint in der
+  // Statuszeile - fehlt er dort, kommt weder URL- noch attr-Zoom an.
+  return ` · Zoom ${zoom}`;
+}
+
 /* ------------------------------ Show-Overlay -------------------------------
  * set <viz> show <url> [sek]: blendet eine Webseite oder ein Bild (Kamera-
  * Snapshot) als Vollbild-Overlay UEBER dem Dashboard ein - die SPA laeuft
@@ -480,48 +527,9 @@ async function main() {
     // FHEMVIZ-Gerät bestimmen (?device=… oder erstes TYPE=FHEMVIZ).
     const params = new URLSearchParams(window.location.search);
 
-    // ?zoom=1.3 (oder 130 als Prozent): Oberflaeche pro Geraet skalieren,
-    // z. B. groesser fuer den entfernten TV, kleiner fuers kleine Tablet.
-    // Gilt nur fuer diese URL - nichts wird am Server konfiguriert.
-    let zoom = parseFloat(String(params.get("zoom") || "").replace(",", "."));
-    if (!isNaN(zoom) && zoom > 0 && zoom !== 1) {
-      if (zoom > 5) zoom = zoom / 100; // 130 -> 1.3
-      zoom = Math.min(3, Math.max(0.5, zoom));
-      // Faktor fuer die TV-Flaechenmessung (_fit) merken.
-      document.documentElement.dataset.vizzoom = String(zoom);
-      if (/Android/i.test(navigator.userAgent)) {
-        // Android-WebViews (Fully Kiosk & Co.) ignorieren CSS zoom und
-        // teils auch viewport-meta-Aenderungen. transform:scale ist reines
-        // Rendering und wirkt IMMER. Der body wird auf Viewport/zoom
-        // verkleinert und hochskaliert; er scrollt selbst (statt html),
-        // damit fixe Elemente (Tab-Leiste) am sichtbaren Rand haengen.
-        const de = document.documentElement.style;
-        de.overflow = "hidden";
-        de.height = "100%";
-        const b = document.body.style;
-        b.transform = `scale(${zoom})`;
-        b.transformOrigin = "0 0";
-        b.width = `calc(100% / ${zoom})`;
-        b.height = `calc(100% / ${zoom})`;
-        b.overflowY = "auto";
-      } else {
-        document.body.style.zoom = zoom;
-        // Aeltere Engines (WebView im Desktop-Mode) skalieren 100%-Breiten
-        // nicht mit -> Kacheln rechts abgeschnitten. Nachmessen und die
-        // Breite kompensieren; moderne Browser brauchen das nicht (Messung
-        // ergibt dort bereits die Viewport-Breite).
-        const vis = document.body.getBoundingClientRect().width;
-        if (vis > window.innerWidth + 2) {
-          document.body.style.width = `calc(100% / ${zoom})`;
-        }
-      }
-    }
-    // Sichtbarkeit fuer die Diagnose: aktiver Zoom erscheint in der
-    // Statuszeile - fehlt er dort trotz ?zoom=, laedt der Browser eine
-    // alte (gecachte) Oberflaeche.
-    const zoomLabel = document.documentElement.dataset.vizzoom
-      ? ` · Zoom ${document.documentElement.dataset.vizzoom}`
-      : "";
+    // ?zoom= aus der URL merken; angewendet wird nach dem Config-Laden
+    // (attr zoom am Geraet ist der Default, die URL geht vor).
+    const urlZoom = String(params.get("zoom") || "");
 
     const vizDevice = params.get("device") || (await client.findVizDevice());
     if (!vizDevice) {
@@ -535,6 +543,7 @@ async function main() {
     // Konfiguration vom Modul holen; URL uebersteuert den Modus.
     const cfg = await client.getConfig(vizDevice);
     applyTheme(cfg.theme);
+    const zoomLabel = applyZoom(urlZoom, cfg.zoom);
 
     // Versions-Waechter: Modul- und SPA-Version muessen zusammenpassen.
     if (cfg.version && cfg.version !== SPA_VERSION) {
