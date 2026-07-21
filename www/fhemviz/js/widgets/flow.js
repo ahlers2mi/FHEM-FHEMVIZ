@@ -72,18 +72,6 @@ export class FhemvizFlow extends FhemvizWidget {
     return map;
   }
 
-  /**
-   * vizReadings-Zeilen NUR fuer Werte, die die Fluss-Grafik nicht selbst
-   * zeigt - sonst stehen PV/Haus/Netz/Batterie/SOC doppelt auf der Kachel
-   * und machen sie unnoetig hoch.
-   */
-  _extraRows() {
-    const parts = this.vizReadingParts();
-    if (!parts) return "";
-    const shown = new Set(Object.values(this._map()));
-    return this.readingRowsHtml(parts.filter((p) => !shown.has(p.reading)));
-  }
-
   _num(reading) {
     const n = parseFloat(this.plain((this.device.readings || {})[reading]));
     return isNaN(n) ? 0 : n;
@@ -146,7 +134,7 @@ export class FhemvizFlow extends FhemvizWidget {
             batt, " W", battColor
           )}
         </div>
-        ${this._extraRows()}
+        ${this.readingRowsHtml()}
       </div>`;
   }
 }
