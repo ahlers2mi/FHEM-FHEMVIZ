@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.11.1";
+const SPA_VERSION = "v0.11.2";
 
 const el = (id) => document.getElementById(id);
 
@@ -264,7 +264,7 @@ class TvController {
    * 100vh alleine skaliert unter zoom nicht mit -> Flaeche waere zu hoch.
    */
   _fit() {
-    const zoom = parseFloat(document.body.style.zoom) || 1;
+    const zoom = parseFloat(document.documentElement.dataset.vizzoom) || 1;
     document.documentElement.style.setProperty(
       "--viz-vh",
       Math.floor(window.innerHeight / zoom) + "px"
@@ -484,24 +484,36 @@ async function main() {
     // z. B. groesser fuer den entfernten TV, kleiner fuers kleine Tablet.
     // Gilt nur fuer diese URL - nichts wird am Server konfiguriert.
     let zoom = parseFloat(String(params.get("zoom") || "").replace(",", "."));
-    if (!isNaN(zoom) && zoom > 0) {
+    if (!isNaN(zoom) && zoom > 0 && zoom !== 1) {
       if (zoom > 5) zoom = zoom / 100; // 130 -> 1.3
       zoom = Math.min(3, Math.max(0.5, zoom));
-      const vp = document.querySelector('meta[name="viewport"]');
-      if (/Android/i.test(navigator.userAgent) && vp) {
-        // Android-WebViews (Fully Kiosk & Co.) ignorieren CSS zoom teils -
-        // dort skaliert die native Viewport-Skala. innerHeight liefert dann
-        // bereits lokale CSS-Pixel, _fit() teilt NICHT nochmal (body.zoom
-        // bleibt leer -> Faktor 1).
-        vp.setAttribute(
-          "content",
-          `width=device-width, initial-scale=${zoom}, minimum-scale=${zoom},` +
-            ` maximum-scale=${zoom}, user-scalable=no`
-        );
+      // Faktor fuer die TV-Flaechenmessung (_fit) merken.
+      document.documentElement.dataset.vizzoom = String(zoom);
+      if (/Android/i.test(navigator.userAgent)) {
+        // Android-WebViews (Fully Kiosk & Co.) ignorieren CSS zoom und
+        // teils auch viewport-meta-Aenderungen. transform:scale ist reines
+        // Rendering und wirkt IMMER. Der body wird auf Viewport/zoom
+        // verkleinert und hochskaliert; er scrollt selbst (statt html),
+        // damit fixe Elemente (Tab-Leiste) am sichtbaren Rand haengen.
+        const de = document.documentElement.style;
+        de.overflow = "hidden";
+        de.height = "100%";
+        const b = document.body.style;
+        b.transform = `scale(${zoom})`;
+        b.transformOrigin = "0 0";
+        b.width = `calc(100% / ${zoom})`;
+        b.height = `calc(100% / ${zoom})`;
+        b.overflowY = "auto";
       } else {
         document.body.style.zoom = zoom;
       }
     }
+    // Sichtbarkeit fuer die Diagnose: aktiver Zoom erscheint in der
+    // Statuszeile - fehlt er dort trotz ?zoom=, laedt der Browser eine
+    // alte (gecachte) Oberflaeche.
+    const zoomLabel = document.documentElement.dataset.vizzoom
+      ? ` · Zoom ${document.documentElement.dataset.vizzoom}`
+      : "";
 
     const vizDevice = params.get("device") || (await client.findVizDevice());
     if (!vizDevice) {
@@ -668,7 +680,7 @@ async function main() {
         activeRoom ? { ...baseOpts, activeRoom } : baseOpts
       );
     }
-    setStatus(`${count} Gerät(e)`);
+    setStatus(`${count} Gerät(e)${zoomLabel}`);
 
     // Live-Kanal: Geraete der Sicht + das FHEMVIZ-Geraet selbst
     // (dessen scene-Readings steuern die TV-Szenen).
@@ -719,7 +731,7 @@ async function main() {
         store.applyEvent(id, value);
       },
       onStatus: (s) => {
-        if (s === "live") setStatus(`${count} Gerät(e) · live`, "live");
+        if (s === "live") setStatus(`${count} Gerät(e) · live${zoomLabel}`, "live");
         else if (s === "reconnect") setStatus("Verbindung verloren – reconnect…");
       },
     });
