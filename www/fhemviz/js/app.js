@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.15.16";
+const SPA_VERSION = "v0.15.17";
 
 const el = (id) => document.getElementById(id);
 
@@ -474,11 +474,22 @@ function startTabletClock() {
   setInterval(tick, 1000);
 }
 
-function applyViewportWidth(value) {
-  const w = parseInt(String(value ?? ""), 10);
-  if (isNaN(w) || w < 320 || w > 3840) return "";
+function applyViewportWidth(urlValue, cfgValue) {
+  // attr width am Geraet ist der Default, ?width= in der URL geht vor
+  // (wie bei zoom - Fully verschluckt URL-Parameter gern, darum das Attribut).
+  const parse = (s) => {
+    const w = parseInt(String(s ?? ""), 10);
+    return isNaN(w) || w < 320 || w > 3840 ? null : w;
+  };
+  const w = parse(urlValue) ?? parse(cfgValue);
+  if (!w) return "";
   const meta = document.querySelector('meta[name="viewport"]');
-  if (meta) meta.setAttribute("content", `width=${w}`);
+  if (meta) {
+    // initial-scale explizit mitgeben (Bildschirm-/Layoutbreite), damit der
+    // WebView auch ohne "Load with Overview Mode" sicher einpasst.
+    const scale = Math.min(5, Math.max(0.2, (window.screen.width || w) / w));
+    meta.setAttribute("content", `width=${w}, initial-scale=${scale.toFixed(4)}`);
+  }
   return ` · Breite ${w}`;
 }
 
@@ -609,9 +620,9 @@ async function main() {
     // Konfiguration vom Modul holen; URL uebersteuert den Modus.
     const cfg = await client.getConfig(vizDevice);
     applyTheme(cfg.theme);
-    // ?width= (feste Layout-Breite, Geraet skaliert selbst) geht vor ?zoom=
+    // width (feste Layout-Breite, Geraet skaliert selbst) geht vor zoom
     // (transform-Skalierung) - beides zusammen ergibt keinen Sinn.
-    const widthLabel = applyViewportWidth(params.get("width"));
+    const widthLabel = applyViewportWidth(params.get("width"), cfg.width);
     const zoomLabel = widthLabel || applyZoom(urlZoom, cfg.zoom);
 
     // Versions-Waechter: Modul- und SPA-Version muessen zusammenpassen.
