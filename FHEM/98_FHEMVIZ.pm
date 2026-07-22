@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.15.18
+# Version:  v0.15.19
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.18";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.19";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -265,7 +265,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.15.18"),
+            FHEMVIZ_jsonStr("v0.15.19"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -553,9 +553,14 @@ sub FHEMVIZ_Attr {
         nicht verdoppelt, wenn der Wert sie schon trägt. Farben sind
         semantische Namen: <code>ok</code>/<code>gruen</code>,
         <code>warn</code>/<code>orange</code>, <code>bad</code>/<code>rot</code>,
-        <code>accent</code>, <code>blau</code>. Das Flag <code>bar</code>
-        ergänzt einen Fortschrittsbalken in der Eintragsfarbe (Skala 0&ndash;100,
-        z. B. Autarkie- oder Akku-Prozent). Bei Widgets mit eigener
+        <code>accent</code>, <code>blau</code>. Im Flags-Feld (durch
+        Leerzeichen getrennt): <code>bar</code> ergänzt einen
+        Fortschrittsbalken in der Eintragsfarbe (Skala 0&ndash;100, z. B.
+        Autarkie- oder Akku-Prozent); eine <b>Zahl</b> legt die
+        Nachkommastellen fest (<code>0</code> = ganzzahlig, <code>1</code> =
+        eine Stelle). Ohne Angabe werden reine Zahlen automatisch auf max.
+        2 Stellen gerundet (Roh-Floats wie <code>10.4575382701608</code>
+        &rarr; <code>10.46</code>). Bei Widgets mit eigener
         Darstellung erscheinen die Einträge als Info-Zeilen. Beispiel:<br>
         <code>attr d_autark vizReadings percent:Autark heute:%:accent:bar</code><br>
         <b>Wertabhängige Farbe (Schwellwerte):</b> statt eines festen

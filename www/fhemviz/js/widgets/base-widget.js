@@ -258,10 +258,29 @@ export class FhemvizWidget extends HTMLElement {
   }
 
   /**
-   * vizReadings-Attribut parsen: "reading[:Label[:Einheit[:Farbe[:bar]]]]".
+   * Reine Zahl auf sinnvolle Nachkommastellen kuerzen (Default max. 2),
+   * Nachkommanullen entfernen. Nicht-numerische Werte (z. B. "17821 Wh",
+   * "on") bleiben unveraendert. Behebt Roh-Floats wie
+   * "10.4575382701608 g/m3" -> "10.46".
+   */
+  fmtNum(s, decimals = 2) {
+    const str = String(s).trim();
+    if (!/^-?\d+(\.\d+)?$/.test(str)) return str; // keine reine Zahl
+    const n = parseFloat(str);
+    if (!isFinite(n)) return str;
+    let out = n.toFixed(Math.max(0, Math.min(6, decimals)));
+    if (out.indexOf(".") >= 0) out = out.replace(/0+$/, "").replace(/\.$/, "");
+    return out;
+  }
+
+  /**
+   * vizReadings-Attribut parsen: "reading[:Label[:Einheit[:Farbe[:flags]]]]".
    * Liefert [{label,value,color,bar,num}] direkt aus den Readings, null
    * wenn nicht gesetzt. Von ALLEN Widgets nutzbar (Info-Zeilen).
-   * Flag "bar": zusaetzlich ein Fortschrittsbalken (Skala 0-100).
+   * flags (durch Leerzeichen getrennt): "bar" = Fortschrittsbalken
+   * (Skala 0-100); eine Zahl = feste Nachkommastellen (z. B. "0" ganzzahlig,
+   * "1" eine Stelle). Ohne Angabe werden reine Zahlen auf max. 2 Stellen
+   * gerundet.
    */
   vizReadingParts() {
     const spec = this.device.attr && this.device.attr.vizReadings;
@@ -276,9 +295,16 @@ export class FhemvizWidget extends HTMLElement {
           .split(":")
           .map((x) => (x || "").trim());
         if (!reading) return null;
+        // flags: "bar" und/oder eine Nachkommastellen-Zahl.
+        const flags = String(flag || "").trim().split(/\s+/).filter(Boolean);
+        const bar = flags.some((f) => /^bar$/i.test(f));
+        const decTok = flags.find((f) => /^\d+$/.test(f));
+        const decimals = decTok !== undefined ? parseInt(decTok, 10) : 2;
         const raw = readings[reading];
         const v =
-          raw === undefined || raw === null || raw === "" ? "–" : this.plain(raw);
+          raw === undefined || raw === null || raw === ""
+            ? "–"
+            : this.fmtNum(this.plain(raw), decimals);
         // Einheit nur anhaengen, wenn der Wert sie nicht schon traegt
         // (Readings wie "17821 Wh" bringen ihre Einheit selbst mit).
         const value =
@@ -291,7 +317,7 @@ export class FhemvizWidget extends HTMLElement {
           label: label || reading,
           value,
           color: this.colorFor(color, num),
-          bar: /^bar$/i.test(flag || ""),
+          bar,
           num,
         };
       })
