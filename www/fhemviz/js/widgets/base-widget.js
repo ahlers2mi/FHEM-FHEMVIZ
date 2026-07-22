@@ -225,6 +225,39 @@ export class FhemvizWidget extends HTMLElement {
   }
 
   /**
+   * Farbfeld eines vizReadings-Eintrags aufloesen. Zwei Formen:
+   *   - fester Name wie bisher:            "bad", "warn", "accent" ...
+   *   - Schwellwerte (wertabhaengig):      "farbe@[op]zahl" mit | getrennt,
+   *     z. B. "bad@75|warn@65" oder mit Vergleich "blau@<=5|bad@>=30".
+   * op ist optional (Default >=), erlaubt: >= > <= < ==. Der ERSTE Treffer
+   * gewinnt -> hoechste Schwelle zuerst notieren (wie if/elsif). Kein
+   * Treffer bzw. nicht-numerischer Wert -> Standardfarbe. Ersetzt die
+   * frueher per Notify gesetzten _colour-Readings (HTML-style), die FHEMVIZ
+   * bewusst nicht auswertet.
+   */
+  colorFor(spec, num) {
+    const s = String(spec || "").trim();
+    if (!s) return "";
+    if (s.indexOf("@") < 0) return this.colorVar(s); // fester Name
+    if (isNaN(num)) return "";
+    for (const rule of s.split("|").map((r) => r.trim()).filter(Boolean)) {
+      const m = rule.match(/^([a-zäöü]+)@(<=|>=|<|>|==)?\s*(-?\d+(?:[.,]\d+)?)$/i);
+      if (!m) continue;
+      const name = m[1];
+      const op = m[2] || ">=";
+      const t = parseFloat(m[3].replace(",", "."));
+      const hit =
+        op === ">=" ? num >= t :
+        op === ">"  ? num >  t :
+        op === "<=" ? num <= t :
+        op === "<"  ? num <  t :
+                      num === t;
+      if (hit) return this.colorVar(name);
+    }
+    return "";
+  }
+
+  /**
    * vizReadings-Attribut parsen: "reading[:Label[:Einheit[:Farbe[:bar]]]]".
    * Liefert [{label,value,color,bar,num}] direkt aus den Readings, null
    * wenn nicht gesetzt. Von ALLEN Widgets nutzbar (Info-Zeilen).
@@ -252,13 +285,14 @@ export class FhemvizWidget extends HTMLElement {
           unit && !v.toLowerCase().endsWith(unit.toLowerCase())
             ? v + " " + unit
             : v;
+        const num = parseFloat(String(v).replace(",", "."));
         return {
           reading,
           label: label || reading,
           value,
-          color: this.colorVar(color),
+          color: this.colorFor(color, num),
           bar: /^bar$/i.test(flag || ""),
-          num: parseFloat(v),
+          num,
         };
       })
       .filter(Boolean);
