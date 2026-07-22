@@ -192,21 +192,20 @@ html[data-vizmode="tv"] .viz-tabs { display: none; }
 
 /* Zoom (?zoom): der Zoom-Pfad skaliert per transform auf dem body - ein
  * transformierter Vorfahr macht position:fixed unbrauchbar (die Tab-Leiste
- * scrollt mit). Loesung ausserhalb TV: body als Flex-Spalte, der Inhalt
- * (#fhemviz-app) fuellt IMMER die Viewporthoehe (flex:1), und die sticky
- * Tab-Leiste wird per margin-top:auto an die Unterkante gedrueckt. So steht
- * sie bei WENIG Inhalt sauber unten (nicht mittig schwebend) und klebt bei
- * VIEL Inhalt beim Scrollen am sichtbaren Rand.
- * WICHTIG: KEINE eigene min-height/height setzen - app.js gibt dem body
- * bereits inline height:calc(100%/zoom), damit er nach dem scale(zoom)
- * genau viewporthoch ist. Ein min-height:100% wuerde ihn auf 100vh
- * (unskaliert) zwingen -> nach dem Skalieren 100vh*zoom -> die Bar landet
- * unterhalb des sichtbaren Rands und verschwindet. */
-html[data-vizzoom]:not([data-vizmode="tv"]) body {
-  display: flex; flex-direction: column;
-}
+ * scrollt mit). Loesung ausserhalb TV: die Inhaltsflaeche (#fhemviz-app)
+ * bekommt eine STABILE Mindesthoehe = sichtbare Hoehe minus Kopfzeile
+ * (--viz-vh/--viz-header-h werden in app.js gemessen, siehe
+ * measureViewport). Als Flex-Spalte drueckt margin-top:auto die sticky
+ * Tab-Leiste an die Unterkante. So steht sie bei WENIG Inhalt sauber unten
+ * und klebt bei VIEL Inhalt beim Scrollen am Rand.
+ * Warum feste min-height statt flex:1 auf dem body: eine flex-abgeleitete
+ * Fuellhoehe wird bei jedem Live-Update neu verteilt -> die Bar "huepfte".
+ * Ein fester Pixelwert (aus JS) bleibt ruhig. overscroll-behavior daempft
+ * zusaetzlich das Gummiband-Springen bei fast-viewporthohem Inhalt. */
+html[data-vizzoom]:not([data-vizmode="tv"]) body { overscroll-behavior-y: none; }
 html[data-vizzoom]:not([data-vizmode="tv"]) #fhemviz-app {
-  flex: 1 0 auto; display: flex; flex-direction: column;
+  display: flex; flex-direction: column;
+  min-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px));
   box-sizing: border-box; padding-bottom: 14px;
 }
 html[data-vizzoom]:not([data-vizmode="tv"]) .viz-tabs {
