@@ -196,9 +196,14 @@ html[data-vizmode="tv"] .viz-tabs { display: none; }
  * (#fhemviz-app) fuellt IMMER die Viewporthoehe (flex:1), und die sticky
  * Tab-Leiste wird per margin-top:auto an die Unterkante gedrueckt. So steht
  * sie bei WENIG Inhalt sauber unten (nicht mittig schwebend) und klebt bei
- * VIEL Inhalt beim Scrollen am sichtbaren Rand. */
+ * VIEL Inhalt beim Scrollen am sichtbaren Rand.
+ * WICHTIG: KEINE eigene min-height/height setzen - app.js gibt dem body
+ * bereits inline height:calc(100%/zoom), damit er nach dem scale(zoom)
+ * genau viewporthoch ist. Ein min-height:100% wuerde ihn auf 100vh
+ * (unskaliert) zwingen -> nach dem Skalieren 100vh*zoom -> die Bar landet
+ * unterhalb des sichtbaren Rands und verschwindet. */
 html[data-vizzoom]:not([data-vizmode="tv"]) body {
-  display: flex; flex-direction: column; min-height: 100%;
+  display: flex; flex-direction: column;
 }
 html[data-vizzoom]:not([data-vizmode="tv"]) #fhemviz-app {
   flex: 1 0 auto; display: flex; flex-direction: column;
