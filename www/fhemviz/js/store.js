@@ -33,6 +33,35 @@ export class Store {
     }
   }
 
+  /**
+   * Frischen jsonlist2-Snapshot ueber die vorhandenen Geraete legen und nur
+   * die tatsaechlich geaenderten neu rendern. Fuer den Resync nach einem
+   * inform-Aussetzer (verpasste Events) und als periodisches Sicherheitsnetz
+   * gegen stundenalte Werte. Neue/entfernte Geraete werden hier ignoriert.
+   */
+  resync(jsonlist2) {
+    const results = (jsonlist2 && jsonlist2.Results) || [];
+    for (const r of results) {
+      const dev = this.devices.get(r.Name);
+      if (!dev) continue;
+      const readings = {};
+      for (const [k, v] of Object.entries(r.Readings || {})) {
+        readings[k] = v && typeof v === "object" ? v.Value : v;
+      }
+      const state =
+        readings.state ?? (r.Internals && r.Internals.STATE) ?? dev.state;
+      const changed =
+        state !== dev.state ||
+        JSON.stringify(readings) !== JSON.stringify(dev.readings);
+      dev.readings = readings;
+      dev.state = state;
+      if (r.PossibleSets) dev.possibleSets = r.PossibleSets;
+      if (r.Attributes) dev.attr = r.Attributes;
+      if (r.Internals) dev.internals = r.Internals;
+      if (changed) this._notify(r.Name);
+    }
+  }
+
   all() {
     return [...this.devices.values()];
   }

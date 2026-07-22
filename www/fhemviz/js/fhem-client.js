@@ -96,16 +96,28 @@ export class FhemClient {
           const reader = resp.body.getReader();
           const decoder = new TextDecoder();
           let buf = "";
-          while (!stopped) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            buf += decoder.decode(value, { stream: true });
-            let nl;
-            while ((nl = buf.indexOf("\n")) >= 0) {
-              const line = buf.slice(0, nl).trim();
-              buf = buf.slice(nl + 1);
-              if (line) self._handleInformLine(line, onEvent);
+          // Watchdog: bleibt der Longpoll stumm (FHEM-Neustart, tote WLAN-
+          // Verbindung, die kein Fehler-Event ausloest), wird nach IDLE_MS
+          // abgebrochen -> reconnect. FHEMWEB sendet regelmaessig Keepalive-
+          // Zeilen, echte Stille ueber 2,5 min gibt es im Betrieb nicht.
+          const IDLE_MS = 150000;
+          let idle = setTimeout(() => ctrl.abort(), IDLE_MS);
+          try {
+            while (!stopped) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              clearTimeout(idle);
+              idle = setTimeout(() => ctrl.abort(), IDLE_MS);
+              buf += decoder.decode(value, { stream: true });
+              let nl;
+              while ((nl = buf.indexOf("\n")) >= 0) {
+                const line = buf.slice(0, nl).trim();
+                buf = buf.slice(nl + 1);
+                if (line) self._handleInformLine(line, onEvent);
+              }
             }
+          } finally {
+            clearTimeout(idle);
           }
         } catch (e) {
           if (stopped) break;
