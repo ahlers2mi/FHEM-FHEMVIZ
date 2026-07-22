@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.16.0
+# Version:  v0.16.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.16.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.16.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -266,7 +266,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.16.0"),
+            FHEMVIZ_jsonStr("v0.16.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -595,9 +595,14 @@ sub FHEMVIZ_Attr {
         kommasepariert (mehrere Serien möglich), plus optionale Tokens
         <code>hours=&lt;n&gt;</code> (Zeitraum in Stunden, Default 24) und
         <code>unit=&lt;text&gt;</code> (Einheit am Kopfwert). Farben wie bei
-        vizReadings (<code>accent</code>, <code>ok</code>, …). Beispiel:<br>
+        vizReadings (<code>accent</code>, <code>ok</code>, …). Der Log-Typ
+        (FileLog/DbLog) wird automatisch erkannt. Bei <b>DbLog</b> hält ein
+        Log viele Geräte &ndash; darum das Quellgerät im Reading angeben:
+        <code>&lt;reading&gt;</code> &rarr; <code>&lt;quellgeraet&gt;#&lt;reading&gt;</code>.
+        Beispiele:<br>
         <code>attr MQTT2_Sonoff_POW_01 vizWidget chart</code><br>
-        <code>attr MQTT2_Sonoff_POW_01 vizChart FileLog_Sonoff_POW_01:ENERGY_Power:Leistung:accent unit=W hours=24</code><br>
+        FileLog: <code>attr MQTT2_Sonoff_POW_01 vizChart FileLog_Sonoff_POW_01:ENERGY_Power:Leistung:accent unit=W hours=24</code><br>
+        DbLog: <code>attr MQTT2_Sonoff_POW_01 vizChart LogDB:MQTT2_Sonoff_POW_01#ENERGY_Power:Leistung:accent unit=W hours=168</code><br>
         Größere Kachel (<code>vizSize 2x2</code> o. ä.) empfohlen. Der
         Verlauf wird beim Öffnen und danach alle 5&nbsp;min aktualisiert.</li>
   </ul><br>
