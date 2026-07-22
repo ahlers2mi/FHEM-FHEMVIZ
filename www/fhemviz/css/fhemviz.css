@@ -190,14 +190,23 @@ fhemviz-switch, fhemviz-sensor, fhemviz-dimmer, fhemviz-actions {
  * wenigen Kacheln werden zentriert (statt verloren oben links). */
 html[data-vizmode="tv"] .viz-tabs { display: none; }
 
-/* Zoom (?zoom): der Android-Pfad skaliert per transform auf dem body -
- * ein transformierter Vorfahr macht position:fixed unbrauchbar (die
- * Tab-Leiste scrollt mit). Darum unter Zoom die Tabs sticky halten und
- * die Flaeche mindestens viewporthoch machen, damit sie auch bei wenig
- * Inhalt unten stehen bleiben statt in der Mitte zu schweben. */
-html[data-vizzoom] .viz-tabs { position: sticky; }
-/* Tabs liegen jetzt IM Fluss (kein fixed) -> keine 84px-Reserve noetig. */
-html[data-vizzoom] #fhemviz-app { min-height: 100%; box-sizing: border-box; padding-bottom: 14px; }
+/* Zoom (?zoom): der Zoom-Pfad skaliert per transform auf dem body - ein
+ * transformierter Vorfahr macht position:fixed unbrauchbar (die Tab-Leiste
+ * scrollt mit). Loesung ausserhalb TV: body als Flex-Spalte, der Inhalt
+ * (#fhemviz-app) fuellt IMMER die Viewporthoehe (flex:1), und die sticky
+ * Tab-Leiste wird per margin-top:auto an die Unterkante gedrueckt. So steht
+ * sie bei WENIG Inhalt sauber unten (nicht mittig schwebend) und klebt bei
+ * VIEL Inhalt beim Scrollen am sichtbaren Rand. */
+html[data-vizzoom]:not([data-vizmode="tv"]) body {
+  display: flex; flex-direction: column; min-height: 100%;
+}
+html[data-vizzoom]:not([data-vizmode="tv"]) #fhemviz-app {
+  flex: 1 0 auto; display: flex; flex-direction: column;
+  box-sizing: border-box; padding-bottom: 14px;
+}
+html[data-vizzoom]:not([data-vizmode="tv"]) .viz-tabs {
+  position: sticky; bottom: 0; margin-top: auto;
+}
 html[data-vizmode="tv"] body { overflow: hidden; }
 html[data-vizmode="tv"] #fhemviz-app {
   padding: 26px 34px 30px;
