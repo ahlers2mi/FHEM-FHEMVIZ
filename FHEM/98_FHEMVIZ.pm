@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.15.17
+# Version:  v0.15.18
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.17";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.18";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -265,7 +265,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.15.17"),
+            FHEMVIZ_jsonStr("v0.15.18"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -557,7 +557,17 @@ sub FHEMVIZ_Attr {
         ergänzt einen Fortschrittsbalken in der Eintragsfarbe (Skala 0&ndash;100,
         z. B. Autarkie- oder Akku-Prozent). Bei Widgets mit eigener
         Darstellung erscheinen die Einträge als Info-Zeilen. Beispiel:<br>
-        <code>attr d_autark vizReadings percent:Autark heute:%:accent:bar</code></li>
+        <code>attr d_autark vizReadings percent:Autark heute:%:accent:bar</code><br>
+        <b>Wertabhängige Farbe (Schwellwerte):</b> statt eines festen
+        Farbnamens kann das Farbfeld Schwellwerte enthalten:
+        <code>farbe@[vergleich]zahl</code>, mehrere mit <code>|</code>
+        getrennt. Der <b>erste</b> Treffer gewinnt (höchste Schwelle zuerst
+        notieren, wie if/elsif). Vergleich optional (Default
+        <code>&gt;=</code>), erlaubt <code>&gt;= &gt; &lt;= &lt; ==</code>.
+        Ersetzt die früher per Notify gesetzten <code>_colour</code>-Readings.
+        Beispiele:<br>
+        <code>attr Mobil5data vizReadings temperature:Temperatur:C,humidity:Feuchtigkeit:%:bad@75|warn@65,moisturecontent:Wasser:g/m3:bad@14|warn@13</code><br>
+        <code>...:blau@&lt;=5|bad@&gt;=30|warn@&gt;=25</code> (kalt blau, heiß rot)</li>
     <li><a id="FHEMVIZ-attr-vizStates"></a><b>vizStates</b><br>
         Typ: textField-long. Übersetzt technische Status-Codes in Klartext +
         Farbe: <code>pattern:Label[:Farbe]</code> kommasepariert, pattern =
