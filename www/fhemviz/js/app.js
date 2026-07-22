@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.15.14";
+const SPA_VERSION = "v0.15.15";
 
 const el = (id) => document.getElementById(id);
 
@@ -694,6 +694,9 @@ async function main() {
           tvc.stop();
           document.documentElement.dataset.vizmode = "tablet";
           renderLayout(root, store, client, tabletOpts);
+          // Uhr/Szene sind jetzt ausgeblendet -> Header ist niedriger,
+          // Fuellhoehe (--viz-header-h) neu messen.
+          measureViewport();
           armIdle();
         });
         // Jede Interaktion in der Tablet-Ansicht verlaengert die Frist.

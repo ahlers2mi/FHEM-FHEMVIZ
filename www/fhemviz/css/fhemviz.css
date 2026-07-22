@@ -66,9 +66,14 @@ body {
 
 /* Zoom (transform-Pfad, app.js setzt data-vizzoom): der body ist der
  * Scroller, damit fixe Elemente (Tab-Leiste) am SICHTBAREN Rand haengen.
- * Die TV-Regel (overflow hidden) weiter unten gewinnt im TV-Modus. */
+ * Die TV-Regel (overflow hidden) weiter unten gewinnt im TV-Modus.
+ * scrollbar-gutter reserviert die Scrollbar-Spur DAUERHAFT: sonst laesst
+ * jedes Auftauchen/Verschwinden der (klassischen Desktop-)Scrollbar die
+ * Inhaltsbreite um ~15px springen - Kacheln und Tab-Leiste "huepfen",
+ * sobald die Seitenhoehe um die Viewport-Schwelle pendelt (Live-Updates,
+ * Re-Render beim Tab-Wechsel). */
 html[data-vizzoom] { overflow: hidden; height: 100%; }
-html[data-vizzoom] body { overflow-y: auto; }
+html[data-vizzoom] body { overflow-y: auto; scrollbar-gutter: stable; }
 
 /* Kopfzeile ------------------------------------------------------------------ */
 #viz-header {
