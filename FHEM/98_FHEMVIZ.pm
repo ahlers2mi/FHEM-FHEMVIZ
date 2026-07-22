@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.15.15
+# Version:  v0.15.16
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.15";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.16";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -263,7 +263,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.15.15"),
+            FHEMVIZ_jsonStr("v0.15.16"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -435,7 +435,9 @@ sub FHEMVIZ_Attr {
         (<code>130</code>). Der URL-Parameter <code>?zoom=</code> geht vor
         (für abweichende Einzelgeräte). Praktisch für Kiosk-Browser wie
         Fully, die URL-Parameter verschlucken. Der aktive Zoom wird in der
-        Statuszeile angezeigt.</li>
+        Statuszeile angezeigt. Auf Android/Fully ist der URL-Parameter
+        <code>?width=</code> die einfachere Alternative (siehe
+        URL-Parameter unten).</li>
     <li><a id="FHEMVIZ-attr-readonly"></a><b>readonly</b> 0|1<br>
         Nur-Lese-Sicht ohne Bedienelemente (Gäste-/Wandmodus). Im TV-Modus
         immer aktiv.</li>
@@ -579,6 +581,13 @@ sub FHEMVIZ_Attr {
         Kiosk-Start-URLs)</li>
     <li><code>?zoom=1.3</code> &ndash; Oberfläche skalieren (0.5&ndash;3,
         auch <code>130</code> als Prozent), pro Gerät in der Start-URL</li>
+    <li><code>?width=1280</code> &ndash; feste Layout-Breite in CSS-Pixeln
+        (320&ndash;3840): die Seite wird in dieser Breite gerendert, das
+        Gerät (Fully/Android) skaliert sie selbst bildschirmfüllend.
+        Einfachere Alternative zu <code>?zoom=</code> ohne dessen
+        Einschränkungen; setzt <code>?zoom=</code> außer Kraft.
+        Desktop-Browser ignorieren den Parameter. Kleinere Breite =
+        größere Darstellung.</li>
     <li><code>?room=Solar</code> &ndash; Startseite: TV beginnt die Rotation
         mit diesem Raum, Tablet öffnet den Tab; geht vor dem Reading
         <code>page</code></li>

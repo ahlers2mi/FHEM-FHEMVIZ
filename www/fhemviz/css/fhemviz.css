@@ -99,6 +99,11 @@ html[data-vizzoom] body { overflow-y: auto; scrollbar-gutter: stable; }
   font-size: 1.5rem; font-weight: 200; letter-spacing: -0.02em;
   line-height: 1;
 }
+/* Tablet: Datum + Uhrzeit dezent statt grosser TV-Uhr */
+html:not([data-vizmode="tv"]) .viz-clock {
+  font-size: 0.85rem; font-weight: 600; letter-spacing: 0;
+  color: var(--viz-muted);
+}
 
 /* Szenen-Fortschritt (TV): schmale Linie an der Unterkante des Headers */
 /* Status-Chips (attr statusBar): immer sichtbar, tablet-tippbar --------- */
