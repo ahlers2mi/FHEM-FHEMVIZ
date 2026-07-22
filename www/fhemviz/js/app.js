@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.15.15";
+const SPA_VERSION = "v0.15.16";
 
 const el = (id) => document.getElementById(id);
 
@@ -442,6 +442,46 @@ class TvController {
  * in jeder Engine. Er scrollt selbst (CSS: html[data-vizzoom]), damit
  * fixe Elemente (Tab-Leiste) am sichtbaren Rand haengen.
  */
+/**
+ * ?width=1280: feste Layout-Breite als EINFACHERE Alternative zu ?zoom=.
+ * Setzt das Viewport-Meta auf die gewuenschte CSS-Breite - Android/Fully
+ * rendert die Seite dann in dieser Breite und skaliert sie selbst
+ * bildschirmfuellend (natives Browser-Verhalten, kein transform-Hack:
+ * position:fixed, sticky und Scrollen funktionieren normal).
+ * Desktop-Browser ignorieren das Viewport-Meta - der Parameter ist dort
+ * wirkungslos (dafuer gibt es ?zoom= bzw. Strg+Mausrad).
+ */
+/**
+ * Datum + Uhrzeit im Tablet-Header (rechts, wo im TV-Modus die grosse Uhr
+ * sitzt): "Di 22.07. · 14:32". Laeuft dauerhaft; solange der TV-Modus aktiv
+ * ist (Szenen-Rotation), laesst der Ticker die Anzeige in Ruhe - dort
+ * verwaltet der TvController Uhr (HH:MM:SS) und Datum (im Titel) selbst.
+ */
+function startTabletClock() {
+  const tick = () => {
+    if (document.documentElement.dataset.vizmode === "tv") return;
+    const c = el("viz-clock");
+    if (!c) return;
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, "0");
+    const wd = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][d.getDay()];
+    c.textContent =
+      `${wd} ${p(d.getDate())}.${p(d.getMonth() + 1)}.` +
+      ` · ${p(d.getHours())}:${p(d.getMinutes())}`;
+    c.hidden = false;
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+function applyViewportWidth(value) {
+  const w = parseInt(String(value ?? ""), 10);
+  if (isNaN(w) || w < 320 || w > 3840) return "";
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (meta) meta.setAttribute("content", `width=${w}`);
+  return ` · Breite ${w}`;
+}
+
 function applyZoom(urlValue, cfgValue) {
   const parse = (s) => {
     let z = parseFloat(String(s ?? "").replace(",", "."));
@@ -569,7 +609,10 @@ async function main() {
     // Konfiguration vom Modul holen; URL uebersteuert den Modus.
     const cfg = await client.getConfig(vizDevice);
     applyTheme(cfg.theme);
-    const zoomLabel = applyZoom(urlZoom, cfg.zoom);
+    // ?width= (feste Layout-Breite, Geraet skaliert selbst) geht vor ?zoom=
+    // (transform-Skalierung) - beides zusammen ergibt keinen Sinn.
+    const widthLabel = applyViewportWidth(params.get("width"));
+    const zoomLabel = widthLabel || applyZoom(urlZoom, cfg.zoom);
 
     // Versions-Waechter: Modul- und SPA-Version muessen zusammenpassen.
     if (cfg.version && cfg.version !== SPA_VERSION) {
@@ -732,6 +775,10 @@ async function main() {
     // Modus, wo kein TvController laeuft) und bei Groessenaenderung nachziehen.
     measureViewport();
     window.addEventListener("resize", measureViewport);
+
+    // Datum + Uhrzeit im Tablet-Header (im TV-Modus zeigt der TvController
+    // seine eigene grosse Uhr - der Ticker pausiert dort automatisch).
+    startTabletClock();
 
     // Resync: frischen Snapshot ueber den Store legen und geaenderte Kacheln
     // nachziehen. Faengt verpasste Aenderungen nach einem inform-Aussetzer
