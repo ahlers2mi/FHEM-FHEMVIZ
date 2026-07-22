@@ -203,8 +203,13 @@ export function renderLayout(root, store, client, opts = {}) {
   let active = opts.activeRoom ?? loadActiveRoom();
   if (active !== ALL_ROOMS) active = resolveRoom(roomNames, active) ?? ALL_ROOMS;
 
+  // Tab-Leiste bauen, aber ERST NACH dem Rauminhalt einhaengen: unter
+  // ?zoom sind die Tabs sticky (transform bricht position:fixed), und
+  // sticky wirkt nur, wenn das Element am ENDE des Flusses steht - sonst
+  // klebt die Raumwahl oben statt unten.
+  let nav = null;
   if (showTabs) {
-    const nav = document.createElement("nav");
+    nav = document.createElement("nav");
     nav.className = "viz-tabs";
     for (const name of [ALL_ROOMS, ...roomNames]) {
       const tab = document.createElement("button");
@@ -216,7 +221,6 @@ export function renderLayout(root, store, client, opts = {}) {
       });
       nav.appendChild(tab);
     }
-    root.appendChild(nav);
   }
 
   const widgetOpts = { readonly: !!opts.readonly, tv: !!opts.tv };
@@ -349,4 +353,9 @@ export function renderLayout(root, store, client, opts = {}) {
       if (spans[i] > 1) t.style.gridRow = `span ${spans[i]}`;
     });
   }
+
+  // Tab-Leiste ganz am Ende einhaengen (siehe oben): fixed (ohne Zoom)
+  // ignoriert die Position ohnehin, sticky (mit Zoom) klebt so korrekt
+  // unten statt oben.
+  if (nav) root.appendChild(nav);
 }
