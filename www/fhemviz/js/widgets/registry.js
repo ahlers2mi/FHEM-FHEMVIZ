@@ -19,6 +19,7 @@ import { FhemvizVent } from "./vent.js";
 import { FhemvizFlow } from "./flow.js";
 import { FhemvizForecast } from "./forecast.js";
 import { FhemvizWeather } from "./weather.js";
+import { FhemvizChart } from "./chart.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -33,7 +34,8 @@ export const WIDGET_REGISTRY = {
   flow: "fhemviz-flow",
   forecast: "fhemviz-forecast",
   weather: "fhemviz-weather",
-  // TODO: thermostat, chart, media.
+  chart: "fhemviz-chart",
+  // TODO: thermostat, media.
 };
 
 // genericDeviceType -> Widget-Schluessel (PoC-Teilmenge).
@@ -64,6 +66,7 @@ export function registerCoreWidgets() {
     ["fhemviz-flow", FhemvizFlow],
     ["fhemviz-forecast", FhemvizForecast],
     ["fhemviz-weather", FhemvizWeather],
+    ["fhemviz-chart", FhemvizChart],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -78,6 +81,8 @@ export function selectWidget(device) {
   if (attr.vizWidget && WIDGET_REGISTRY[attr.vizWidget]) {
     return WIDGET_REGISTRY[attr.vizWidget];
   }
+  // 1b. vizChart gesetzt -> Diagramm-Kachel (auch ohne vizWidget).
+  if (attr.vizChart) return WIDGET_REGISTRY.chart;
   // 2. genericDeviceType. Rollladen brauchen pct - Pegel-Proxies
   //    (gdt blind, aber nur state-Slider) bekommen den Dimmer.
   const gdt = attr.genericDeviceType || attr.gdt;
