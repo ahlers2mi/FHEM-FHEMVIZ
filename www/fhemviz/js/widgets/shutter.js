@@ -42,8 +42,18 @@ export class FhemvizShutter extends FhemvizWidget {
 
   _pct() {
     const r = this.device.readings || {};
-    const raw = r.pct ?? r.dim ?? this.plain(this.device.state);
-    const n = parseInt(String(raw).replace(/[^\d-]/g, ""), 10);
+    // Zuerst ein numerisches Positions-Reading (HomeMatic: pct ODER level).
+    for (const k of ["pct", "level", "dim", "position"]) {
+      if (r[k] !== undefined && /\d/.test(String(r[k]))) {
+        const n = parseInt(String(r[k]).replace(/[^\d-]/g, ""), 10);
+        if (!isNaN(n)) return Math.max(0, Math.min(100, n));
+      }
+    }
+    // Kein Zahlenwert: state auswerten. "on/auf/open" = offen (100),
+    // sonst die Zahl aus dem state (z. B. "80 %"), Rest zu (0).
+    const st = this.plain(this.device.state).toLowerCase();
+    if (/^(on|auf|open|ge(ö|oe)ffnet)\b/.test(st)) return 100;
+    const n = parseInt(st.replace(/[^\d-]/g, ""), 10);
     return isNaN(n) ? 0 : Math.max(0, Math.min(100, n));
   }
 
