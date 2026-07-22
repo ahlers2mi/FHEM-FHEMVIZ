@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.15.16
+# Version:  v0.15.17
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.16";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.17";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -105,6 +105,7 @@ sub FHEMVIZ_Initialize {
           "theme:auto,light,dark " .
           "mode:tablet,tv " .
           "zoom " .
+          "width " .
           "tvScenes " .
           "tvTouch " .
           "statusBar:textField-long " .
@@ -249,6 +250,7 @@ sub FHEMVIZ_Get {
         my $tvScenes   = AttrVal($name, "tvScenes", "");
         my $tvTouch    = AttrVal($name, "tvTouch", "");
         my $zoomAttr   = AttrVal($name, "zoom", "");
+        my $widthAttr  = AttrVal($name, "width", "");
         my $statusBar  = AttrVal($name, "statusBar", "");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
@@ -260,15 +262,16 @@ sub FHEMVIZ_Get {
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"zoom":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
+              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.15.16"),
+            FHEMVIZ_jsonStr("v0.15.17"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
             FHEMVIZ_jsonStr($mode),
             FHEMVIZ_jsonStr($zoomAttr),
+            FHEMVIZ_jsonStr($widthAttr),
             FHEMVIZ_jsonStr($tvScenes),
             FHEMVIZ_jsonStr($tvTouch),
             FHEMVIZ_jsonStr($statusBar),
@@ -435,9 +438,19 @@ sub FHEMVIZ_Attr {
         (<code>130</code>). Der URL-Parameter <code>?zoom=</code> geht vor
         (für abweichende Einzelgeräte). Praktisch für Kiosk-Browser wie
         Fully, die URL-Parameter verschlucken. Der aktive Zoom wird in der
-        Statuszeile angezeigt. Auf Android/Fully ist der URL-Parameter
-        <code>?width=</code> die einfachere Alternative (siehe
-        URL-Parameter unten).</li>
+        Statuszeile angezeigt. Auf Android/Fully ist <b>width</b> die
+        einfachere Alternative.</li>
+    <li><a id="FHEMVIZ-attr-width"></a><b>width</b><br>
+        Typ: textField. Feste Layout-Breite in CSS-Pixeln (320&ndash;3840,
+        z. B. <code>900</code>): die Seite wird in dieser Breite gerendert,
+        das Gerät (Fully/Android) skaliert sie selbst bildschirmfüllend
+        &ndash; ohne die Einschränkungen der transform-Skalierung von
+        <b>zoom</b>. Kleinere Breite = größere Darstellung. Hat Vorrang
+        vor <b>zoom</b>; der URL-Parameter <code>?width=</code> geht vor.
+        Desktop-Browser ignorieren das Viewport-Meta &ndash; dort wirkt
+        weiterhin nur <b>zoom</b>. In Fully muss &quot;Use Wide
+        Viewport&quot; aktiv sein (Default), &quot;Desktop Mode&quot; aus.
+        Die aktive Breite wird in der Statuszeile angezeigt.</li>
     <li><a id="FHEMVIZ-attr-readonly"></a><b>readonly</b> 0|1<br>
         Nur-Lese-Sicht ohne Bedienelemente (Gäste-/Wandmodus). Im TV-Modus
         immer aktiv.</li>
