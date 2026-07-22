@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.15.19
+# Version:  v0.16.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.15.19";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.16.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -72,7 +72,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast,weather",
+    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast,weather,chart",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHide:1,0",
     "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power",
@@ -80,6 +80,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizReadings:textField-long",
     "vizStates:textField-long",
     "vizFlow:textField-long",
+    "vizChart:textField-long",
 );
 
 # ----------------------------------------------------------------------------
@@ -265,7 +266,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.15.19"),
+            FHEMVIZ_jsonStr("v0.16.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -585,6 +586,20 @@ sub FHEMVIZ_Attr {
         <code>soc</code>. Vorzeichen: Netz &gt; 0 = Bezug, &lt; 0 =
         Einspeisung; Batterie &gt; 0 = laden, &lt; 0 = entladen. Default:<br>
         <code>pv=pv_leistung,haus=out_leistung,netz=netzleistung_all,batterie=batterie_leistung,soc=soc</code></li>
+    <li><a id="FHEMVIZ-attr-vizChart"></a><b>vizChart</b><br>
+        Typ: textField-long. Aktiviert das Diagramm-Widget (setzt implizit
+        <code>vizWidget chart</code>). Zeichnet den Verlauf aus einem FileLog
+        als SVG-Flächendiagramm im Dashboard-Look &ndash; die Daten kommen
+        über <code>get &lt;FileLog&gt; …</code> (wie bei den FHEM-SVGs).
+        Format: <code>&lt;logdev&gt;:&lt;reading&gt;[:Label[:Farbe]]</code>
+        kommasepariert (mehrere Serien möglich), plus optionale Tokens
+        <code>hours=&lt;n&gt;</code> (Zeitraum in Stunden, Default 24) und
+        <code>unit=&lt;text&gt;</code> (Einheit am Kopfwert). Farben wie bei
+        vizReadings (<code>accent</code>, <code>ok</code>, …). Beispiel:<br>
+        <code>attr MQTT2_Sonoff_POW_01 vizWidget chart</code><br>
+        <code>attr MQTT2_Sonoff_POW_01 vizChart FileLog_Sonoff_POW_01:ENERGY_Power:Leistung:accent unit=W hours=24</code><br>
+        Größere Kachel (<code>vizSize 2x2</code> o. ä.) empfohlen. Der
+        Verlauf wird beim Öffnen und danach alle 5&nbsp;min aktualisiert.</li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>
