@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.15.13";
+const SPA_VERSION = "v0.15.14";
 
 const el = (id) => document.getElementById(id);
 
@@ -257,22 +257,9 @@ class TvController {
     el("viz-title").textContent = "FHEMVIZ";
   }
 
-  /**
-   * Feste TV-Flaeche vermessen: Viewport-Hoehe in LOKALEN CSS-Pixeln
-   * (innerHeight ist zoom-unabhaengig, der Inhalt skaliert aber mit
-   * ?zoom= - deshalb teilen) plus Header-Hoehe als CSS-Variablen.
-   * 100vh alleine skaliert unter zoom nicht mit -> Flaeche waere zu hoch.
-   */
+  /** Feste TV-Flaeche vermessen (siehe measureViewport). */
   _fit() {
-    const zoom = parseFloat(document.documentElement.dataset.vizzoom) || 1;
-    document.documentElement.style.setProperty(
-      "--viz-vh",
-      Math.floor(window.innerHeight / zoom) + "px"
-    );
-    document.documentElement.style.setProperty(
-      "--viz-header-h",
-      el("viz-header").offsetHeight + "px"
-    );
+    measureViewport();
   }
 
   _tickClock() {
@@ -480,6 +467,32 @@ function applyZoom(urlValue, cfgValue) {
     getComputedStyle(document.body).transform !== "none" &&
     Math.abs(document.body.getBoundingClientRect().width - window.innerWidth) < 4;
   return ` · Zoom ${zoom} ${applied ? "✓" : "✗"}`;
+}
+
+/**
+ * Viewport-Masse als CSS-Variablen bereitstellen:
+ *   --viz-vh       = sichtbare Hoehe in LOKALEN CSS-Pixeln. innerHeight ist
+ *                    zoom-unabhaengig, der Inhalt skaliert aber per ?zoom=
+ *                    (transform) - daher durch zoom teilen.
+ *   --viz-header-h = aktuelle Kopfzeilenhoehe.
+ * Beide braucht der TV-Modus (feste Szenenflaeche, _fit) UND der Tablet-
+ * Modus unter Zoom: dort setzt die CSS die Fuellhoehe der Inhaltsflaeche auf
+ * genau diesen Wert, damit die Tab-Leiste stabil unten sitzt und nicht bei
+ * jedem Live-Update ueber die Flex-Neuberechnung "huepft".
+ */
+function measureViewport() {
+  const zoom = parseFloat(document.documentElement.dataset.vizzoom) || 1;
+  document.documentElement.style.setProperty(
+    "--viz-vh",
+    Math.floor(window.innerHeight / zoom) + "px"
+  );
+  const h = el("viz-header");
+  if (h) {
+    document.documentElement.style.setProperty(
+      "--viz-header-h",
+      h.offsetHeight + "px"
+    );
+  }
 }
 
 /* ------------------------------ Show-Overlay -------------------------------
@@ -711,6 +724,11 @@ async function main() {
       );
     }
     setStatus(`${count} Gerät(e)${zoomLabel}`);
+
+    // Viewport-Masse fuer die CSS-Fuellhoehe setzen (auch im reinen Tablet-
+    // Modus, wo kein TvController laeuft) und bei Groessenaenderung nachziehen.
+    measureViewport();
+    window.addEventListener("resize", measureViewport);
 
     // Resync: frischen Snapshot ueber den Store legen und geaenderte Kacheln
     // nachziehen. Faengt verpasste Aenderungen nach einem inform-Aussetzer
