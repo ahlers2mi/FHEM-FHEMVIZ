@@ -189,6 +189,15 @@ fhemviz-switch, fhemviz-sensor, fhemviz-dimmer, fhemviz-actions {
  * Keine Tabs, keine Bedienung, groessere Ziffern, mehr Luft. Szenen mit
  * wenigen Kacheln werden zentriert (statt verloren oben links). */
 html[data-vizmode="tv"] .viz-tabs { display: none; }
+
+/* Zoom (?zoom): der Android-Pfad skaliert per transform auf dem body -
+ * ein transformierter Vorfahr macht position:fixed unbrauchbar (die
+ * Tab-Leiste scrollt mit). Darum unter Zoom die Tabs sticky halten und
+ * die Flaeche mindestens viewporthoch machen, damit sie auch bei wenig
+ * Inhalt unten stehen bleiben statt in der Mitte zu schweben. */
+html[data-vizzoom] .viz-tabs { position: sticky; }
+/* Tabs liegen jetzt IM Fluss (kein fixed) -> keine 84px-Reserve noetig. */
+html[data-vizzoom] #fhemviz-app { min-height: 100%; box-sizing: border-box; padding-bottom: 14px; }
 html[data-vizmode="tv"] body { overflow: hidden; }
 html[data-vizmode="tv"] #fhemviz-app {
   padding: 26px 34px 30px;

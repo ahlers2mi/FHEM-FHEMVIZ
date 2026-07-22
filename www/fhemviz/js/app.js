@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.15.8";
+const SPA_VERSION = "v0.15.10";
 
 const el = (id) => document.getElementById(id);
 
@@ -712,10 +712,30 @@ async function main() {
     }
     setStatus(`${count} Gerät(e)${zoomLabel}`);
 
+    // Resync: frischen Snapshot ueber den Store legen und geaenderte Kacheln
+    // nachziehen. Faengt verpasste Aenderungen nach einem inform-Aussetzer
+    // ab (Rolladen "zu", Forecast von gestern nach langer Laufzeit). Laeuft
+    // bei jedem (Re-)Connect und zusaetzlich periodisch als Sicherheitsnetz.
+    let resyncBusy = false;
+    const resync = async () => {
+      if (resyncBusy) return;
+      resyncBusy = true;
+      try {
+        store.resync(await client.snapshot(cfg.devspec));
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("FHEMVIZ resync fehlgeschlagen:", e && e.message);
+      } finally {
+        resyncBusy = false;
+      }
+    };
+    setInterval(resync, 180000); // alle 3 min
+
     // Live-Kanal: Geraete der Sicht + das FHEMVIZ-Geraet selbst
     // (dessen scene-Readings steuern die TV-Szenen).
     let sceneDuration = 30;
     let showDuration = 30;
+    let hadLive = false;
     const names = store.all().map((d) => d.name);
     const filter = [...names, vizDevice].join("|") || ".*";
     client.connectInform({
@@ -761,8 +781,15 @@ async function main() {
         store.applyEvent(id, value);
       },
       onStatus: (s) => {
-        if (s === "live") setStatus(`${count} Gerät(e) · live${zoomLabel}`, "live");
-        else if (s === "reconnect") setStatus("Verbindung verloren – reconnect…");
+        if (s === "live") {
+          setStatus(`${count} Gerät(e) · live${zoomLabel}`, "live");
+          // Nach einer Unterbrechung (nicht beim ersten Connect) sofort den
+          // Snapshot nachziehen - verpasste Events waeren sonst verloren.
+          if (hadLive) resync();
+          hadLive = true;
+        } else if (s === "reconnect") {
+          setStatus("Verbindung verloren – reconnect…");
+        }
       },
     });
   } catch (e) {
