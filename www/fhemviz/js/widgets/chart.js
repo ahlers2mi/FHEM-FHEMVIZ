@@ -2,13 +2,16 @@
  * FHEMVIZ - Chart-Widget (v0.16.0).
  * Zeichnet den Verlauf eines oder mehrerer Log-Readings als schlankes,
  * dark-themiges SVG-Flaechendiagramm - statt das hell gestylte FHEM-SVG
- * einzubetten. Datenquelle ist die vorhandene FHEMWEB-API:
- *   get <FileLog> - - <von> <bis> 4:<reading>\x3a:0:
+ * einzubetten. Datenquelle ist die vorhandene FHEMWEB-API (Log-Typ wird
+ * automatisch erkannt):
+ *   FileLog:  get <log> - - <von> <bis> 4:<reading>\x3a:0:
+ *   DbLog:    get <log> - - <von> <bis> <quellgeraet>:<reading>::
  * (genau wie die gplot-Zeilen der FHEM-SVGs die Daten holen).
  *
  * Aktivierung:  attr <geraet> vizWidget chart
  *               attr <geraet> vizChart <logdev>:<reading>[:Label[:Farbe]][,...] [hours=24]
- * Beispiel:     attr MQTT2_Sonoff_POW_01 vizChart FileLog_Sonoff_POW_01:ENERGY_Power:Leistung:accent hours=24
+ * Beispiele:    FileLog_Sonoff_POW_01:ENERGY_Power:Leistung:accent hours=24
+ *               LogDB:MQTT2_Sonoff_POW_01#ENERGY_Power:Leistung:accent  (DbLog: quellgeraet#reading)
  */
 
 import { FhemvizWidget } from "./base-widget.js";
@@ -50,6 +53,22 @@ export class FhemvizChart extends FhemvizWidget {
     if (!this._data && !this._loading) this._load();
   }
 
+  /** Log-Typ ermitteln (FileLog/DbLog) - fuer die richtige get-Syntax. Cache. */
+  async _logType(logdev) {
+    if (!this._types) this._types = {};
+    if (this._types[logdev]) return this._types[logdev];
+    let type = "FileLog";
+    try {
+      const snap = await this.client.snapshot(logdev);
+      const r = snap && snap.Results && snap.Results[0];
+      type = (r && r.Internals && r.Internals.TYPE) || "FileLog";
+    } catch {
+      /* Standard FileLog */
+    }
+    this._types[logdev] = type;
+    return type;
+  }
+
   _fmtTs(d) {
     const p = (n) => String(n).padStart(2, "0");
     return (
@@ -82,9 +101,17 @@ export class FhemvizChart extends FhemvizWidget {
     try {
       const out = [];
       for (const s of spec.series) {
+        const type = await this._logType(s.logdev);
+        // reading kann "quellgeraet#reading" sein (fuer DbLog noetig, da ein
+        // DbLog viele Geraete haelt); bei FileLog reicht der Reading-Name.
+        const h = s.reading.indexOf("#");
+        const src = h >= 0 ? s.reading.slice(0, h) : "";
+        const rd = h >= 0 ? s.reading.slice(h + 1) : s.reading;
+        const colspec = /DbLog/i.test(type)
+          ? `${src || this.device.name}:${rd}::` // DbLog: <dev>:<reading>::
+          : `4:${rd}\\x3a:0:`;                    // FileLog: Spalte 4 == Wert
         const cmd =
-          `get ${s.logdev} - - ${this._fmtTs(from)} ${this._fmtTs(to)} ` +
-          `4:${s.reading}\\x3a:0:`;
+          `get ${s.logdev} - - ${this._fmtTs(from)} ${this._fmtTs(to)} ${colspec}`;
         const text = await this.client.command(cmd);
         out.push({ ...s, points: this._parse(text) });
       }
