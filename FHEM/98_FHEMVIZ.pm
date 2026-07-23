@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.19.0
+# Version:  v0.19.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.19.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.19.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -270,7 +270,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.19.0"),
+            FHEMVIZ_jsonStr("v0.19.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -479,11 +479,15 @@ sub FHEMVIZ_Attr {
         als Bildschirmschoner für Wand-Tablets.</li>
     <li><a id="FHEMVIZ-attr-statusBar"></a><b>statusBar</b><br>
         Typ: textField-long. Immer sichtbare Status-Chips im Kopf:
-        kommaseparierte Liste <code>gerät[:reading[:einheit]]</code>.
+        kommaseparierte Liste <code>gerät[:reading[:einheit[:farbe]]]</code>.
         structure-Geräte werden zu "Alias: n offen · m gekippt" (Warnfarbe),
-        Readings zu Wert-Chips, sonst Zustands-Chip. Auf dem Tablet springt
-        ein Tipp auf den Chip zum FHEMVIZ-Raum des Geräts. Beispiel:<br>
-        <code>attr myViz statusBar st_fenster,st_tuer,d_Wechselrichter_all:pv_leistung:W</code></li>
+        Readings zu Wert-Chips, sonst Zustands-Chip. Das optionale 4. Feld
+        <b>farbe</b> färbt einen Reading-Chip &ndash; fester Name
+        (<code>ok</code>/<code>warn</code>/<code>bad</code>/…) oder
+        <b>Schwellwerte</b> wie bei vizReadings
+        (<code>bad@&lt;=15|warn@&lt;=30|ok@&gt;=80</code>). Auf dem Tablet
+        springt ein Tipp auf den Chip zum FHEMVIZ-Raum des Geräts. Beispiel:<br>
+        <code>attr myViz statusBar st_fenster,st_tuer,d_Wechselrichter_all:soc:%:bad@&lt;=15|warn@&lt;=30|ok@&gt;=80,weather_dummy</code></li>
 
     <p><b>Raum-Filter</b></p>
     <li><a id="FHEMVIZ-attr-showRooms"></a><b>showRooms</b><br>
