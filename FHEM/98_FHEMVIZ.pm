@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.16.1
+# Version:  v0.17.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.16.1";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.17.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -72,7 +72,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast,weather,chart",
+    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast,weather,chart,watering",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHide:1,0",
     "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power",
@@ -81,6 +81,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizStates:textField-long",
     "vizFlow:textField-long",
     "vizChart:textField-long",
+    "vizWatering:textField-long",
 );
 
 # ----------------------------------------------------------------------------
@@ -266,7 +267,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.16.1"),
+            FHEMVIZ_jsonStr("v0.17.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -605,6 +606,19 @@ sub FHEMVIZ_Attr {
         DbLog: <code>attr MQTT2_Sonoff_POW_01 vizChart LogDB:MQTT2_Sonoff_POW_01#ENERGY_Power:Leistung:accent unit=W hours=168</code><br>
         Größere Kachel (<code>vizSize 2x2</code> o. ä.) empfohlen. Der
         Verlauf wird beim Öffnen und danach alle 5&nbsp;min aktualisiert.</li>
+    <li><a id="FHEMVIZ-attr-vizWatering"></a><b>vizWatering</b><br>
+        Typ: textField-long. Feinzuordnung der Readings des
+        Bewässerungs-Widgets als <code>rolle=reading</code>-Liste
+        (kommasepariert). Für Geräte vom Typ <code>Gartenbewaesserung</code>
+        wird das Widget automatisch gewählt; für andere per
+        <code>vizWidget watering</code>. Rollen (Default in Klammern):
+        <code>status</code> (state), <code>valve</code> (currentValveName),
+        <code>barrel</code> (barrelLevel), <code>soil</code> (soilMoisture),
+        <code>remaining</code> (remainingTime), <code>rain</code> (raining),
+        <code>progress</code> (cycleProgress). Die Kachel zeigt Status +
+        aktives Ventil, den Fass-Füllstand als Balken, Bodenfeuchte
+        (schwellwert-gefärbt), Restzeit, Zyklus und einen Regen-Hinweis.
+        Meist genügt der Default (kein Attribut nötig).</li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>
