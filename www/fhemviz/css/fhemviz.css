@@ -121,7 +121,7 @@ html:not([data-vizmode="tv"]) .viz-clock {
  * --viz-headicon bzw. headerInfo "icon=geraet:20rem". Out-of-flow (absolut
  * zur sticky Kopfzeile) -> Datum bleibt unberuehrt. */
 #viz-headinfo .hi-icon {
-  position: absolute; top: 20px; right: 5px;
+  position: absolute; top: 10px; right: -5px;
   height: var(--viz-headicon, 12rem); width: auto; max-width: 46vw;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
   pointer-events: none; z-index: 9;
