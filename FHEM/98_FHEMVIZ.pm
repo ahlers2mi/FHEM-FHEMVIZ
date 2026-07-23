@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.22.0
+# Version:  v0.22.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.22.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.22.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -62,6 +62,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 # damit sie an jedem Geraet im FHEMWEB-Dropdown auftauchen.
 #   vizWidget   - Widget-Typ erzwingen (uebersteuert GDT/Heuristik/Rauschfilter)
 #   vizSize     - Kachelgroesse im Raster (1x1, 2x1, 1x2, 2x2)
+#   vizHero     - Geraet als breiter Blickfang ganz oben im Raum
 #   vizHide     - Geraet aus der Sicht ausblenden
 #   vizReadings - Kachelinhalt direkt aus Readings statt state-Parsing:
 #                 "reading[:Label[:Einheit[:Farbe]]]" kommasepariert,
@@ -74,6 +75,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 my @FHEMVIZ_DEV_ATTRS = (
     "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast,weather,chart,watering,image",
     "vizSize:1x1,2x1,1x2,2x2",
+    "vizHero:1,0",
     "vizHide:1,0",
     "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power",
     "vizGroup",
@@ -295,7 +297,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.22.0"),
+            FHEMVIZ_jsonStr("v0.22.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -606,8 +608,18 @@ sub FHEMVIZ_Attr {
         sie mit dem FHEM-Attribut <code>webCmdLabel</code> (":"-getrennt, je
         webCmd-Eintrag), falls gesetzt.</li>
     <li><a id="FHEMVIZ-attr-vizSize"></a><b>vizSize</b> 1x1|2x1|1x2|2x2<br>
-        Kachelgröße im Raster; 2x2 ergibt eine Hero-Kachel mit größerer
-        Schrift.</li>
+        Kachelgröße im Raster; 2x2 vergrößert Fläche und Schrift der
+        Kachel (bleibt aber im Raster). Für einen echten, seitenbreiten
+        Blickfang siehe <code>vizHero</code>.</li>
+    <li><a id="FHEMVIZ-attr-vizHero"></a><b>vizHero</b> 1|0<br>
+        Hebt das Gerät als <b>breiten Blickfang ganz oben im Raum</b> heraus
+        (bzw. in der TV-Szene): eine volle Zeile über dem normalen Raster,
+        große Schrift, dezenter Akzentrahmen. Aus dem Raster herausgelöst,
+        also nicht doppelt. Das Gerät behält sein normales Widget
+        (sensor/flow/forecast …) — <code>vizHero</code> ist nur die
+        Platzierung/Betonung, unabhängig von <code>vizWidget</code>. Mehrere
+        Hero-Geräte eines Raums teilen sich die Zeile. Beispiel:<br>
+        <code>attr d_Wechselrichter_all vizHero 1</code></li>
     <li><a id="FHEMVIZ-attr-vizHide"></a><b>vizHide</b> 1|0<br>
         Gerät aus der Sicht ausblenden.</li>
     <li><a id="FHEMVIZ-attr-vizIcon"></a><b>vizIcon</b>
