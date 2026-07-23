@@ -160,9 +160,24 @@ const CARD_CSS = `
     border-radius: 8px;
   }
 
+  /* vizAlert: pulsierender roter Rahmen um die Kachel, solange aktiv. */
+  @keyframes viz-tile-alert {
+    0%, 100% { box-shadow: 0 0 0 2px var(--viz-error, #ff5d5d); }
+    50% {
+      box-shadow: 0 0 0 2px var(--viz-error, #ff5d5d),
+                  0 0 16px 2px color-mix(in srgb, var(--viz-error, #ff5d5d) 65%, transparent);
+    }
+  }
+  .card.viz-tile-alert {
+    animation: viz-tile-alert 1.6s ease-in-out infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     button.toggle, button.toggle::after { transition: none; }
     .viz-flash { animation: none; }
+    .card.viz-tile-alert {
+      animation: none; box-shadow: 0 0 0 2px var(--viz-error, #ff5d5d);
+    }
   }
 `;
 
@@ -245,6 +260,11 @@ export class FhemvizWidget extends HTMLElement {
     this._rendered = true;
     this.shadowRoot.innerHTML = `<style>${CARD_CSS}</style>` + html;
     this.afterRender && this.afterRender();
+    // vizAlert: pulsierender roter Rahmen, solange die Bedingung wahr ist.
+    if (this.alertActive()) {
+      const card = this.shadowRoot.querySelector(".card");
+      if (card) card.classList.add("viz-tile-alert");
+    }
     if (changed) {
       const t =
         this.shadowRoot.querySelector(".value,.tval,.vstate,.cval") ||
@@ -254,6 +274,36 @@ export class FhemvizWidget extends HTMLElement {
         void t.offsetWidth; // Reflow -> Animation neu starten
         t.classList.add("viz-flash");
       }
+    }
+  }
+
+  /**
+   * vizAlert-Bedingung auswerten -> true = Kachel-Alarm (roter Rahmen).
+   * Formen: "reading OP wert" (OP: > < >= <= = == !=) oder nur "reading"
+   * (wahr bei on/an/1/true/open/alarm/error ...). state ist erlaubt.
+   */
+  alertActive() {
+    const spec = String((this.device.attr || {}).vizAlert || "").trim();
+    if (!spec) return false;
+    const rd = (n) =>
+      n === "state" ? this.device.state : (this.device.readings || {})[n];
+    const m = spec.match(/^(.+?)\s*(>=|<=|!=|==|=|>|<)\s*(.+)$/);
+    if (!m) {
+      const v = this.plain(rd(spec)).toLowerCase();
+      return /^(on|an|1|true|yes|ja|open|offen|alarm|alert|error|fault|fehler)$/.test(v);
+    }
+    const cur = this.plain(rd(m[1].trim()));
+    const target = m[3].trim();
+    const a = parseFloat(String(cur).replace(",", "."));
+    const b = parseFloat(String(target).replace(",", "."));
+    const num = !isNaN(a) && !isNaN(b);
+    switch (m[2]) {
+      case ">":  return num && a > b;
+      case "<":  return num && a < b;
+      case ">=": return num && a >= b;
+      case "<=": return num && a <= b;
+      case "!=": return num ? a !== b : cur.toLowerCase() !== target.toLowerCase();
+      default:   return num ? a === b : cur.toLowerCase() === target.toLowerCase();
     }
   }
 

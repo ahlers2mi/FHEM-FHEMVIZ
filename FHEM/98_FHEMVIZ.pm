@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.20.3
+# Version:  v0.21.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.20.3";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.21.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -85,6 +85,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizWateringButtons:textField-long",
     "vizText:textField-long",
     "vizImage",
+    "vizAlert",
 );
 
 # ----------------------------------------------------------------------------
@@ -272,7 +273,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.20.3"),
+            FHEMVIZ_jsonStr("v0.21.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -689,6 +690,18 @@ sub FHEMVIZ_Attr {
         implizit <code>vizWidget image</code>. Bildunterschrift = <code>htmlattr
         title="…"</code>, sonst der state. Beispiel:<br>
         <code>attr www_weather_icon_today vizWidget image</code></li>
+    <li><a id="FHEMVIZ-attr-vizAlert"></a><b>vizAlert</b><br>
+        Typ: textField. Bedingung; ist sie wahr, bekommt die Kachel einen
+        pulsierenden roten Rahmen (Alarm) &ndash; live, in Tablet- und
+        TV-Modus. Formen: <code>reading OP wert</code> mit OP aus
+        <code>&gt; &lt; &gt;= &lt;= = == !=</code> (numerisch oder Text),
+        oder nur <code>reading</code> (wahr bei
+        on/an/1/true/open/alarm/error …). <code>state</code> ist erlaubt.
+        Beispiele:<br>
+        <code>attr MQTT2_PUMPE_BLITZ01 vizAlert power&gt;500</code><br>
+        <code>attr rauchmelder vizAlert state=alarm</code><br>
+        Für den zusätzlichen Vollbild-Alarm im TV-Modus siehe
+        <code>set scene</code> (Event-Übernahme).</li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>
