@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.20.3";
+const SPA_VERSION = "v0.22.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -663,6 +663,43 @@ function showOverlay(url, sec) {
   overlayTimer = setTimeout(hideOverlay, Math.max(3, sec) * 1000);
 }
 
+/* -------------------------------- Nachricht --------------------------------
+ * set <viz> msg <text> [sek]: blendet eine kurze Textnachricht als Banner
+ * oben mittig ueber dem Dashboard ein (z. B. aus einer send_to_all-Methode).
+ * Das Dashboard laeuft darunter unveraendert weiter. Nach Ablauf oder per
+ * Tipp verschwindet das Banner. "set <viz> msg off" schliesst sofort.
+ */
+
+let toastTimer = null;
+
+function hideToast() {
+  clearTimeout(toastTimer);
+  const t = el("viz-toast");
+  if (t) t.remove();
+}
+
+function showToast(text, sec) {
+  hideToast();
+  const txt = String(text || "").trim();
+  if (!txt) return;
+  const t = document.createElement("div");
+  t.id = "viz-toast";
+  const msg = document.createElement("div");
+  msg.className = "viz-toast-msg";
+  msg.textContent = txt;
+  t.appendChild(msg);
+  // stopPropagation: der Schliess-Tipp darf nicht gleichzeitig die
+  // tvTouch-Uebernahme ausloesen.
+  t.addEventListener("click", (e) => {
+    e.stopPropagation();
+    hideToast();
+  });
+  document.body.appendChild(t);
+  // Slide-in im naechsten Frame (Transition greift erst nach dem Einhaengen).
+  requestAnimationFrame(() => t.classList.add("viz-toast-in"));
+  toastTimer = setTimeout(hideToast, Math.max(3, sec) * 1000);
+}
+
 /* --------------------------------- Start ----------------------------------- */
 
 async function main() {
@@ -888,6 +925,7 @@ async function main() {
     // (dessen scene-Readings steuern die TV-Szenen).
     let sceneDuration = 30;
     let showDuration = 30;
+    let msgDuration = 20;
     let hadLive = false;
     const names = store.all().map((d) => d.name);
     const filter = [...names, vizDevice].join("|") || ".*";
@@ -913,6 +951,19 @@ async function main() {
           const v = String(value).trim();
           if (!v || /^(off|none|auto)$/i.test(v)) hideOverlay();
           else showOverlay(v, showDuration);
+          return;
+        }
+        // set <viz> msg <text> [sek]: kurze Textnachricht oben als Banner
+        // (z. B. aus einer send_to_all-Methode).
+        if (id === vizDevice + "-msgDuration") {
+          const n = parseInt(value, 10);
+          if (!isNaN(n) && n > 0) msgDuration = n;
+          return;
+        }
+        if (id === vizDevice + "-msg") {
+          const v = String(value).trim();
+          if (!v || /^(off|none|clear)$/i.test(v)) hideToast();
+          else showToast(v, msgDuration);
           return;
         }
         // set <viz> page <raum>|auto: dauerhafte Umschaltung. TV pinnt die
