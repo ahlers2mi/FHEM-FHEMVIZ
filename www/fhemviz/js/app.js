@@ -678,16 +678,52 @@ function hideToast() {
   if (t) t.remove();
 }
 
-function showToast(text, sec) {
+// Nachricht ist "level|ueberschrift|text" (level und ueberschrift optional).
+// level = X/wichtig -> important (rot), S/leise -> info (gedaempft),
+// sonst normal (amber). Das erste send_to_all-Argument passt so 1:1.
+function parseToast(raw) {
+  const s = String(raw || "").trim();
+  const parts = s.split("|");
+  let level = "";
+  let heading = "";
+  let text = "";
+  if (parts.length >= 3) {
+    level = parts[0].trim();
+    heading = parts[1].trim();
+    text = parts.slice(2).join("|").trim();
+  } else if (parts.length === 2) {
+    heading = parts[0].trim();
+    text = parts.slice(1).join("|").trim();
+  } else {
+    text = s;
+  }
+  const lvl = /^(x|wichtig|important|high|alarm)$/i.test(level)
+    ? "important"
+    : /^(s|leise|info|low|unwichtig|silent)$/i.test(level)
+      ? "info"
+      : "normal";
+  return { level: lvl, heading, text };
+}
+
+function showToast(raw, sec) {
   hideToast();
-  const txt = String(text || "").trim();
-  if (!txt) return;
+  const { level, heading, text } = parseToast(raw);
+  if (!text && !heading) return;
   const t = document.createElement("div");
   t.id = "viz-toast";
-  const msg = document.createElement("div");
-  msg.className = "viz-toast-msg";
-  msg.textContent = txt;
-  t.appendChild(msg);
+  t.className = "viz-toast-" + level;
+  if (heading) {
+    const h = document.createElement("div");
+    h.className = "viz-toast-head";
+    h.textContent = heading;
+    t.appendChild(h);
+  }
+  if (text) {
+    const msg = document.createElement("div");
+    msg.className = "viz-toast-msg";
+    msg.textContent = text;
+    t.appendChild(msg);
+  }
   // stopPropagation: der Schliess-Tipp darf nicht gleichzeitig die
   // tvTouch-Uebernahme ausloesen.
   t.addEventListener("click", (e) => {

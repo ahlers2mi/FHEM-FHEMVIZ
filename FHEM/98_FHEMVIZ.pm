@@ -232,10 +232,13 @@ sub FHEMVIZ_Set {
     }
 
     if ($cmd eq "msg") {
-        return "usage: set $name msg <text>|off [seconds]" if (!@args);
+        return "usage: set $name msg <[level|][ueberschrift|]text>|off [seconds]"
+            if (!@args);
 
         # Letztes Argument ist die Anzeigedauer, wenn es eine reine Zahl ist
         # (so bleiben Leerzeichen im Nachrichtentext erhalten). Default 20 s.
+        # Der Rest wird unveraendert als "level|ueberschrift|text" gespeichert;
+        # die SPA zerlegt ihn (Trennzeichen |, alle Felder ausser text optional).
         my $dur = 20;
         if (@args > 1 && $args[-1] =~ /^\d+$/) {
             $dur = pop @args;
@@ -435,16 +438,24 @@ sub FHEMVIZ_Attr {
         X-Frame-Options verbieten; FHEM-eigene Seiten und Bilder gehen
         immer). Beispiel Türklingel:<br>
         <code>define n_klingel_tv notify MQTT2_DOORBELL:motion:.* set myViz show http://kamera/snapshot.jpg 20</code></li>
-    <li><a id="FHEMVIZ-set-msg"></a><b>msg</b> &lt;text&gt;|off [sekunden] &ndash;
+    <li><a id="FHEMVIZ-set-msg"></a><b>msg</b>
+        &lt;[level|][überschrift|]text&gt;|off [sekunden] &ndash;
         blendet eine kurze Textnachricht als Banner oben mittig über dem
         Dashboard ein (im TV-Modus größer). Ideal, um aus einer eigenen
         <code>send_to_all</code>-Methode eine Meldung auf den Fernseher zu
         legen. Das Dashboard läuft darunter unverändert weiter; nach Ablauf
         (Default 20 s) oder per Tipp verschwindet das Banner,
         <code>off</code> schließt sofort. Ist das letzte Argument eine
-        reine Zahl, gilt es als Anzeigedauer, sonst gehört alles zum Text.
-        Beispiele:<br>
-        <code>set myViz msg "Waschmaschine fertig" 30</code><br>
+        reine Zahl, gilt es als Anzeigedauer.<br>
+        Der Text kann mit <code>|</code> in bis zu drei Felder geteilt werden:
+        <b>level|überschrift|text</b> (nur <i>text</i> ist Pflicht). Das
+        <i>level</i> steuert die Farbe/Betonung und ist so gewählt, dass das
+        erste <code>send_to_all</code>-Argument direkt passt:
+        <code>X</code>/<code>wichtig</code> = rot mit kurzem Puls,
+        <code>S</code>/<code>leise</code> = gedämpft/grau, alles andere
+        (z. B. Leerzeichen) = normal (amber). Beispiele:<br>
+        <code>set myViz msg X|Blumen|Verlangen nach Wasser 30</code><br>
+        <code>set myViz msg Waschmaschine fertig</code><br>
         <code>set myViz msg off</code></li>
   </ul><br>
 
