@@ -121,14 +121,14 @@ html:not([data-vizmode="tv"]) .viz-clock {
  * --viz-headicon bzw. headerInfo "icon=geraet:20rem". Out-of-flow (absolut
  * zur sticky Kopfzeile) -> Datum bleibt unberuehrt. */
 #viz-headinfo .hi-icon {
-  position: absolute; top: calc(100% - 1rem); right: 24px;
-  height: var(--viz-headicon, 6rem); width: auto; max-width: 46vw;
+  position: absolute; top: 20px; right: 5px;
+  height: var(--viz-headicon, 12rem); width: auto; max-width: 46vw;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
   pointer-events: none; z-index: 9;
 }
 html:not([data-vizmode="tv"]) #viz-headinfo .hi-val { font-size: 1rem; }
 html:not([data-vizmode="tv"]) #viz-headinfo .hi-icon {
-  height: var(--viz-headicon, 3.6rem); right: 14px;
+  height: var(--viz-headicon, 6rem); top: 12px; right: 8px;
 }
 
 /* Szenen-Fortschritt (TV): schmale Linie an der Unterkante des Headers */
