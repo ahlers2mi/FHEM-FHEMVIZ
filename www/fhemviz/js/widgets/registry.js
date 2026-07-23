@@ -21,6 +21,7 @@ import { FhemvizForecast } from "./forecast.js";
 import { FhemvizWeather } from "./weather.js";
 import { FhemvizChart } from "./chart.js";
 import { FhemvizWatering } from "./watering.js";
+import { FhemvizImage } from "./image.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -37,6 +38,7 @@ export const WIDGET_REGISTRY = {
   weather: "fhemviz-weather",
   chart: "fhemviz-chart",
   watering: "fhemviz-watering",
+  image: "fhemviz-image",
   // TODO: thermostat, media.
 };
 
@@ -70,6 +72,7 @@ export function registerCoreWidgets() {
     ["fhemviz-weather", FhemvizWeather],
     ["fhemviz-chart", FhemvizChart],
     ["fhemviz-watering", FhemvizWatering],
+    ["fhemviz-image", FhemvizImage],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -87,6 +90,7 @@ export function selectWidget(device) {
   // 1b. vizChart/vizWatering gesetzt -> passende Kachel (auch ohne vizWidget).
   if (attr.vizChart) return WIDGET_REGISTRY.chart;
   if (attr.vizWatering) return WIDGET_REGISTRY.watering;
+  if (attr.vizImage) return WIDGET_REGISTRY.image;
   if (attr.vizText) return WIDGET_REGISTRY.text;
   // 2. genericDeviceType. Rollladen brauchen pct - Pegel-Proxies
   //    (gdt blind, aber nur state-Slider) bekommen den Dimmer.

@@ -15,7 +15,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.18.3";
+const SPA_VERSION = "v0.19.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -265,14 +265,13 @@ class TvController {
   _tickClock() {
     const d = new Date();
     const p = (n) => String(n).padStart(2, "0");
+    const wd = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][d.getDay()];
+    // Datum + Uhrzeit gemeinsam RECHTS (wie im Tablet-Modus) - der Titel
+    // links bleibt "FHEMVIZ", damit die Datumsposition ueberall gleich ist.
     el("viz-clock").textContent =
-      p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
-    // Im TV-Header steht das Datum statt des FHEMVIZ-Schriftzugs.
-    el("viz-title").textContent = d.toLocaleDateString("de-DE", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
+      `${wd} ${p(d.getDate())}.${p(d.getMonth() + 1)}. · ` +
+      `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    el("viz-title").textContent = "FHEMVIZ";
   }
 
   _render(room) {

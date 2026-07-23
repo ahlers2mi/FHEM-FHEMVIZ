@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.18.3
+# Version:  v0.19.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.18.3";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.19.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -72,7 +72,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast,weather,chart,watering",
+    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast,weather,chart,watering,image",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHide:1,0",
     "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power",
@@ -84,6 +84,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizWatering:textField-long",
     "vizWateringButtons:textField-long",
     "vizText:textField-long",
+    "vizImage",
 );
 
 # ----------------------------------------------------------------------------
@@ -269,7 +270,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.18.3"),
+            FHEMVIZ_jsonStr("v0.19.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -538,7 +539,10 @@ sub FHEMVIZ_Attr {
         (Konfiguration über <code>vizChart</code>),
         <code>watering</code> = Gartenbewässerung mit Status, Fass-Füllstand,
         Bodenfeuchte und Bedien-Buttons (siehe <code>vizWatering</code> /
-        <code>vizWateringButtons</code>).</li>
+        <code>vizWateringButtons</code>),
+        <code>image</code> = Bild/Icon-Kachel (z. B. Wettervorhersage-Icon
+        aus einem <code>weblink image …</code>; Quelle sonst über
+        <code>vizImage</code>).</li>
     <li><a id="FHEMVIZ-attr-vizSize"></a><b>vizSize</b> 1x1|2x1|1x2|2x2<br>
         Kachelgröße im Raster; 2x2 ergibt eine Hero-Kachel mit größerer
         Schrift.</li>
@@ -656,6 +660,15 @@ sub FHEMVIZ_Attr {
         Beispiele:<br>
         <code>attr weather_dummy vizText Es wird heute {temp_min|blau@&lt;=5|warn@&gt;=22} bis {temp_max|bad@&gt;=30|warn@&gt;=25} Grad</code><br>
         <code>attr d_xy vizText **Achtung:** {=Wartung fällig|warn}</code></li>
+    <li><a id="FHEMVIZ-attr-vizImage"></a><b>vizImage</b><br>
+        Typ: textField. Bildquelle für das <code>image</code>-Widget: eine
+        literale URL (<code>/fhem/icons/…</code> oder <code>http…</code>)
+        oder ein <b>Reading-Name</b>, dessen Wert die URL enthält. Ohne
+        Angabe wird bei einem <code>weblink</code>-Gerät automatisch die URL
+        aus dessen DEF (<code>image &lt;url&gt;</code>) genommen; setzt dann
+        implizit <code>vizWidget image</code>. Bildunterschrift = <code>htmlattr
+        title="…"</code>, sonst der state. Beispiel:<br>
+        <code>attr www_weather_icon_today vizWidget image</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>
