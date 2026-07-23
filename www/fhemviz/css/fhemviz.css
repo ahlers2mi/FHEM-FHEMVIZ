@@ -115,9 +115,19 @@ html:not([data-vizmode="tv"]) .viz-clock {
 #viz-headinfo .hi-unit { font-size: 0.8em; color: var(--viz-muted); margin-left: 1px; }
 #viz-headinfo .hi-lbl { font-size: 0.7rem; color: var(--viz-muted); margin-right: 4px;
   text-transform: uppercase; letter-spacing: 0.08em; }
-#viz-headinfo .hi-icon { height: 2.4rem; width: auto; display: block; }
+/* Das Icon darf gross sein und UEBER die Kopfzeile hinaus in die Seite
+ * ragen: negative Raender halten die Kopfzeilenhoehe klein, der Ueberhang
+ * (v. a. nach unten) schwebt mit Schatten ueber dem Inhalt. */
+#viz-headinfo .hi-icon {
+  width: auto; display: block; height: 6rem;
+  margin: -0.75rem 0 -2.75rem; position: relative; z-index: 11;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55));
+  pointer-events: none;
+}
 html:not([data-vizmode="tv"]) #viz-headinfo .hi-val { font-size: 1rem; }
-html:not([data-vizmode="tv"]) #viz-headinfo .hi-icon { height: 1.7rem; }
+html:not([data-vizmode="tv"]) #viz-headinfo .hi-icon {
+  height: 3.6rem; margin: -0.5rem 0 -1.6rem;
+}
 
 /* Szenen-Fortschritt (TV): schmale Linie an der Unterkante des Headers */
 /* Status-Chips (attr statusBar): immer sichtbar, tablet-tippbar --------- */
