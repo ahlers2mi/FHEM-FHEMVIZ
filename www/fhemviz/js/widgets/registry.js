@@ -20,6 +20,7 @@ import { FhemvizFlow } from "./flow.js";
 import { FhemvizForecast } from "./forecast.js";
 import { FhemvizWeather } from "./weather.js";
 import { FhemvizChart } from "./chart.js";
+import { FhemvizWatering } from "./watering.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -35,6 +36,7 @@ export const WIDGET_REGISTRY = {
   forecast: "fhemviz-forecast",
   weather: "fhemviz-weather",
   chart: "fhemviz-chart",
+  watering: "fhemviz-watering",
   // TODO: thermostat, media.
 };
 
@@ -67,6 +69,7 @@ export function registerCoreWidgets() {
     ["fhemviz-forecast", FhemvizForecast],
     ["fhemviz-weather", FhemvizWeather],
     ["fhemviz-chart", FhemvizChart],
+    ["fhemviz-watering", FhemvizWatering],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -81,8 +84,9 @@ export function selectWidget(device) {
   if (attr.vizWidget && WIDGET_REGISTRY[attr.vizWidget]) {
     return WIDGET_REGISTRY[attr.vizWidget];
   }
-  // 1b. vizChart gesetzt -> Diagramm-Kachel (auch ohne vizWidget).
+  // 1b. vizChart/vizWatering gesetzt -> passende Kachel (auch ohne vizWidget).
   if (attr.vizChart) return WIDGET_REGISTRY.chart;
+  if (attr.vizWatering) return WIDGET_REGISTRY.watering;
   // 2. genericDeviceType. Rollladen brauchen pct - Pegel-Proxies
   //    (gdt blind, aber nur state-Slider) bekommen den Dimmer.
   const gdt = attr.genericDeviceType || attr.gdt;
@@ -97,6 +101,10 @@ export function selectWidget(device) {
   // 2b. SolarForecast bekommt automatisch das Prognose-Widget.
   if ((device.internals || {}).TYPE === "SolarForecast") {
     return WIDGET_REGISTRY.forecast;
+  }
+  // 2b2. Gartenbewaesserung -> Bewaesserungs-Widget (auch ohne vizWidget).
+  if ((device.internals || {}).TYPE === "Gartenbewaesserung") {
+    return WIDGET_REGISTRY.watering;
   }
   // 2c. structure-Geraete -> Gruppen-Kachel. Der Zustand wird dort aus den
   //     Mitgliedern berechnet - der eigene state ist bei gemischten
