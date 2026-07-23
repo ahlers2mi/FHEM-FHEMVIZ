@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.22.1
+# Version:  v0.22.2
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.22.1";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.22.2";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -297,7 +297,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.22.1"),
+            FHEMVIZ_jsonStr("v0.22.2"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -494,14 +494,14 @@ sub FHEMVIZ_Attr {
         einfachere Alternative.</li>
     <li><a id="FHEMVIZ-attr-width"></a><b>width</b><br>
         Typ: textField. Feste Layout-Breite in CSS-Pixeln (320&ndash;3840,
-        z. B. <code>900</code>): die Seite wird in dieser Breite gerendert,
-        das Gerät (Fully/Android) skaliert sie selbst bildschirmfüllend
-        &ndash; ohne die Einschränkungen der transform-Skalierung von
-        <b>zoom</b>. Kleinere Breite = größere Darstellung. Hat Vorrang
+        z. B. <code>900</code>): die Seite wird in dieser Breite gerendert
+        und dann bildschirmfüllend skaliert. Kleinere Breite = größere
+        Darstellung. Intern ist das der gleiche transform-Pfad wie
+        <b>zoom</b>, nur wird der Faktor aus der tatsächlich sichtbaren
+        Breite abgeleitet (<code>sichtbareBreite / width</code>) statt aus
+        einer Zoom-Stufe &ndash; so passt die Fläche exakt und
+        Vollbild-Elemente (Alarm-Rahmen) sitzen bündig am Rand. Hat Vorrang
         vor <b>zoom</b>; der URL-Parameter <code>?width=</code> geht vor.
-        Desktop-Browser ignorieren das Viewport-Meta &ndash; dort wirkt
-        weiterhin nur <b>zoom</b>. In Fully muss &quot;Use Wide
-        Viewport&quot; aktiv sein (Default), &quot;Desktop Mode&quot; aus.
         Die aktive Breite wird in der Statuszeile angezeigt.</li>
     <li><a id="FHEMVIZ-attr-readonly"></a><b>readonly</b> 0|1<br>
         Nur-Lese-Sicht ohne Bedienelemente (Gäste-/Wandmodus). Im TV-Modus
@@ -782,12 +782,11 @@ sub FHEMVIZ_Attr {
     <li><code>?zoom=1.3</code> &ndash; Oberfläche skalieren (0.5&ndash;3,
         auch <code>130</code> als Prozent), pro Gerät in der Start-URL</li>
     <li><code>?width=1280</code> &ndash; feste Layout-Breite in CSS-Pixeln
-        (320&ndash;3840): die Seite wird in dieser Breite gerendert, das
-        Gerät (Fully/Android) skaliert sie selbst bildschirmfüllend.
-        Einfachere Alternative zu <code>?zoom=</code> ohne dessen
-        Einschränkungen; setzt <code>?zoom=</code> außer Kraft.
-        Desktop-Browser ignorieren den Parameter. Kleinere Breite =
-        größere Darstellung.</li>
+        (320&ndash;3840): die Seite wird in dieser Breite gerendert und dann
+        bildschirmfüllend skaliert (Faktor = sichtbareBreite / width). Ein
+        einfacher zu treffender Weg als <code>?zoom=</code>; setzt
+        <code>?zoom=</code> außer Kraft. Kleinere Breite = größere
+        Darstellung.</li>
     <li><code>?room=Solar</code> &ndash; Startseite: TV beginnt die Rotation
         mit diesem Raum, Tablet öffnet den Tab; geht vor dem Reading
         <code>page</code></li>

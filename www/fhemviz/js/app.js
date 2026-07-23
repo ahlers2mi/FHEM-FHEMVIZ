@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.22.1";
+const SPA_VERSION = "v0.22.2";
 
 const el = (id) => document.getElementById(id);
 
@@ -547,6 +547,21 @@ function startTabletClock() {
   setInterval(tick, 1000);
 }
 
+// Body per CSS-transform skalieren - EINE Koordinatenwelt fuer zoom UND
+// width. Das data-Attribut merkt den Faktor fuer measureViewport (Fit-Hoehe)
+// und aktiviert die Scroll-Regeln in fhemviz.css. Wichtig: der Vollbild-
+// Alert-Rahmen (body::after, position:fixed) haengt am transformierten body,
+// deckt also GENAU dessen Box (= sichtbarer Bereich) - er kann nicht mehr
+// rechts/unten hinausragen wie beim frueheren meta-viewport-Hack.
+function setBodyScale(zoom) {
+  document.documentElement.dataset.vizzoom = String(zoom);
+  const b = document.body.style;
+  b.transform = `scale(${zoom})`;
+  b.transformOrigin = "0 0";
+  b.width = `calc(100% / ${zoom})`;
+  b.height = `calc(100% / ${zoom})`;
+}
+
 function applyViewportWidth(urlValue, cfgValue) {
   // attr width am Geraet ist der Default, ?width= in der URL geht vor
   // (wie bei zoom - Fully verschluckt URL-Parameter gern, darum das Attribut).
@@ -556,13 +571,14 @@ function applyViewportWidth(urlValue, cfgValue) {
   };
   const w = parse(urlValue) ?? parse(cfgValue);
   if (!w) return "";
-  const meta = document.querySelector('meta[name="viewport"]');
-  if (meta) {
-    // initial-scale explizit mitgeben (Bildschirm-/Layoutbreite), damit der
-    // WebView auch ohne "Load with Overview Mode" sicher einpasst.
-    const scale = Math.min(5, Math.max(0.2, (window.screen.width || w) / w));
-    meta.setAttribute("content", `width=${w}, initial-scale=${scale.toFixed(4)}`);
-  }
+  // KEIN meta-viewport-Hack mehr (screen.width ist im WebView unzuverlaessig
+  // -> Layout-Viewport groesser als sichtbar -> Rahmen/Inhalt ragten raus).
+  // Stattdessen aus der TATSAECHLICH sichtbaren Breite die Skalierung
+  // ableiten und ueber denselben transform-Pfad wie zoom anwenden. Damit
+  // stimmen Fit-Hoehe und Alert-Rahmen ohne Raterei.
+  const vw = window.innerWidth || w;
+  const zoom = Math.min(3, Math.max(0.2, vw / w));
+  if (Math.abs(zoom - 1) > 0.001) setBodyScale(zoom);
   return ` · Breite ${w}`;
 }
 
@@ -575,14 +591,7 @@ function applyZoom(urlValue, cfgValue) {
   };
   const zoom = parse(urlValue) ?? parse(cfgValue);
   if (!zoom || zoom === 1) return "";
-  // Faktor fuer die TV-Flaechenmessung (_fit) merken; das data-Attribut
-  // aktiviert zugleich die Scroll-Regeln in fhemviz.css.
-  document.documentElement.dataset.vizzoom = String(zoom);
-  const b = document.body.style;
-  b.transform = `scale(${zoom})`;
-  b.transformOrigin = "0 0";
-  b.width = `calc(100% / ${zoom})`;
-  b.height = `calc(100% / ${zoom})`;
+  setBodyScale(zoom);
   // Diagnose fuer die Statuszeile: kommt der Wert an UND rendert die
   // Engine die Skalierung? Nach dem Anwenden nachmessen: mit wirksamem
   // transform ist der body visuell wieder viewportbreit; hat die Engine
