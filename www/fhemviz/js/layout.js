@@ -80,6 +80,11 @@ function sortKey(dev) {
   return (a.sortby || a.alias || dev.name).toLowerCase();
 }
 
+// vizHero: Geraet als breiter Blickfang oben im Raum (aus dem Raster geloest).
+function isHero(dev) {
+  return /^(1|true|yes|on)$/i.test(String((dev.attr || {}).vizHero || ""));
+}
+
 function loadActiveRoom() {
   try {
     return localStorage.getItem(LS_ACTIVE_ROOM) || ALL_ROOMS;
@@ -252,6 +257,37 @@ export function renderLayout(root, store, client, opts = {}) {
       roomEl.appendChild(h2);
     }
 
+    // Hero-Band: als vizHero markierte Geraete laufen breit und gross ganz
+    // oben (aus dem Raster herausgeloest, kein Doppel-Rendern). Ueber alle
+    // Gruppen des Raums eingesammelt und nach Name dedupliziert.
+    const heroSeen = new Set();
+    const heroDevs = [];
+    for (const devs of groups.values()) {
+      for (const d of devs) {
+        if (isHero(d) && !heroSeen.has(d.name)) {
+          heroSeen.add(d.name);
+          heroDevs.push(d);
+        }
+      }
+    }
+    if (heroDevs.length) {
+      const band = document.createElement("div");
+      band.className = "viz-hero";
+      heroDevs
+        .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
+        .forEach((dev) => {
+          const w = createWidget(dev, store, client, widgetOpts);
+          // Raster-Spans (aus vizSize) im Band nicht anwenden - das Band hat
+          // ein eigenes Layout; Typo aber gross (mind. 2x2), fuer die Ferne.
+          w.style.gridColumn = "";
+          w.style.gridRow = "";
+          w.setAttribute("data-hero", "");
+          if (!w.getAttribute("data-size")) w.setAttribute("data-size", "2x2");
+          band.appendChild(w);
+        });
+      roomEl.appendChild(band);
+    }
+
     // Gruppen fliessen nebeneinander: jede Gruppe ist nur so breit wie
     // ihre Kacheln (Spaltenzahl = Summe der Spannweiten, gedeckelt) -
     // kleine Gruppen teilen sich eine Zeile statt sie zu verschwenden.
@@ -259,7 +295,10 @@ export function renderLayout(root, store, client, opts = {}) {
     groupsWrap.className = "viz-groups";
     roomEl.appendChild(groupsWrap);
 
-    for (const [group, devices] of [...groups.entries()].sort()) {
+    for (const [group, allDevices] of [...groups.entries()].sort()) {
+      // Hero-Geraete sind bereits im Band oben - hier auslassen.
+      const devices = allDevices.filter((d) => !isHero(d));
+      if (!devices.length) continue;
       const groupEl = document.createElement("div");
       groupEl.className = "viz-group";
       const hasWide = devices.some((d) =>

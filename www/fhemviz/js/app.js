@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.22.0";
+const SPA_VERSION = "v0.22.1";
 
 const el = (id) => document.getElementById(id);
 
@@ -88,7 +88,7 @@ function computePageOffsets(container) {
   // Zeilen-Unterkante = groesste Unterkante (deckt vizSize-Spans ab).
   const rows = new Map();
   const items = container.querySelectorAll(
-    ".viz-grid > *, .viz-group > h3, .viz-room > h2"
+    ".viz-grid > *, .viz-hero > *, .viz-group > h3, .viz-room > h2"
   );
   for (const item of items) {
     const r = item.getBoundingClientRect();
