@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.17.0
+# Version:  v0.17.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.17.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.17.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -82,6 +82,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizFlow:textField-long",
     "vizChart:textField-long",
     "vizWatering:textField-long",
+    "vizWateringButtons:textField-long",
 );
 
 # ----------------------------------------------------------------------------
@@ -267,7 +268,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.17.0"),
+            FHEMVIZ_jsonStr("v0.17.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -619,6 +620,16 @@ sub FHEMVIZ_Attr {
         aktives Ventil, den Fass-Füllstand als Balken, Bodenfeuchte
         (schwellwert-gefärbt), Restzeit, Zyklus und einen Regen-Hinweis.
         Meist genügt der Default (kein Attribut nötig).</li>
+    <li><a id="FHEMVIZ-attr-vizWateringButtons"></a><b>vizWateringButtons</b><br>
+        Typ: textField-long. Bedien-Buttons des Bewässerungs-Widgets als
+        <code>Label=befehl</code>-Liste, mit <code>|</code> getrennt. Der
+        Befehl wird als <code>set &lt;gerät&gt; &lt;befehl&gt;</code>
+        abgesetzt und darf Leerzeichen enthalten (z. B.
+        <code>startCircuit 8</code>). Buttons erscheinen nur im bedienbaren
+        Modus (nicht TV/readonly); <code>start</code>/<code>stop</code>
+        werden grün bzw. rot eingefärbt. Default:
+        <code>Start=start|Stop=stop</code>. Beispiel:<br>
+        <code>attr bewaesserung vizWateringButtons Start=start|Stop=stop|Gewächshaus=startCircuit 8|IBC füllen=startIBCFill</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>
