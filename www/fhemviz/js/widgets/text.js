@@ -78,8 +78,8 @@ export class FhemvizText extends FhemvizWidget {
         color = spec.slice(pipe + 1).trim();
         spec = spec.slice(0, pipe).trim();
       }
-      const cv = this.colorVar(color) || "var(--viz-accent)";
       let val;
+      let num = NaN;
       if (spec.startsWith("=")) {
         // literaler, hervorgehobener Text (keine Reading-Aufloesung)
         val = spec.slice(1).trim();
@@ -96,6 +96,15 @@ export class FhemvizText extends FhemvizWidget {
           raw === undefined || raw === null || raw === ""
             ? "–"
             : this._fmt(this.plain(raw), dec);
+        num = parseFloat(String(val).replace(",", "."));
+      }
+      // Farbe: fester Name -> accent-Default; Schwellwerte (mit @) -> colorFor,
+      // ohne Treffer neutral (var(--viz-text)), sonst waeren Schwellwerte sinnlos.
+      let cv;
+      if (color.indexOf("@") >= 0) {
+        cv = this.colorFor(color, num) || "var(--viz-text)";
+      } else {
+        cv = this.colorVar(color) || "var(--viz-accent)";
       }
       out += `<span class="tval" style="color:${cv}">${this.escape(val)}</span>`;
     }
