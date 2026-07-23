@@ -57,6 +57,26 @@ export class FhemvizWatering extends FhemvizWidget {
     return `<div class="vbar"><div style="width:${w}%;${bg}"></div></div>`;
   }
 
+  /**
+   * Bedien-Buttons aus vizWateringButtons: "Label=befehl|Label=befehl|..."
+   * (| trennt Buttons, erstes = trennt Label vom set-Befehl; der Befehl darf
+   * Leerzeichen enthalten, z. B. "startCircuit 8"). Default Start/Stop.
+   */
+  _buttons() {
+    const spec = String((this.device.attr || {}).vizWateringButtons || "").trim();
+    const src = spec || "Start=start|Stop=stop";
+    return src
+      .split("|")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((tok) => {
+        const i = tok.indexOf("=");
+        if (i <= 0) return null;
+        return { label: tok.slice(0, i).trim(), cmd: tok.slice(i + 1).trim() };
+      })
+      .filter((b) => b && b.cmd);
+  }
+
   _row(label, value, color) {
     return (
       `<div class="row"><span class="sub">${this.escape(label)}</span>` +
@@ -129,14 +149,54 @@ export class FhemvizWatering extends FhemvizWidget {
       rows.push(this._row("Regen", "erkannt", "var(--viz-action)"));
     }
 
+    // Bedien-Buttons (nur im bedienbaren Modus, nicht TV/readonly).
+    const buttons = this.readonly ? [] : this._buttons();
+    const btnHtml = buttons.length
+      ? `<div class="wbtns">` +
+        buttons
+          .map((b, i) => {
+            const cls =
+              /^stop/i.test(b.cmd) ? " stop" : /^start\b/i.test(b.cmd) ? " start" : "";
+            return `<button class="wbtn${cls}" data-i="${i}">${this.escape(b.label)}</button>`;
+          })
+          .join("") +
+        `</div>`
+      : "";
+    this._btnDefs = buttons;
+
+    const btnCss = `
+      <style>
+        .wbtns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .wbtn {
+          font: inherit; font-size: 0.85rem; font-weight: 600;
+          min-height: 42px; padding: 8px 14px; flex: 1 1 auto;
+          border-radius: 999px; border: 1px solid var(--viz-border);
+          background: transparent; color: var(--viz-text); cursor: pointer;
+          white-space: nowrap;
+        }
+        .wbtn.start { color: var(--viz-ok); border-color: color-mix(in srgb, var(--viz-ok) 55%, var(--viz-border)); }
+        .wbtn.stop { color: var(--viz-error); border-color: color-mix(in srgb, var(--viz-error) 55%, var(--viz-border)); }
+        .wbtn:focus-visible { outline: 2px solid var(--viz-action); outline-offset: 2px; }
+        :host([data-size="2x2"]) .wbtn { font-size: 1rem; min-height: 48px; }
+      </style>`;
+
     const sizeCls = mainText.length > 18 ? " sm" : mainText.length > 9 ? " md" : "";
-    return `
+    return btnCss + `
       <div class="card ${active ? "on" : ""}">
         <span class="label">${this.escape(this.displayName())}</span>
         <div class="value${sizeCls}" style="color:${mainColor};">${this.escape(mainText)}</div>
         ${barrelHtml}
         ${rows.length ? `<div class="grow"></div>${rows.join("")}` : ""}
+        ${btnHtml}
       </div>`;
+  }
+
+  afterRender() {
+    const defs = this._btnDefs || [];
+    this.shadowRoot.querySelectorAll(".wbtn").forEach((btn) => {
+      const def = defs[parseInt(btn.dataset.i, 10)];
+      if (def) btn.addEventListener("click", () => this.sendCommand(def.cmd));
+    });
   }
 
   _fmt(n) {
