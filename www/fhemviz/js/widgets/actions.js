@@ -18,6 +18,12 @@ export class FhemvizActions extends FhemvizWidget {
     return wc.split(":").map((s) => s.trim()).filter(Boolean);
   }
 
+  /** webCmdLabel (FHEM-Standard): Beschriftungen je webCmd-Eintrag (":"-getrennt). */
+  _labels() {
+    const wl = (this.device.attr && this.device.attr.webCmdLabel) || "";
+    return String(wl).replace(/\\n/g, ":").split(":").map((s) => s.trim());
+  }
+
   /** PossibleSets -> Map(cmd -> spec-String hinter dem Doppelpunkt). */
   _setSpecs() {
     const map = new Map();
@@ -70,13 +76,15 @@ export class FhemvizActions extends FhemvizWidget {
     }
     let body = "";
     if (!this.readonly) {
+      const labels = this._labels();
+      const lbl = (c) => labels[c.idx] || c.entry;
       const parts = [];
       const buttons = [];
       for (const c of this._controls()) {
         if (c.kind === "slider") {
           parts.push(`
             <div class="ctlrow">
-              <span class="sub">${this.escape(c.entry)}</span>
+              <span class="sub">${this.escape(lbl(c))}</span>
               <input type="range" data-idx="${c.idx}" data-cmd="${this.escape(c.entry)}"
                 min="${c.min}" max="${c.max}" step="${c.step}" value="${c.value}"
                 aria-label="${this.escape(c.entry)}">
@@ -91,14 +99,14 @@ export class FhemvizActions extends FhemvizWidget {
             .join("");
           parts.push(`
             <div class="ctlrow">
-              <span class="sub">${this.escape(c.entry)}</span>
+              <span class="sub">${this.escape(lbl(c))}</span>
               <select class="pill" data-cmd="${this.escape(c.entry)}">${opts}</select>
             </div>`);
         } else {
           buttons.push(
             `<button class="pill" data-idx="${c.idx}" title="set ${this.escape(
               this.device.name
-            )} ${this.escape(c.entry)}">${this.escape(c.entry)}</button>`
+            )} ${this.escape(c.entry)}">${this.escape(lbl(c))}</button>`
           );
         }
       }

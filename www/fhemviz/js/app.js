@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.19.1";
+const SPA_VERSION = "v0.19.2";
 
 const el = (id) => document.getElementById(id);
 
