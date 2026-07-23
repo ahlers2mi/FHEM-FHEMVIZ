@@ -150,8 +150,19 @@ const CARD_CSS = `
   :host([data-tv][data-size="2x2"]) .value.md { font-size: 3rem; }
   :host([data-tv][data-size="2x2"]) .value.sm { font-size: 2.3rem; }
 
+  /* Kurzes Aufleuchten bei Wertaenderung (base _paint setzt .viz-flash). */
+  @keyframes viz-flash {
+    0%   { background-color: color-mix(in srgb, var(--viz-accent) 30%, transparent); }
+    100% { background-color: transparent; }
+  }
+  .viz-flash {
+    animation: viz-flash 0.7s ease-out;
+    border-radius: 8px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     button.toggle, button.toggle::after { transition: none; }
+    .viz-flash { animation: none; }
   }
 `;
 
@@ -225,8 +236,25 @@ export class FhemvizWidget extends HTMLElement {
   }
 
   _paint() {
-    this.shadowRoot.innerHTML = `<style>${CARD_CSS}</style>` + this.render();
+    const html = this.render();
+    // Aufleuchten nur bei tatsaechlicher Aenderung des Kachelinhalts (nicht
+    // beim ersten Rendern) - so pulsiert eine Kachel bei jedem neuen Wert
+    // kurz auf, ohne dass sich unveraenderte Kacheln bewegen.
+    const changed = this._rendered && html !== this._prevHtml;
+    this._prevHtml = html;
+    this._rendered = true;
+    this.shadowRoot.innerHTML = `<style>${CARD_CSS}</style>` + html;
     this.afterRender && this.afterRender();
+    if (changed) {
+      const t =
+        this.shadowRoot.querySelector(".value,.tval,.vstate,.cval") ||
+        this.shadowRoot.querySelector(".card");
+      if (t) {
+        t.classList.remove("viz-flash");
+        void t.offsetWidth; // Reflow -> Animation neu starten
+        t.classList.add("viz-flash");
+      }
+    }
   }
 
   /** Anzeigename: alias, sonst technischer Name. */

@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.19.2";
+const SPA_VERSION = "v0.20.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -203,6 +203,71 @@ function setupStatusBar(store, spec, opts) {
   });
   watch.forEach((n) => store.subscribe(n, render));
   render();
+}
+
+/**
+ * Glance-Header (attr headerInfo): kompakte Live-Info rechts neben dem
+ * Datum. Kommaseparierte Items:
+ *   <geraet>:<reading>[:einheit][:label]  -> Wert (gross)
+ *   icon=<geraet>                          -> Icon aus weblink-image-DEF
+ * Live ueber Store-Abos. Macht die sonst leere Kopfzeile lebendig.
+ */
+function setupHeaderInfo(store, spec) {
+  const host = el("viz-headinfo");
+  if (!host) return;
+  const plain = (x) => String(x ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const items = String(spec || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .map((t) => {
+      const ic = t.match(/^icon\s*=\s*(.+)$/i);
+      if (ic) return { kind: "icon", dev: ic[1].trim() };
+      const [dev, reading, unit, label] = t.split(":").map((x) => (x || "").trim());
+      return { kind: "val", dev, reading, unit, label };
+    })
+    .filter((it) => store.get(it.dev));
+  if (!items.length) return;
+  host.hidden = false;
+
+  function render() {
+    host.textContent = "";
+    for (const it of items) {
+      const d = store.get(it.dev);
+      if (!d) continue;
+      if (it.kind === "icon") {
+        const def = (d.internals || {}).DEF || "";
+        const m = def.match(/^\s*image\s+(\S+)/i);
+        if (!m) continue;
+        const img = document.createElement("img");
+        img.className = "hi-icon";
+        img.src = m[1];
+        const title = String((d.attr || {}).htmlattr || "").match(/title\s*=\s*"([^"]*)"/i);
+        img.alt = title ? title[1] : "";
+        host.appendChild(img);
+      } else {
+        const raw = it.reading === "state" ? d.state : (d.readings || {})[it.reading];
+        const v = plain(raw);
+        if (v === "" ) continue;
+        const span = document.createElement("span");
+        span.className = "hi-val";
+        span.innerHTML =
+          (it.label ? `<span class="hi-lbl">${escapeHtml(it.label)}</span>` : "") +
+          escapeHtml(v) +
+          (it.unit ? `<span class="hi-unit">${escapeHtml(it.unit)}</span>` : "");
+        host.appendChild(span);
+      }
+    }
+  }
+
+  [...new Set(items.map((i) => i.dev))].forEach((n) => store.subscribe(n, render));
+  render();
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
+  );
 }
 
 class TvController {
@@ -675,6 +740,7 @@ async function main() {
       jump: (room) =>
         renderLayout(root, store, client, { ...baseOpts, activeRoom: room }),
     });
+    setupHeaderInfo(store, cfg.headerInfo);
 
     // ?room=Solar (alias ?scene=): Startseite. TV beginnt die Rotation mit
     // diesem Raum, Tablet oeffnet den Tab (statt des zuletzt gemerkten).
