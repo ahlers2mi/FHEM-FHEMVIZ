@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.21.0
+# Version:  v0.22.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.21.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.22.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -195,7 +195,7 @@ sub FHEMVIZ_Undef {
 # ----------------------------------------------------------------------------
 sub FHEMVIZ_Set {
     my ($hash, $name, $cmd, @args) = @_;
-    return "Unknown argument, choose one of scene page show" if (!defined($cmd));
+    return "Unknown argument, choose one of scene page show msg" if (!defined($cmd));
 
     if ($cmd eq "scene") {
         my $scene = $args[0];
@@ -231,7 +231,26 @@ sub FHEMVIZ_Set {
         return undef;
     }
 
-    return "Unknown argument $cmd, choose one of scene page show";
+    if ($cmd eq "msg") {
+        return "usage: set $name msg <text>|off [seconds]" if (!@args);
+
+        # Letztes Argument ist die Anzeigedauer, wenn es eine reine Zahl ist
+        # (so bleiben Leerzeichen im Nachrichtentext erhalten). Default 20 s.
+        my $dur = 20;
+        if (@args > 1 && $args[-1] =~ /^\d+$/) {
+            $dur = pop @args;
+        }
+        my $text = join(" ", @args);
+
+        # Reihenfolge wichtig: Dauer zuerst (wie bei scene/show).
+        readingsBeginUpdate($hash);
+        readingsBulkUpdate($hash, "msgDuration", $dur);
+        readingsBulkUpdate($hash, "msg", $text);
+        readingsEndUpdate($hash, 1);
+        return undef;
+    }
+
+    return "Unknown argument $cmd, choose one of scene page show msg";
 }
 
 # ----------------------------------------------------------------------------
@@ -273,7 +292,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.21.0"),
+            FHEMVIZ_jsonStr("v0.22.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -416,6 +435,17 @@ sub FHEMVIZ_Attr {
         X-Frame-Options verbieten; FHEM-eigene Seiten und Bilder gehen
         immer). Beispiel Türklingel:<br>
         <code>define n_klingel_tv notify MQTT2_DOORBELL:motion:.* set myViz show http://kamera/snapshot.jpg 20</code></li>
+    <li><a id="FHEMVIZ-set-msg"></a><b>msg</b> &lt;text&gt;|off [sekunden] &ndash;
+        blendet eine kurze Textnachricht als Banner oben mittig über dem
+        Dashboard ein (im TV-Modus größer). Ideal, um aus einer eigenen
+        <code>send_to_all</code>-Methode eine Meldung auf den Fernseher zu
+        legen. Das Dashboard läuft darunter unverändert weiter; nach Ablauf
+        (Default 20 s) oder per Tipp verschwindet das Banner,
+        <code>off</code> schließt sofort. Ist das letzte Argument eine
+        reine Zahl, gilt es als Anzeigedauer, sonst gehört alles zum Text.
+        Beispiele:<br>
+        <code>set myViz msg "Waschmaschine fertig" 30</code><br>
+        <code>set myViz msg off</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-get"></a>
@@ -715,6 +745,8 @@ sub FHEMVIZ_Attr {
         keine.</li>
     <li><b>show</b> / <b>showDuration</b> &ndash; letzte per
         <code>set show</code> eingeblendete URL und ihre Dauer.</li>
+    <li><b>msg</b> / <b>msgDuration</b> &ndash; letzte per
+        <code>set msg</code> eingeblendete Textnachricht und ihre Dauer.</li>
   </ul><br>
 
   <a id="FHEMVIZ-url"></a>

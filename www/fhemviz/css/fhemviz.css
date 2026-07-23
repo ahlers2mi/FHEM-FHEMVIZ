@@ -298,6 +298,32 @@ body.viz-alert::after {
   padding: 4px 12px; opacity: 0.85; pointer-events: none;
 }
 
+/* Textnachricht (set <viz> msg <text>): Banner oben mittig, slide-in. */
+#viz-toast {
+  position: fixed; z-index: 210;
+  top: 0; left: 50%;
+  transform: translate(-50%, -120%);
+  transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.3, 1);
+  max-width: 92vw;
+  margin-top: 14px;
+  background: var(--viz-surface, #151920);
+  border-left: 5px solid var(--viz-accent, #ffb020);
+  border-radius: 12px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+#viz-toast.viz-toast-in { transform: translate(-50%, 0); }
+#viz-toast .viz-toast-msg {
+  padding: 14px 22px;
+  color: var(--viz-fg, #e7ecf2);
+  font-size: 1.15rem; font-weight: 600; line-height: 1.3;
+  white-space: pre-wrap; word-break: break-word;
+}
+html[data-vizmode="tv"] #viz-toast { margin-top: 22px; border-left-width: 8px; }
+html[data-vizmode="tv"] #viz-toast .viz-toast-msg {
+  padding: 22px 40px; font-size: 2rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   #viz-progress.run i { animation: none; transform: scaleX(1); }
   .viz-tabs { backdrop-filter: none; }
