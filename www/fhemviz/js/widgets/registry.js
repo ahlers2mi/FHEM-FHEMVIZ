@@ -87,6 +87,7 @@ export function selectWidget(device) {
   // 1b. vizChart/vizWatering gesetzt -> passende Kachel (auch ohne vizWidget).
   if (attr.vizChart) return WIDGET_REGISTRY.chart;
   if (attr.vizWatering) return WIDGET_REGISTRY.watering;
+  if (attr.vizText) return WIDGET_REGISTRY.text;
   // 2. genericDeviceType. Rollladen brauchen pct - Pegel-Proxies
   //    (gdt blind, aber nur state-Slider) bekommen den Dimmer.
   const gdt = attr.genericDeviceType || attr.gdt;

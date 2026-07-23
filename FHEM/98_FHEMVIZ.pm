@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.17.3
+# Version:  v0.18.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.17.3";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.18.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -83,6 +83,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizChart:textField-long",
     "vizWatering:textField-long",
     "vizWateringButtons:textField-long",
+    "vizText:textField-long",
 );
 
 # ----------------------------------------------------------------------------
@@ -268,7 +269,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.17.3"),
+            FHEMVIZ_jsonStr("v0.18.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -630,6 +631,15 @@ sub FHEMVIZ_Attr {
         werden grün bzw. rot eingefärbt. Default:
         <code>Start=start|Stop=stop</code>. Beispiel:<br>
         <code>attr bewaesserung vizWateringButtons Start=start|Stop=stop|Gewächshaus=startCircuit 8|IBC füllen=startIBCFill</code></li>
+    <li><a id="FHEMVIZ-attr-vizText"></a><b>vizText</b><br>
+        Typ: textField-long. Freier Text für das <code>text</code>-Widget mit
+        Platzhaltern <code>{reading[:stellen][|farbe]}</code>; der eingesetzte
+        Wert wird groß und farbig hervorgehoben, der Rest bleibt normaler
+        Fließtext. <code>stellen</code> = Nachkommastellen (Default max. 2,
+        Nullen weg), <code>farbe</code> = <code>ok|warn|bad|accent|blau</code>
+        (Default accent). <code>{state}</code> für den Gerätestatus. Setzt
+        implizit <code>vizWidget text</code>. Beispiel:<br>
+        <code>attr weather_dummy vizText Es wird heute {tttt|ok} bis {cccc|bad} Grad</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>
