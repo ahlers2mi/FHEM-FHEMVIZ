@@ -11,11 +11,12 @@ import { FhemClient } from "./fhem-client.js";
 import { Store } from "./store.js";
 import { renderLayout, collectRooms, resolveRoom, ALL_ROOMS, VIZ_ROOM_PREFIX } from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
+import { vizColorFor } from "./widgets/base-widget.js";
 
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.18.2";
+const SPA_VERSION = "v0.19.1";
 
 const el = (id) => document.getElementById(id);
 
@@ -121,8 +122,8 @@ function setupStatusBar(store, spec, opts) {
     .map((t) => t.trim())
     .filter(Boolean)
     .map((t) => {
-      const [dev, reading, unit] = t.split(":").map((x) => (x || "").trim());
-      return { dev, reading, unit, device: store.get(dev) };
+      const [dev, reading, unit, color] = t.split(":").map((x) => (x || "").trim());
+      return { dev, reading, unit, color, device: store.get(dev) };
     })
     .filter((c) => c.device);
   if (!entries.length) return;
@@ -149,7 +150,9 @@ function setupStatusBar(store, spec, opts) {
     const alias = (c.device.attr && c.device.attr.alias) || c.device.name;
     if (c.reading) {
       const v = plain((c.device.readings || {})[c.reading] ?? "–");
-      return { text: `${alias} ${v}${c.unit ? " " + c.unit : ""}`, warn: false };
+      const num = parseFloat(String(v).replace(",", "."));
+      const color = c.color ? vizColorFor(c.color, num) : "";
+      return { text: `${alias} ${v}${c.unit ? " " + c.unit : ""}`, warn: false, color };
     }
     const mem = members(c.device);
     if (mem.length) {
@@ -183,6 +186,7 @@ function setupStatusBar(store, spec, opts) {
       const d = chipData(c);
       const chip = document.createElement(opts.tv ? "span" : "button");
       chip.className = "viz-chip" + (d.warn ? " warn" : "");
+      if (d.color) chip.style.color = d.color;
       chip.textContent = d.text;
       if (!opts.tv) {
         const room = jumpRoom(c);
@@ -265,14 +269,13 @@ class TvController {
   _tickClock() {
     const d = new Date();
     const p = (n) => String(n).padStart(2, "0");
+    const wd = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][d.getDay()];
+    // Datum + Uhrzeit gemeinsam RECHTS (wie im Tablet-Modus) - der Titel
+    // links bleibt "FHEMVIZ", damit die Datumsposition ueberall gleich ist.
     el("viz-clock").textContent =
-      p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
-    // Im TV-Header steht das Datum statt des FHEMVIZ-Schriftzugs.
-    el("viz-title").textContent = d.toLocaleDateString("de-DE", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
+      `${wd} ${p(d.getDate())}.${p(d.getMonth() + 1)}. · ` +
+      `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    el("viz-title").textContent = "FHEMVIZ";
   }
 
   _render(room) {

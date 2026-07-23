@@ -155,6 +155,50 @@ const CARD_CSS = `
   }
 `;
 
+/**
+ * Semantischer Farbname -> CSS-Custom-Property (ok/gruen, warn/orange,
+ * bad/rot/red, accent/amber, blau/blue). Unbekannt -> "" (Standardfarbe).
+ * Als Modulfunktion exportiert, damit auch app.js (statusBar) sie nutzt.
+ */
+export function vizColorVar(name) {
+  const map = {
+    ok: "--viz-ok", gruen: "--viz-ok", green: "--viz-ok",
+    warn: "--viz-warn", orange: "--viz-warn",
+    bad: "--viz-error", rot: "--viz-error", red: "--viz-error",
+    accent: "--viz-accent", amber: "--viz-accent",
+    blau: "--viz-action", blue: "--viz-action",
+  };
+  const v = map[String(name || "").toLowerCase()];
+  return v ? `var(${v})` : "";
+}
+
+/**
+ * Farbe aufloesen: fester Name ODER Schwellwerte "farbe@[op]zahl" mit |
+ * getrennt (op-Default >=, erlaubt >= > <= < ==). Erster Treffer gewinnt;
+ * kein Treffer / nicht-numerisch -> "".
+ */
+export function vizColorFor(spec, num) {
+  const s = String(spec || "").trim();
+  if (!s) return "";
+  if (s.indexOf("@") < 0) return vizColorVar(s); // fester Name
+  if (isNaN(num)) return "";
+  for (const rule of s.split("|").map((r) => r.trim()).filter(Boolean)) {
+    const m = rule.match(/^([a-zäöü]+)@(<=|>=|<|>|==)?\s*(-?\d+(?:[.,]\d+)?)$/i);
+    if (!m) continue;
+    const name = m[1];
+    const op = m[2] || ">=";
+    const t = parseFloat(m[3].replace(",", "."));
+    const hit =
+      op === ">=" ? num >= t :
+      op === ">"  ? num >  t :
+      op === "<=" ? num <= t :
+      op === "<"  ? num <  t :
+                    num === t;
+    if (hit) return vizColorVar(name);
+  }
+  return "";
+}
+
 export class FhemvizWidget extends HTMLElement {
   constructor() {
     super();
@@ -213,15 +257,7 @@ export class FhemvizWidget extends HTMLElement {
    * blau/blue. Unbekannte Namen -> "" (Standardfarbe).
    */
   colorVar(name) {
-    const map = {
-      ok: "--viz-ok", gruen: "--viz-ok", green: "--viz-ok",
-      warn: "--viz-warn", orange: "--viz-warn",
-      bad: "--viz-error", rot: "--viz-error", red: "--viz-error",
-      accent: "--viz-accent", amber: "--viz-accent",
-      blau: "--viz-action", blue: "--viz-action",
-    };
-    const v = map[String(name || "").toLowerCase()];
-    return v ? `var(${v})` : "";
+    return vizColorVar(name);
   }
 
   /**
@@ -236,25 +272,7 @@ export class FhemvizWidget extends HTMLElement {
    * bewusst nicht auswertet.
    */
   colorFor(spec, num) {
-    const s = String(spec || "").trim();
-    if (!s) return "";
-    if (s.indexOf("@") < 0) return this.colorVar(s); // fester Name
-    if (isNaN(num)) return "";
-    for (const rule of s.split("|").map((r) => r.trim()).filter(Boolean)) {
-      const m = rule.match(/^([a-zäöü]+)@(<=|>=|<|>|==)?\s*(-?\d+(?:[.,]\d+)?)$/i);
-      if (!m) continue;
-      const name = m[1];
-      const op = m[2] || ">=";
-      const t = parseFloat(m[3].replace(",", "."));
-      const hit =
-        op === ">=" ? num >= t :
-        op === ">"  ? num >  t :
-        op === "<=" ? num <= t :
-        op === "<"  ? num <  t :
-                      num === t;
-      if (hit) return this.colorVar(name);
-    }
-    return "";
+    return vizColorFor(spec, num);
   }
 
   /**
