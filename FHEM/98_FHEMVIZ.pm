@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.18.0
+# Version:  v0.18.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.18.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.18.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -269,7 +269,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.18.0"),
+            FHEMVIZ_jsonStr("v0.18.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -637,9 +637,12 @@ sub FHEMVIZ_Attr {
         Wert wird groß und farbig hervorgehoben, der Rest bleibt normaler
         Fließtext. <code>stellen</code> = Nachkommastellen (Default max. 2,
         Nullen weg), <code>farbe</code> = <code>ok|warn|bad|accent|blau</code>
-        (Default accent). <code>{state}</code> für den Gerätestatus. Setzt
-        implizit <code>vizWidget text</code>. Beispiel:<br>
-        <code>attr weather_dummy vizText Es wird heute {tttt|ok} bis {cccc|bad} Grad</code></li>
+        (Default accent). <code>{state}</code> für den Gerätestatus. Auch
+        <b>ohne Variable</b>: <code>{=Text|farbe}</code> hebt literalen Text
+        groß/farbig hervor, <code>**Text**</code> macht ihn fett. Setzt
+        implizit <code>vizWidget text</code>. Beispiele:<br>
+        <code>attr weather_dummy vizText Es wird heute {tttt|ok} bis {cccc|bad} Grad</code><br>
+        <code>attr d_xy vizText **Achtung:** {=Wartung fällig|warn}</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>

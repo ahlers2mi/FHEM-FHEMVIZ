@@ -49,19 +49,27 @@ export class FhemvizText extends FhemvizWidget {
     return out;
   }
 
+  /** Literaler Text: escapen, **fett** -> <b>, Zeilenumbrueche -> <br>. */
+  _markup(s) {
+    return this.escape(s)
+      .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+      .replace(/\n/g, "<br>");
+  }
+
   /**
-   * Template mit {reading[:stellen][|farbe]}-Platzhaltern in HTML aufloesen.
-   * Literaler Text wird escaped, Zeilenumbrueche zu <br>.
+   * Template in HTML aufloesen. Platzhalter:
+   *   {reading[:stellen][|farbe]}  - Reading-Wert, gross + farbig
+   *   {=Text[|farbe]}              - literaler Text, gross + farbig
+   * Literaler Text ausserhalb: **fett** moeglich.
    */
   _renderTemplate(tpl) {
     const readings = this.device.readings || {};
-    const lit = (s) => this.escape(s).replace(/\n/g, "<br>");
     let out = "";
     let last = 0;
     const re = /\{([^}]+)\}/g;
     let m;
     while ((m = re.exec(tpl)) !== null) {
-      out += lit(tpl.slice(last, m.index));
+      out += this._markup(tpl.slice(last, m.index));
       last = m.index + m[0].length;
       let spec = m[1].trim();
       let color = "";
@@ -70,22 +78,28 @@ export class FhemvizText extends FhemvizWidget {
         color = spec.slice(pipe + 1).trim();
         spec = spec.slice(0, pipe).trim();
       }
-      let dec = null;
-      const colon = spec.indexOf(":");
-      if (colon >= 0) {
-        const d = parseInt(spec.slice(colon + 1), 10);
-        if (!isNaN(d)) dec = d;
-        spec = spec.slice(0, colon).trim();
-      }
-      const raw = spec === "state" ? this.device.state : readings[spec];
-      const val =
-        raw === undefined || raw === null || raw === ""
-          ? "–"
-          : this._fmt(this.plain(raw), dec);
       const cv = this.colorVar(color) || "var(--viz-accent)";
+      let val;
+      if (spec.startsWith("=")) {
+        // literaler, hervorgehobener Text (keine Reading-Aufloesung)
+        val = spec.slice(1).trim();
+      } else {
+        let dec = null;
+        const colon = spec.indexOf(":");
+        if (colon >= 0) {
+          const d = parseInt(spec.slice(colon + 1), 10);
+          if (!isNaN(d)) dec = d;
+          spec = spec.slice(0, colon).trim();
+        }
+        const raw = spec === "state" ? this.device.state : readings[spec];
+        val =
+          raw === undefined || raw === null || raw === ""
+            ? "–"
+            : this._fmt(this.plain(raw), dec);
+      }
       out += `<span class="tval" style="color:${cv}">${this.escape(val)}</span>`;
     }
-    out += lit(tpl.slice(last));
+    out += this._markup(tpl.slice(last));
     return out;
   }
 
