@@ -115,18 +115,20 @@ html:not([data-vizmode="tv"]) .viz-clock {
 #viz-headinfo .hi-unit { font-size: 0.8em; color: var(--viz-muted); margin-left: 1px; }
 #viz-headinfo .hi-lbl { font-size: 0.7rem; color: var(--viz-muted); margin-right: 4px;
   text-transform: uppercase; letter-spacing: 0.08em; }
-/* Das Icon darf gross sein und UEBER die Kopfzeile hinaus in die Seite
- * ragen: negative Raender halten die Kopfzeilenhoehe klein, der Ueberhang
- * (v. a. nach unten) schwebt mit Schatten ueber dem Inhalt. */
+/* Das Icon darf gross sein und aus der Kopfzeile in die Seite ragen. RECHTS
+ * verankert (right, kein left) und aus der Kopfzeile nach unten haengend ->
+ * waechst nach links/unten und laeuft NIE rechts aus dem Bild. Groesse via
+ * --viz-headicon bzw. headerInfo "icon=geraet:20rem". Out-of-flow (absolut
+ * zur sticky Kopfzeile) -> Datum bleibt unberuehrt. */
 #viz-headinfo .hi-icon {
-  width: auto; display: block; height: 6rem;
-  margin: -0.75rem 0 -2.75rem; position: relative; z-index: 11;
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55));
-  pointer-events: none;
+  position: absolute; top: 20px; right: 5px;
+  height: var(--viz-headicon, 12rem); width: auto; max-width: 46vw;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+  pointer-events: none; z-index: 9;
 }
 html:not([data-vizmode="tv"]) #viz-headinfo .hi-val { font-size: 1rem; }
 html:not([data-vizmode="tv"]) #viz-headinfo .hi-icon {
-  height: 3.6rem; margin: -0.5rem 0 -1.6rem;
+  height: var(--viz-headicon, 6rem); top: 12px; right: 8px;
 }
 
 /* Szenen-Fortschritt (TV): schmale Linie an der Unterkante des Headers */

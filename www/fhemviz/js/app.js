@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.20.1";
+const SPA_VERSION = "v0.20.3";
 
 const el = (id) => document.getElementById(id);
 
@@ -222,7 +222,11 @@ function setupHeaderInfo(store, spec) {
     .filter(Boolean)
     .map((t) => {
       const ic = t.match(/^icon\s*=\s*(.+)$/i);
-      if (ic) return { kind: "icon", dev: ic[1].trim() };
+      if (ic) {
+        // icon=<geraet>[:<groesse>]  (Groesse z. B. 20rem, 120px)
+        const [dev, size] = ic[1].split(":").map((x) => x.trim());
+        return { kind: "icon", dev, size };
+      }
       const [dev, reading, unit, label] = t.split(":").map((x) => (x || "").trim());
       return { kind: "val", dev, reading, unit, label };
     })
@@ -242,6 +246,7 @@ function setupHeaderInfo(store, spec) {
         const img = document.createElement("img");
         img.className = "hi-icon";
         img.src = m[1];
+        if (it.size) img.style.height = it.size;
         const title = String((d.attr || {}).htmlattr || "").match(/title\s*=\s*"([^"]*)"/i);
         img.alt = title ? title[1] : "";
         host.appendChild(img);

@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.20.1
+# Version:  v0.20.3
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.20.1";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.20.3";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -272,7 +272,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.20.1"),
+            FHEMVIZ_jsonStr("v0.20.3"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -495,9 +495,12 @@ sub FHEMVIZ_Attr {
         Typ: textField-long. Kompakte Live-Info rechts neben dem Datum (der
         „Glance-Header") &ndash; belebt die sonst leere Kopfzeile auf jeder
         Seite. Kommaseparierte Items: <code>gerät:reading[:einheit[:label]]</code>
-        zeigt einen großen Wert, <code>icon=gerät</code> ein Icon aus einem
-        <code>weblink image …</code>. Live über den inform-Kanal. Beispiel:<br>
-        <code>attr myViz headerInfo MQTT2_B0CBD8D5566F:temp_C:°C,icon=www_weather_icon_today</code></li>
+        zeigt einen großen Wert, <code>icon=gerät[:größe]</code> ein Icon aus
+        einem <code>weblink image …</code> (Größe optional, z. B.
+        <code>icon=dev:16rem</code>). Das Icon ist rechts verankert und darf
+        aus der Kopfzeile in die Seite ragen, ohne rechts aus dem Bild zu
+        laufen. Live über den inform-Kanal. Beispiel:<br>
+        <code>attr myViz headerInfo MQTT2_B0CBD8D5566F:temp_C:°C,icon=www_weather_icon_today:14rem</code></li>
 
     <p><b>Raum-Filter</b></p>
     <li><a id="FHEMVIZ-attr-showRooms"></a><b>showRooms</b><br>
