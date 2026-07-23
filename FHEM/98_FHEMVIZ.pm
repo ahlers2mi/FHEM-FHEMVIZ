@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.19.2
+# Version:  v0.20.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.19.2";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.20.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -114,6 +114,7 @@ sub FHEMVIZ_Initialize {
           "tvScenes " .
           "tvTouch " .
           "statusBar:textField-long " .
+          "headerInfo:textField-long " .
           "showRooms " .
           "hideRooms " .
           "hideTypes " .
@@ -257,6 +258,7 @@ sub FHEMVIZ_Get {
         my $zoomAttr   = AttrVal($name, "zoom", "");
         my $widthAttr  = AttrVal($name, "width", "");
         my $statusBar  = AttrVal($name, "statusBar", "");
+        my $headerInfo = AttrVal($name, "headerInfo", "");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
@@ -267,10 +269,10 @@ sub FHEMVIZ_Get {
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
+              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.19.2"),
+            FHEMVIZ_jsonStr("v0.20.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -280,6 +282,7 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($tvScenes),
             FHEMVIZ_jsonStr($tvTouch),
             FHEMVIZ_jsonStr($statusBar),
+            FHEMVIZ_jsonStr($headerInfo),
             FHEMVIZ_jsonStr($page),
             FHEMVIZ_jsonStr($showRooms),
             FHEMVIZ_jsonStr($hideRooms),
@@ -488,6 +491,13 @@ sub FHEMVIZ_Attr {
         (<code>bad@&lt;=15|warn@&lt;=30|ok@&gt;=80</code>). Auf dem Tablet
         springt ein Tipp auf den Chip zum FHEMVIZ-Raum des Geräts. Beispiel:<br>
         <code>attr myViz statusBar st_fenster,st_tuer,d_Wechselrichter_all:soc:%:bad@&lt;=15|warn@&lt;=30|ok@&gt;=80,weather_dummy</code></li>
+    <li><a id="FHEMVIZ-attr-headerInfo"></a><b>headerInfo</b><br>
+        Typ: textField-long. Kompakte Live-Info rechts neben dem Datum (der
+        „Glance-Header") &ndash; belebt die sonst leere Kopfzeile auf jeder
+        Seite. Kommaseparierte Items: <code>gerät:reading[:einheit[:label]]</code>
+        zeigt einen großen Wert, <code>icon=gerät</code> ein Icon aus einem
+        <code>weblink image …</code>. Live über den inform-Kanal. Beispiel:<br>
+        <code>attr myViz headerInfo MQTT2_B0CBD8D5566F:temp_C:°C,icon=www_weather_icon_today</code></li>
 
     <p><b>Raum-Filter</b></p>
     <li><a id="FHEMVIZ-attr-showRooms"></a><b>showRooms</b><br>

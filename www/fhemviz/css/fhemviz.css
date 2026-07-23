@@ -105,6 +105,20 @@ html:not([data-vizmode="tv"]) .viz-clock {
   color: var(--viz-muted);
 }
 
+/* Glance-Header (attr headerInfo): Aussentemperatur/Icon o. ae. rechts
+ * neben dem Datum - macht die sonst leere Kopfzeile lebendig. */
+#viz-headinfo {
+  display: inline-flex; align-items: center; gap: 12px; margin-left: 14px;
+  font-variant-numeric: tabular-nums;
+}
+#viz-headinfo .hi-val { font-size: 1.4rem; font-weight: 600; line-height: 1; }
+#viz-headinfo .hi-unit { font-size: 0.8em; color: var(--viz-muted); margin-left: 1px; }
+#viz-headinfo .hi-lbl { font-size: 0.7rem; color: var(--viz-muted); margin-right: 4px;
+  text-transform: uppercase; letter-spacing: 0.08em; }
+#viz-headinfo .hi-icon { height: 2.4rem; width: auto; display: block; }
+html:not([data-vizmode="tv"]) #viz-headinfo .hi-val { font-size: 1rem; }
+html:not([data-vizmode="tv"]) #viz-headinfo .hi-icon { height: 1.7rem; }
+
 /* Szenen-Fortschritt (TV): schmale Linie an der Unterkante des Headers */
 /* Status-Chips (attr statusBar): immer sichtbar, tablet-tippbar --------- */
 #viz-statusbar {
