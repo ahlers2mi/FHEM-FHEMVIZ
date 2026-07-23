@@ -178,6 +178,28 @@ export class FhemvizChart extends FhemvizWidget {
     return out;
   }
 
+  /** Kompakte Achsen-Zahl: 36000 -> "36k", 1200000 -> "1.2M". */
+  _short(v) {
+    if (!isFinite(v)) return "–";
+    const a = Math.abs(v);
+    if (a >= 1e6) return this._num(v / 1e6, 1) + "M";
+    if (a >= 1e3) return this._num(v / 1e3, 1) + "k";
+    return this._num(v, 1);
+  }
+
+  /** Drei Zeit-Labels (Anfang/Mitte/Ende) je nach Zeitspanne HH:MM oder DD.MM. */
+  _axisTimes(t0, t1) {
+    const spanH = (t1 - t0) / 3600000;
+    const p = (n) => String(n).padStart(2, "0");
+    const fmt = (ms) => {
+      const d = new Date(ms);
+      return spanH <= 36
+        ? `${p(d.getHours())}:${p(d.getMinutes())}`
+        : `${p(d.getDate())}.${p(d.getMonth() + 1)}.`;
+    };
+    return [fmt(t0), fmt((t0 + t1) / 2), fmt(t1)];
+  }
+
   render() {
     const spec = this._spec();
     const chartCss = `
@@ -190,8 +212,23 @@ export class FhemvizChart extends FhemvizWidget {
         :host([data-size="2x2"]) .cval { font-size: 3rem; }
         :host([data-tv]) .cval { font-size: 2.6rem; }
         .cunit { font-size: 0.9rem; color: var(--viz-muted); }
-        .csvg { flex: 1 1 auto; min-height: 70px; width: 100%; display: block; }
-        :host([data-size="1x2"]) .csvg, :host([data-size="2x2"]) .csvg { min-height: 150px; }
+        /* Plotflaeche mit Achsen: Y-Werte links, Zeit unten (HTML-Labels,
+         * damit sie nicht mit dem gestreckten SVG verzerren). */
+        .cbody { flex: 1 1 auto; min-height: 74px; display: grid;
+                 grid-template-columns: auto 1fr; grid-template-rows: 1fr auto;
+                 column-gap: 6px; row-gap: 2px; }
+        :host([data-size="1x2"]) .cbody, :host([data-size="2x2"]) .cbody { min-height: 150px; }
+        .csvg { grid-row: 1; grid-column: 2; width: 100%; height: 100%;
+                min-height: 0; display: block; }
+        .cyax { grid-row: 1; grid-column: 1; display: flex; flex-direction: column;
+                justify-content: space-between; align-items: flex-end;
+                font-size: 0.6rem; line-height: 1; color: var(--viz-muted);
+                font-variant-numeric: tabular-nums; }
+        .cxax { grid-row: 2; grid-column: 2; display: flex;
+                justify-content: space-between; font-size: 0.6rem;
+                color: var(--viz-muted); font-variant-numeric: tabular-nums; }
+        :host([data-tv]) .cyax, :host([data-tv]) .cxax,
+        :host([data-size="2x2"]) .cyax, :host([data-size="2x2"]) .cxax { font-size: 0.75rem; }
         .cfoot { display: flex; justify-content: space-between; gap: 8px;
                  font-size: 0.72rem; color: var(--viz-muted); }
         :host([data-tv]) .cfoot { font-size: 0.9rem; }
@@ -252,10 +289,18 @@ export class FhemvizChart extends FhemvizWidget {
     const vals = prim.points.map((p) => p[1]);
     const max = Math.max(...vals), min = Math.min(...vals);
     const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-    const u = spec.unit ? ` <span class="cunit">${this.escape(spec.unit)}</span>` : "";
+    const unit = spec.unit ? this.escape(spec.unit) : "";
+    const u = unit ? ` <span class="cunit">${unit}</span>` : "";
     const legend = series.length > 1
       ? series.map((s) => `<span style="color:${this._colorOf(s.color, "var(--viz-accent)")}">●</span> ${this.escape(s.label)}`).join(" &nbsp; ")
       : `${prim.label !== this.device.name ? this.escape(prim.label) + " · " : ""}letzte ${spec.hours} h`;
+
+    // Y-Achse: oben vMax, Mitte, unten vMin (Einheit am oberen Wert).
+    const yLabels = [vMax, (vMax + vMin) / 2, vMin].map(
+      (v, i) => `<span>${this._short(v)}${i === 0 && unit ? " " + unit : ""}</span>`
+    ).join("");
+    // X-Achse: Anfang/Mitte/Ende der Zeitspanne.
+    const [tA, tM, tE] = this._axisTimes(t0, t1);
 
     return chartCss + `
       <div class="card">
@@ -263,9 +308,13 @@ export class FhemvizChart extends FhemvizWidget {
           <div class="chead">${head}
             <span class="cval">${this._num(last)}${u}</span>
           </div>
-          <svg class="csvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-            ${grid}${paths}
-          </svg>
+          <div class="cbody">
+            <div class="cyax">${yLabels}</div>
+            <svg class="csvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+              ${grid}${paths}
+            </svg>
+            <div class="cxax"><span>${tA}</span><span>${tM}</span><span>${tE}</span></div>
+          </div>
           <div class="cfoot">
             <span>${legend}</span>
             <span>Ø ${this._num(avg)} · ↑ ${this._num(max)} · ↓ ${this._num(min)}</span>
