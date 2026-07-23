@@ -1,5 +1,5 @@
 UPD 2026-07-23_11:44:58 38769 FHEM/98_FHEMVIZ.pm
-UPD 2026-07-23_11:44:58 12179 www/fhemviz/css/fhemviz.css
+UPD 2026-07-23_11:52:10 12180 www/fhemviz/css/fhemviz.css
 UPD 2026-07-21_13:43:26 729 www/fhemviz/favicon.svg
 UPD 2026-07-23_11:19:31 1453 www/fhemviz/index.html
 UPD 2026-07-23_11:44:58 35483 www/fhemviz/js/app.js
