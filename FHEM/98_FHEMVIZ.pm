@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.18.2
+# Version:  v0.18.3
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.18.2";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.18.3";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -269,7 +269,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.18.2"),
+            FHEMVIZ_jsonStr("v0.18.3"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -510,13 +510,16 @@ sub FHEMVIZ_Attr {
   registriert, erscheinen im Attribut-Dropdown jedes Geräts)
   <ul>
     <li><a id="FHEMVIZ-attr-vizWidget"></a><b>vizWidget</b>
-        switch|sensor|dimmer|shutter|actions|text|agenda|contact|vent|flow|forecast|weather<br>
+        switch|sensor|dimmer|shutter|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering<br>
         Widget-Typ erzwingen; übersteuert genericDeviceType/webCmd/Heuristik
         und die Rausch-Filter (Gerät wird immer angezeigt). Automatisch
         erkannt werden u. a. <code>genericDeviceType</code>
         (blind/shutter/light/window/door), <code>TYPE=SolarForecast</code>
-        (&rarr; forecast), <code>TYPE=structure</code> (&rarr; Gruppen-Kachel)
-        und Kontakt-Zustände (open/closed/tilted). Besondere Widgets:
+        (&rarr; forecast), <code>TYPE=Gartenbewaesserung</code>
+        (&rarr; watering), <code>TYPE=structure</code> (&rarr; Gruppen-Kachel)
+        und Kontakt-Zustände (open/closed/tilted); ein gesetztes
+        <code>vizChart</code> bzw. <code>vizWatering</code> wählt ebenfalls
+        automatisch das passende Widget. Besondere Widgets:
         <code>text</code> = mehrzeiliger Klartext,
         <code>agenda</code> = Terminliste (<code>DD.MM.YYYY HH:MM Text</code>-Zeilen)
         mit Wochentag und hervorgehobenem nächstem Termin,
@@ -530,7 +533,12 @@ sub FHEMVIZ_Attr {
         erkannt an temp_C/winddir/rainrate_mm): gro&szlig;e Temperatur,
         Windrose mit Richtungspfeil, Glance-Zeilen mit Symbolen f&uuml;r
         Regen (heute + Rate), UV/Sonne (farbig nach UV-Index), Luftdruck
-        und Innenklima.</li>
+        und Innenklima,
+        <code>chart</code> = SVG-Verlaufsdiagramm aus FileLog-/DbLog-Daten
+        (Konfiguration über <code>vizChart</code>),
+        <code>watering</code> = Gartenbewässerung mit Status, Fass-Füllstand,
+        Bodenfeuchte und Bedien-Buttons (siehe <code>vizWatering</code> /
+        <code>vizWateringButtons</code>).</li>
     <li><a id="FHEMVIZ-attr-vizSize"></a><b>vizSize</b> 1x1|2x1|1x2|2x2<br>
         Kachelgröße im Raster; 2x2 ergibt eine Hero-Kachel mit größerer
         Schrift.</li>
