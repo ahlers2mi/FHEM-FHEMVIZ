@@ -21,16 +21,24 @@ const REFRESH_MS = 300000; // Verlauf alle 5 min frisch ziehen
 export class FhemvizChart extends FhemvizWidget {
   /** vizChart parsen: {hours, unit, series:[{logdev,reading,label,color}]}. */
   _spec() {
-    const raw = String((this.device.attr || {}).vizChart || "").trim();
+    let raw = String((this.device.attr || {}).vizChart || "").trim();
     if (!raw) return null;
     let hours = 24;
     let unit = "";
+    // Optionen hours=/unit= koennen mit Leerzeichen ODER Komma abgetrennt sein
+    // (z. B. "...:accent unit=W hours=168"). Ueberall herausloesen, damit sie
+    // nicht faelschlich im Farbfeld der Serie landen.
+    raw = raw.replace(/(^|[\s,])hours?\s*=\s*(\d+)/i, (_m, _p, h) => {
+      hours = Math.max(1, Math.min(2160, parseInt(h, 10)));
+      return " ";
+    });
+    raw = raw.replace(/(^|[\s,])unit\s*=\s*(\S+)/i, (_m, _p, u) => {
+      unit = u.trim();
+      return " ";
+    });
+    // Rest = Serien, kommasepariert.
     const series = [];
     for (const tok of raw.split(",").map((s) => s.trim()).filter(Boolean)) {
-      let m = tok.match(/^hours?\s*=\s*(\d+)$/i);
-      if (m) { hours = Math.max(1, Math.min(2160, parseInt(m[1], 10))); continue; }
-      m = tok.match(/^unit\s*=\s*(.+)$/i);
-      if (m) { unit = m[1].trim(); continue; }
       const [logdev, reading, label, color] = tok.split(":").map((x) => (x || "").trim());
       if (logdev && reading) series.push({ logdev, reading, label: label || reading, color });
     }
