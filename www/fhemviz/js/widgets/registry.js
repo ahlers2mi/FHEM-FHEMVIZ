@@ -18,6 +18,7 @@ import { FhemvizShutter } from "./shutter.js";
 import { FhemvizShutterGroup } from "./shuttergroup.js";
 import { FhemvizVent } from "./vent.js";
 import { FhemvizVentGroup } from "./ventgroup.js";
+import { FhemvizSolvis } from "./solvis.js";
 import { FhemvizFlow } from "./flow.js";
 import { FhemvizForecast } from "./forecast.js";
 import { FhemvizWeather } from "./weather.js";
@@ -37,6 +38,7 @@ export const WIDGET_REGISTRY = {
   shuttergroup: "fhemviz-shuttergroup",
   vent: "fhemviz-vent",
   ventgroup: "fhemviz-ventgroup",
+  solvis: "fhemviz-solvis",
   flow: "fhemviz-flow",
   forecast: "fhemviz-forecast",
   weather: "fhemviz-weather",
@@ -73,6 +75,7 @@ export function registerCoreWidgets() {
     ["fhemviz-shuttergroup", FhemvizShutterGroup],
     ["fhemviz-vent", FhemvizVent],
     ["fhemviz-ventgroup", FhemvizVentGroup],
+    ["fhemviz-solvis", FhemvizSolvis],
     ["fhemviz-flow", FhemvizFlow],
     ["fhemviz-forecast", FhemvizForecast],
     ["fhemviz-weather", FhemvizWeather],
@@ -127,6 +130,10 @@ export function selectWidget(device) {
   // 2b2. Gartenbewaesserung -> Bewaesserungs-Widget (auch ohne vizWidget).
   if ((device.internals || {}).TYPE === "Gartenbewaesserung") {
     return WIDGET_REGISTRY.watering;
+  }
+  // 2b3. SolvisClient -> Heizungs-/Solar-Anlagenschema (auch ohne vizWidget).
+  if ((device.internals || {}).TYPE === "SolvisClient") {
+    return WIDGET_REGISTRY.solvis;
   }
   // 2c. structure-Geraete -> Gruppen-Kachel. Der Zustand wird dort aus den
   //     Mitgliedern berechnet - der eigene state ist bei gemischten
