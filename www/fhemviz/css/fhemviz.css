@@ -202,14 +202,18 @@ button.viz-chip { cursor: pointer; }
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: var(--viz-gap);
   margin-bottom: 20px;
+  /* start statt stretch: die Kachel waechst mit dem Inhalt (host height:100%
+   * wuerde sie sonst auf die Track-/min-height zwingen -> Inhalt abgeschnitten,
+   * da .card overflow:hidden hat). */
+  align-items: start;
 }
 .viz-hero > * {
-  min-height: 132px;
+  min-height: 104px;
   border-radius: var(--viz-radius);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--viz-accent) 55%, transparent),
               0 10px 30px rgba(0, 0, 0, 0.35);
 }
-html[data-vizmode="tv"] .viz-hero > * { min-height: 200px; }
+html[data-vizmode="tv"] .viz-hero > * { min-height: 150px; }
 .viz-groups {
   display: flex; flex-wrap: wrap; align-items: start;
   gap: 18px var(--viz-gap);

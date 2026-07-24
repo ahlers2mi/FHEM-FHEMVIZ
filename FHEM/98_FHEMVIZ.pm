@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.25.0
+# Version:  v0.26.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.25.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.26.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -73,7 +73,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis",
+    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:1,0",
     "vizHide:1,0",
@@ -297,7 +297,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.25.0"),
+            FHEMVIZ_jsonStr("v0.26.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -614,6 +614,14 @@ sub FHEMVIZ_Attr {
         (<code>S01</code>..<code>S18</code>, <code>SL</code>, <code>SE</code>,
         <code>A01</code>, <code>A12</code>), Wert 250 = „nicht verbunden";
         Empfehlung <code>vizSize 2x2</code>,
+        <code>mediagroup</code> = Media-Gruppe: EINE Kachel für ein
+        <code>structure</code>-Gerät aus AV-Receivern/Playern (Denon, HEOS …),
+        je Gerät eine Zeile mit Power/Lautstärke/Mute und – falls vom Gerät
+        unterstützt – Eingangs-Auswahl (<code>input</code>) und Transport
+        (Play/Pause/Stop/…). Automatisch für <code>structure</code> mit
+        clientstate <code>media</code>/<code>audio</code> (erzwingbar per
+        <code>vizWidget mediagroup</code>); Mitglieder im devspec, Empfehlung
+        <code>vizSize 2x2</code>,
         <code>ventgroup</code> = Lüften-Gruppe: EINE Kachel für ein
         <code>structure</code>-Gerät aus Lüftungs-Dummies, je Raum eine Zeile
         mit Empfehlung/Farbe (rein anzeigend, per
