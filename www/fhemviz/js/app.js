@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.28.1";
+const SPA_VERSION = "v0.28.2";
 
 const el = (id) => document.getElementById(id);
 
@@ -246,7 +246,10 @@ function setupHeaderInfo(store, spec) {
         const img = document.createElement("img");
         img.className = "hi-icon";
         img.src = m[1];
-        if (it.size) img.style.height = it.size;
+        // Groesse als CSS-Variable durchreichen (nicht inline height!), damit
+        // die mode-abhaengige CSS-Regel (Tablet/Handy kleiner + gedeckelt)
+        // greifen kann. Inline height wuerde sie sonst uebersteuern.
+        if (it.size) img.style.setProperty("--viz-headicon", it.size);
         const title = String((d.attr || {}).htmlattr || "").match(/title\s*=\s*"([^"]*)"/i);
         img.alt = title ? title[1] : "";
         host.appendChild(img);
