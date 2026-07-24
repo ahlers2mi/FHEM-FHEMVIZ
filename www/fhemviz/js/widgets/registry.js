@@ -17,6 +17,7 @@ import { FhemvizContact } from "./contact.js";
 import { FhemvizShutter } from "./shutter.js";
 import { FhemvizShutterGroup } from "./shuttergroup.js";
 import { FhemvizVent } from "./vent.js";
+import { FhemvizVentGroup } from "./ventgroup.js";
 import { FhemvizFlow } from "./flow.js";
 import { FhemvizForecast } from "./forecast.js";
 import { FhemvizWeather } from "./weather.js";
@@ -35,6 +36,7 @@ export const WIDGET_REGISTRY = {
   shutter: "fhemviz-shutter",
   shuttergroup: "fhemviz-shuttergroup",
   vent: "fhemviz-vent",
+  ventgroup: "fhemviz-ventgroup",
   flow: "fhemviz-flow",
   forecast: "fhemviz-forecast",
   weather: "fhemviz-weather",
@@ -70,6 +72,7 @@ export function registerCoreWidgets() {
     ["fhemviz-shutter", FhemvizShutter],
     ["fhemviz-shuttergroup", FhemvizShutterGroup],
     ["fhemviz-vent", FhemvizVent],
+    ["fhemviz-ventgroup", FhemvizVentGroup],
     ["fhemviz-flow", FhemvizFlow],
     ["fhemviz-forecast", FhemvizForecast],
     ["fhemviz-weather", FhemvizWeather],
