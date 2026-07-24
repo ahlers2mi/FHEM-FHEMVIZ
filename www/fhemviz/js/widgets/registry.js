@@ -17,6 +17,7 @@ import { FhemvizContact } from "./contact.js";
 import { FhemvizShutter } from "./shutter.js";
 import { FhemvizShutterGroup } from "./shuttergroup.js";
 import { FhemvizSwitchGroup } from "./switchgroup.js";
+import { FhemvizSensorGroup } from "./sensorgroup.js";
 import { FhemvizVent } from "./vent.js";
 import { FhemvizVentGroup } from "./ventgroup.js";
 import { FhemvizSolvis } from "./solvis.js";
@@ -39,6 +40,7 @@ export const WIDGET_REGISTRY = {
   shutter: "fhemviz-shutter",
   shuttergroup: "fhemviz-shuttergroup",
   switchgroup: "fhemviz-switchgroup",
+  sensorgroup: "fhemviz-sensorgroup",
   vent: "fhemviz-vent",
   ventgroup: "fhemviz-ventgroup",
   solvis: "fhemviz-solvis",
@@ -78,6 +80,7 @@ export function registerCoreWidgets() {
     ["fhemviz-shutter", FhemvizShutter],
     ["fhemviz-shuttergroup", FhemvizShutterGroup],
     ["fhemviz-switchgroup", FhemvizSwitchGroup],
+    ["fhemviz-sensorgroup", FhemvizSensorGroup],
     ["fhemviz-vent", FhemvizVent],
     ["fhemviz-ventgroup", FhemvizVentGroup],
     ["fhemviz-solvis", FhemvizSolvis],
@@ -134,6 +137,11 @@ export function selectWidget(device) {
     // "switch"/"light", z. B. define st_garage structure switch dev1 dev2 ...).
     if (/^(switch|light|licht|schalter)$/i.test(clientType)) {
       return WIDGET_REGISTRY.switchgroup;
+    }
+    // structure aus Temperatur-/Klima-Sensoren -> sensorgroup (clientstate
+    // "sensor"/"temp"/"thermo"/"klima", z. B. define st_temp structure temp ...).
+    if (/^(sensor|temp|temperatur|thermo|klima)$/i.test(clientType)) {
+      return WIDGET_REGISTRY.sensorgroup;
     }
   }
   if (gdt && GDT_MAP[gdt]) {

@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.28.2
+# Version:  v0.29.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.28.2";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.29.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -73,7 +73,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup",
+    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:1,0",
     "vizHide:1,0",
@@ -297,7 +297,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.28.2"),
+            FHEMVIZ_jsonStr("v0.29.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -612,6 +612,14 @@ sub FHEMVIZ_Attr {
         Automatisch bei <code>structure</code> mit clientstate
         <code>switch</code>/<code>light</code>. Beispiel:<br>
         <code>define st_garage structure switch rp_x rp_y rp_z</code>,
+        <code>sensorgroup</code> = Thermometer-/Sensor-Gruppe: EINE kompakte,
+        read-only Kachel für ein <code>structure</code>-Gerät aus Temperatur-/
+        Klima-Sensoren, je Sensor eine Zeile mit Temperatur (Reading
+        <code>temperature</code>) und - falls vorhanden - Feuchte
+        (<code>humidity</code>). Automatisch bei <code>structure</code> mit
+        clientstate <code>sensor</code>/<code>temp</code>/<code>thermo</code>/
+        <code>klima</code>. Beispiel:<br>
+        <code>define st_temp structure temp LaCrosse_04 LaCrosse_18 …</code>,
         <code>vent</code> = Lüftungsempfehlung (Skala &minus;3..+4),
         <code>solvis</code> = Solvis-Heizung/Solarthermie als Anlagenschema
         (Solar links, Schichtspeicher als Zylinder mittig, Warmwasser/
