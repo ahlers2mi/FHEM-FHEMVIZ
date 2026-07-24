@@ -75,17 +75,27 @@ export class Store {
     // Passendes Geraet finden (Name ist Praefix vor dem ersten "-").
     let dev = null;
     let reading = null;
+    let deviceLevel = false;
     for (const name of this.devices.keys()) {
       if (id === name || id.startsWith(name + "-")) {
         dev = this.devices.get(name);
-        reading = id === name ? "state" : id.slice(name.length + 1);
+        deviceLevel = id === name;
+        reading = deviceLevel ? "state" : id.slice(name.length + 1);
         break;
       }
     }
     if (!dev) return;
     if (reading.endsWith("-ts")) return; // Zeitstempel-Zeilen ignorieren
 
-    if (reading === "state" || reading === "STATE") {
+    if (deviceLevel) {
+      // Geraeteweites STATE-Event = ANZEIGE-STATE, haeufig stateFormat-Text
+      // (z. B. "Aktuell 0 W, gesamt 2.8 kWh, Status ON"). Nur die Anzeige
+      // setzen, NICHT das rohe state-Reading ueberschreiben - sonst geht das
+      // eigentliche on/off im state-Reading verloren (Schalter kippt auf
+      // "unbekannt" und zeigt den Textblock). Das rohe state-Reading kommt
+      // per eigenem "<dev>-state"-Event bzw. aus dem Snapshot.
+      dev.state = value;
+    } else if (reading === "state" || reading === "STATE") {
       dev.state = value;
       dev.readings.state = value;
     } else {
