@@ -282,7 +282,9 @@ export function renderLayout(root, store, client, opts = {}) {
           w.style.gridColumn = "";
           w.style.gridRow = "";
           w.setAttribute("data-hero", "");
-          if (!w.getAttribute("data-size")) w.setAttribute("data-size", "2x2");
+          // 2x1 (breit, aber nicht die riesige 2x2-Typo) - sonst wird der
+          // Inhalt bei schmaleren Layouts (z. B. width 1000) abgeschnitten.
+          if (!w.getAttribute("data-size")) w.setAttribute("data-size", "2x1");
           band.appendChild(w);
         });
       roomEl.appendChild(band);
