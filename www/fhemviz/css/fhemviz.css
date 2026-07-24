@@ -244,27 +244,12 @@ fhemviz-switch, fhemviz-sensor, fhemviz-dimmer, fhemviz-actions {
  * wenigen Kacheln werden zentriert (statt verloren oben links). */
 html[data-vizmode="tv"] .viz-tabs { display: none; }
 
-/* Zoom (?zoom): der Zoom-Pfad skaliert per transform auf dem body - ein
- * transformierter Vorfahr macht position:fixed unbrauchbar (die Tab-Leiste
- * scrollt mit). Loesung ausserhalb TV: die Inhaltsflaeche (#fhemviz-app)
- * bekommt eine STABILE Mindesthoehe = sichtbare Hoehe minus Kopfzeile
- * (--viz-vh/--viz-header-h werden in app.js gemessen, siehe
- * measureViewport). Als Flex-Spalte drueckt margin-top:auto die sticky
- * Tab-Leiste an die Unterkante. So steht sie bei WENIG Inhalt sauber unten
- * und klebt bei VIEL Inhalt beim Scrollen am Rand.
- * Warum feste min-height statt flex:1 auf dem body: eine flex-abgeleitete
- * Fuellhoehe wird bei jedem Live-Update neu verteilt -> die Bar "huepfte".
- * Ein fester Pixelwert (aus JS) bleibt ruhig. overscroll-behavior daempft
- * zusaetzlich das Gummiband-Springen bei fast-viewporthohem Inhalt. */
+/* Tablet-Modus nutzt KEINEN body-transform mehr (Skalierung via Meta-
+ * Viewport), daher greift position:fixed der Tab-Leiste direkt am Viewport.
+ * data-vizzoom (transform) wird nur noch im TV-Modus gesetzt; wechselt der
+ * TV per tvTouch in die Tablet-Ansicht, legt app.js den Transform ab und
+ * stellt auf Meta um - so bleibt hier nichts Transform-Abhaengiges. */
 html[data-vizzoom]:not([data-vizmode="tv"]) body { overscroll-behavior-y: none; }
-html[data-vizzoom]:not([data-vizmode="tv"]) #fhemviz-app {
-  display: flex; flex-direction: column;
-  min-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px));
-  box-sizing: border-box; padding-bottom: 14px;
-}
-html[data-vizzoom]:not([data-vizmode="tv"]) .viz-tabs {
-  position: sticky; bottom: 0; margin-top: auto;
-}
 html[data-vizmode="tv"] body { overflow: hidden; }
 html[data-vizmode="tv"] #fhemviz-app {
   padding: 26px 34px 30px;
