@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.22.4";
+const SPA_VERSION = "v0.22.5";
 
 const el = (id) => document.getElementById(id);
 
@@ -952,7 +952,7 @@ async function main() {
         activeRoom ? { ...baseOpts, activeRoom } : baseOpts
       );
     }
-    setStatus(`${count} Gerät(e)${zoomLabel}`);
+    setStatus(`${count} Gerät(e)${zoomLabel} · ${SPA_VERSION}`);
 
     // Viewport-Masse fuer die CSS-Fuellhoehe setzen (auch im reinen Tablet-
     // Modus, wo kein TvController laeuft) und bei Groessenaenderung nachziehen.
@@ -1047,7 +1047,7 @@ async function main() {
       },
       onStatus: (s) => {
         if (s === "live") {
-          setStatus(`${count} Gerät(e) · live${zoomLabel}`, "live");
+          setStatus(`${count} Gerät(e) · live${zoomLabel} · ${SPA_VERSION}`, "live");
           // Nach einer Unterbrechung (nicht beim ersten Connect) sofort den
           // Snapshot nachziehen - verpasste Events waeren sonst verloren.
           if (hadLive) resync();
