@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.22.7";
+const SPA_VERSION = "v0.22.8";
 
 const el = (id) => document.getElementById(id);
 
@@ -860,6 +860,41 @@ async function main() {
     const widthLabel = applyViewportWidth(params.get("width"), cfg.width, tv);
     const zoomLabel = widthLabel || applyZoom(urlZoom, cfg.zoom, tv);
 
+    // Skalierung beim Laufzeit-Moduswechsel (tvTouch: TV<->Tablet) neu setzen.
+    // TV skaliert per transform (data-vizzoom), Tablet per Meta-Viewport -
+    // sonst erbt die Tablet-Ansicht den TV-Transform und die Tab-Leiste haengt
+    // an einem transformierten, gescrollten body (Leiste rutscht weg).
+    const scaleW = (() => {
+      const w = parseInt(String(params.get("width") ?? cfg.width ?? ""), 10);
+      return isNaN(w) || w < 320 || w > 3840 ? null : w;
+    })();
+    const scaleZ = (() => {
+      let z = parseFloat(String(urlZoom || cfg.zoom || "").replace(",", "."));
+      if (isNaN(z) || z <= 0) return null;
+      if (z > 5) z = z / 100;
+      return Math.min(3, Math.max(0.5, z));
+    })();
+    const clearScale = () => {
+      delete document.documentElement.dataset.vizzoom;
+      const b = document.body.style;
+      b.transform = b.transformOrigin = b.width = b.height = "";
+      const meta = document.querySelector('meta[name="viewport"]');
+      if (meta) meta.setAttribute("content", "width=device-width, initial-scale=1");
+    };
+    const rescale = (isTv) => {
+      clearScale();
+      if (scaleW) {
+        if (isTv) {
+          const z = Math.min(3, Math.max(0.2, (window.innerWidth || scaleW) / scaleW));
+          if (Math.abs(z - 1) > 0.001) setBodyScale(z);
+        } else setMetaWidth(scaleW);
+      } else if (scaleZ) {
+        if (isTv) setBodyScale(scaleZ);
+        else setMetaWidth(Math.round((window.screen.width || 1280) / scaleZ));
+      }
+      measureViewport();
+    };
+
     // Versions-Waechter: Modul- und SPA-Version muessen zusammenpassen.
     if (cfg.version && cfg.version !== SPA_VERSION) {
       versionWarn =
@@ -969,6 +1004,7 @@ async function main() {
           idleTimer = setTimeout(() => {
             if (tvc.active) return;
             document.documentElement.dataset.vizmode = "tv";
+            rescale(true); // TV-Transform wieder anwenden
             tvc.start();
           }, touchSec * 1000);
         };
@@ -979,6 +1015,10 @@ async function main() {
           if (!tvc.active) return;
           tvc.stop();
           document.documentElement.dataset.vizmode = "tablet";
+          // TV-Transform ablegen und auf Tablet-Skalierung (Meta) umstellen -
+          // sonst haengt die Raum-Leiste an einem transformierten, gescrollten
+          // body und rutscht beim Scrollen weg.
+          rescale(false);
           renderLayout(root, store, client, tabletOpts);
           // Uhr/Szene sind jetzt ausgeblendet -> Header ist niedriger,
           // Fuellhoehe (--viz-header-h) neu messen.
