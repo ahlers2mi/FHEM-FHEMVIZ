@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.22.4
+# Version:  v0.22.6
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.22.4";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.22.6";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -297,7 +297,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.22.4"),
+            FHEMVIZ_jsonStr("v0.22.6"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -490,8 +490,14 @@ sub FHEMVIZ_Attr {
         (<code>130</code>). Der URL-Parameter <code>?zoom=</code> geht vor
         (für abweichende Einzelgeräte). Praktisch für Kiosk-Browser wie
         Fully, die URL-Parameter verschlucken. Der aktive Zoom wird in der
-        Statuszeile angezeigt. Auf Android/Fully ist <b>width</b> die
-        einfachere Alternative.</li>
+        Statuszeile angezeigt.<br>
+        Im <b>Tablet-Modus</b> wird der Zoom wie <b>width</b> über den
+        Viewport skaliert (kein CSS-transform), damit die untere Raum-Tab-
+        Leiste zuverlässig am Bildschirm klebt; reine Desktop-Browser ohne
+        Viewport-Meta ignorieren das dann (dort statt Zoom die Browser-
+        Vergrößerung nutzen). Im <b>TV-Modus</b> per transform (feste
+        Szenenfläche). <b>width</b> und <b>zoom</b> sind damit im Tablet
+        gleichwertig.</li>
     <li><a id="FHEMVIZ-attr-width"></a><b>width</b><br>
         Typ: textField. Feste Layout-Breite in CSS-Pixeln (320&ndash;3840,
         z. B. <code>900</code>): die Seite wird in dieser Breite gerendert

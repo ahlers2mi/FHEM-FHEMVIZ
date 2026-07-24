@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.22.4";
+const SPA_VERSION = "v0.22.6";
 
 const el = (id) => document.getElementById(id);
 
@@ -562,6 +562,19 @@ function setBodyScale(zoom) {
   b.height = `calc(100% / ${zoom})`;
 }
 
+// Tablet: das Geraet/der WebView skaliert selbst per Meta-Viewport (feste
+// Layoutbreite w, initial-scale passt sie bildschirmfuellend an). KEIN
+// transform -> die per position:fixed unten verankerte Raum-Tab-Leiste
+// bleibt unberuehrt. (Der frueher genutzte transform-Pfad zwang die Leiste
+// in eine sticky-Ersatzloesung, die auf echten WebViews (Fully) und in
+// Edge/F12 beim Scrollen verschwand.)
+function setMetaWidth(w) {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) return;
+  const scale = Math.min(5, Math.max(0.2, (window.screen.width || w) / w));
+  meta.setAttribute("content", `width=${w}, initial-scale=${scale.toFixed(4)}`);
+}
+
 function applyViewportWidth(urlValue, cfgValue, tv) {
   // attr width am Geraet ist der Default, ?width= in der URL geht vor
   // (wie bei zoom - Fully verschluckt URL-Parameter gern, darum das Attribut).
@@ -580,21 +593,12 @@ function applyViewportWidth(urlValue, cfgValue, tv) {
     const zoom = Math.min(3, Math.max(0.2, vw / w));
     if (Math.abs(zoom - 1) > 0.001) setBodyScale(zoom);
   } else {
-    // Tablet: das Geraet/der WebView skaliert selbst per Meta-Viewport -
-    // KEIN transform. So bleibt die per position:fixed unten verankerte
-    // Raum-Tab-Leiste unberuehrt (der Transform-Pfad zwingt sie sonst in
-    // eine sticky-Ersatzloesung, die in manchen Browsern die Leiste
-    // verschwinden liess).
-    const meta = document.querySelector('meta[name="viewport"]');
-    if (meta) {
-      const scale = Math.min(5, Math.max(0.2, (window.screen.width || w) / w));
-      meta.setAttribute("content", `width=${w}, initial-scale=${scale.toFixed(4)}`);
-    }
+    setMetaWidth(w);
   }
   return ` · Breite ${w}`;
 }
 
-function applyZoom(urlValue, cfgValue) {
+function applyZoom(urlValue, cfgValue, tv) {
   const parse = (s) => {
     let z = parseFloat(String(s ?? "").replace(",", "."));
     if (isNaN(z) || z <= 0) return null;
@@ -603,6 +607,16 @@ function applyZoom(urlValue, cfgValue) {
   };
   const zoom = parse(urlValue) ?? parse(cfgValue);
   if (!zoom || zoom === 1) return "";
+  if (!tv) {
+    // Tablet: KEIN body-transform. Zoom wird als aequivalente feste
+    // Layoutbreite ueber denselben Meta-Viewport-Pfad wie width umgesetzt
+    // (w = screen.width / zoom -> initial-scale = zoom). Damit bleibt die
+    // Raum-Tab-Leiste ein schlichtes position:fixed am Viewport.
+    const w = Math.round((window.screen.width || 1280) / zoom);
+    setMetaWidth(w);
+    return ` · Zoom ${zoom}`;
+  }
+  // TV: transform-Pfad (keine Tab-Leiste, feste Szenenflaeche).
   setBodyScale(zoom);
   // Diagnose fuer die Statuszeile: kommt der Wert an UND rendert die
   // Engine die Skalierung? Nach dem Anwenden nachmessen: mit wirksamem
@@ -798,7 +812,7 @@ async function main() {
     // width (feste Layout-Breite) geht vor zoom (transform-Skalierung) -
     // beides zusammen ergibt keinen Sinn.
     const widthLabel = applyViewportWidth(params.get("width"), cfg.width, tv);
-    const zoomLabel = widthLabel || applyZoom(urlZoom, cfg.zoom);
+    const zoomLabel = widthLabel || applyZoom(urlZoom, cfg.zoom, tv);
 
     // Versions-Waechter: Modul- und SPA-Version muessen zusammenpassen.
     if (cfg.version && cfg.version !== SPA_VERSION) {
@@ -952,7 +966,7 @@ async function main() {
         activeRoom ? { ...baseOpts, activeRoom } : baseOpts
       );
     }
-    setStatus(`${count} Gerät(e)${zoomLabel}`);
+    setStatus(`${count} Gerät(e)${zoomLabel} · ${SPA_VERSION}`);
 
     // Viewport-Masse fuer die CSS-Fuellhoehe setzen (auch im reinen Tablet-
     // Modus, wo kein TvController laeuft) und bei Groessenaenderung nachziehen.
@@ -1047,7 +1061,7 @@ async function main() {
       },
       onStatus: (s) => {
         if (s === "live") {
-          setStatus(`${count} Gerät(e) · live${zoomLabel}`, "live");
+          setStatus(`${count} Gerät(e) · live${zoomLabel} · ${SPA_VERSION}`, "live");
           // Nach einer Unterbrechung (nicht beim ersten Connect) sofort den
           // Snapshot nachziehen - verpasste Events waeren sonst verloren.
           if (hadLive) resync();
