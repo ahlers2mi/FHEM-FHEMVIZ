@@ -114,6 +114,11 @@ export function selectWidget(device) {
     if (clientType === "blind" || gdt === "blind" || gdt === "shutter") {
       return WIDGET_REGISTRY.shuttergroup;
     }
+    // structure aus Lueftungs-Empfehlungen -> ventgroup (clientstate
+    // "lueften"/"vent", z. B. define st_lueften structure lueften dev1 ...).
+    if (/^(vent|l(ü|ue)ften)$/i.test(clientType)) {
+      return WIDGET_REGISTRY.ventgroup;
+    }
   }
   if (gdt && GDT_MAP[gdt]) {
     let key = GDT_MAP[gdt];
