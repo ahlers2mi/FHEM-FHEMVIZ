@@ -79,7 +79,9 @@ html[data-vizzoom] body { overflow-y: auto; scrollbar-gutter: stable; }
 #viz-header {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
-  padding: 12px 18px;
+  /* Safe-Area oben: im Home-Bildschirm-Vollbild (PWA, black-translucent)
+     darf der Header nicht unter die Statusleiste/Notch rutschen. */
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 18px 12px;
   background: var(--viz-bg);
   border-bottom: 1px solid var(--viz-border);
 }
