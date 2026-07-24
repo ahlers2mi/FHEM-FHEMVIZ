@@ -16,6 +16,7 @@ import { FhemvizAgenda } from "./agenda.js";
 import { FhemvizContact } from "./contact.js";
 import { FhemvizShutter } from "./shutter.js";
 import { FhemvizShutterGroup } from "./shuttergroup.js";
+import { FhemvizSwitchGroup } from "./switchgroup.js";
 import { FhemvizVent } from "./vent.js";
 import { FhemvizVentGroup } from "./ventgroup.js";
 import { FhemvizSolvis } from "./solvis.js";
@@ -37,6 +38,7 @@ export const WIDGET_REGISTRY = {
   contact: "fhemviz-contact",
   shutter: "fhemviz-shutter",
   shuttergroup: "fhemviz-shuttergroup",
+  switchgroup: "fhemviz-switchgroup",
   vent: "fhemviz-vent",
   ventgroup: "fhemviz-ventgroup",
   solvis: "fhemviz-solvis",
@@ -75,6 +77,7 @@ export function registerCoreWidgets() {
     ["fhemviz-contact", FhemvizContact],
     ["fhemviz-shutter", FhemvizShutter],
     ["fhemviz-shuttergroup", FhemvizShutterGroup],
+    ["fhemviz-switchgroup", FhemvizSwitchGroup],
     ["fhemviz-vent", FhemvizVent],
     ["fhemviz-ventgroup", FhemvizVentGroup],
     ["fhemviz-solvis", FhemvizSolvis],
@@ -126,6 +129,11 @@ export function selectWidget(device) {
     // "media"/"audio"/"multimedia", z. B. define st_denon structure media ...).
     if (/^(media|audio|multimedia)$/i.test(clientType)) {
       return WIDGET_REGISTRY.mediagroup;
+    }
+    // structure aus on/off-Schaltern/Lichtern -> switchgroup (clientstate
+    // "switch"/"light", z. B. define st_garage structure switch dev1 dev2 ...).
+    if (/^(switch|light|licht|schalter)$/i.test(clientType)) {
+      return WIDGET_REGISTRY.switchgroup;
     }
   }
   if (gdt && GDT_MAP[gdt]) {

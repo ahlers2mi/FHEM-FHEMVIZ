@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Media-Gruppe (v0.27.0).
+ * FHEMVIZ - Media-Gruppe (v0.27.1).
  * Fuer ein FHEM-structure-Geraet aus AV-Receivern/Zonen (z. B. DENON_AVR /
  * DENON_AVR_ZONE): EINE Kachel, je Geraet eine Zeile mit Power-Toggle,
  * Lautstaerke-Regler und Mute. Befehle gehen an das jeweilige Mitglied.
@@ -16,6 +16,10 @@
  * HEOS-Player (z. B. DoRemoteDevice-Proxy eines HEOSPlayer): kein on/off ->
  * Power-Toggle entfaellt, dafuer Transport (play/pause/stop/prev/next) und
  * Mute per mute on/off (kein toggle). Beides wird aus PossibleSets erkannt.
+ *
+ * HEOS-Speaker ohne on/off, aber mit mute (laesst sich nicht ausschalten):
+ * der obere Toggle steuert dann Mute (on = hoerbar, off = stumm), der
+ * separate Mute-Button in der Lautstaerke-Zeile entfaellt.
  */
 
 import { FhemvizWidget } from "./base-widget.js";
@@ -128,22 +132,37 @@ export class FhemvizMediaGroup extends FhemvizWidget {
 
   _devHtml(dev) {
     const hasPower = this._hasPower(dev);
-    const on = hasPower ? this._on(dev) : true;
+    const hasMute = this._has(dev, "mute");
+    // Box ohne on/off, aber mit mute (z. B. HEOS-Speaker, laesst sich nicht
+    // ausschalten): der obere Toggle steuert dann Mute statt Power.
+    const muteAsToggle = !hasPower && hasMute;
     const muted = this._muted(dev);
+    // "aktiv" = eingeschaltet (Power-Geraet) bzw. NICHT stumm (Mute-Toggle-Box);
+    // reine Transport-Geraete gelten immer als aktiv.
+    const on = hasPower ? this._on(dev) : muteAsToggle ? !muted : true;
     const vol = this._vol(dev);
     const sp = this._volSpec(dev);
     const label = (dev.attr && dev.attr.alias) || dev.name;
-    const power = !hasPower
-      ? ""
-      : this.readonly
+    const power = hasPower
+      ? this.readonly
         ? `<span class="sub">${on ? "An" : "Aus"}</span>`
         : `<button class="toggle${on ? " on" : ""}" data-dev="${this.escape(dev.name)}"
            data-act="power" role="switch" aria-checked="${on}"
-           aria-label="${this.escape(label)} ein/aus"></button>`;
+           aria-label="${this.escape(label)} ein/aus"></button>`
+      : muteAsToggle
+        ? this.readonly
+          ? `<span class="sub">${muted ? "Stumm" : "An"}</span>`
+          : `<button class="toggle${on ? " on" : ""}" data-dev="${this.escape(dev.name)}"
+             data-act="mute" role="switch" aria-checked="${on}"
+             aria-label="${this.escape(label)} stumm ein/aus"></button>`
+        : "";
     const hasVol = this._vol(dev) !== null || /(?:^|\s)volume\b/.test(String(dev.possibleSets || ""));
+    // Inline-Mute-Button nur bei Power-Geraeten, die zusaetzlich mute koennen -
+    // bei Mute-Toggle-Boxen sitzt Mute schon oben.
+    const showInlineMute = hasMute && !muteAsToggle;
     const ctl = this.readonly
       ? `<span class="mgvol">${vol == null ? "" : vol}</span>`
-      : `${this._has(dev, "mute") ? `<button class="mgmute${muted ? " on" : ""}" data-dev="${this.escape(dev.name)}"
+      : `${showInlineMute ? `<button class="mgmute${muted ? " on" : ""}" data-dev="${this.escape(dev.name)}"
            data-act="mute" aria-label="${this.escape(label)} stumm">${muted ? "🔇" : "🔊"}</button>` : ""}
          <input type="range" min="${sp.min}" max="${sp.max}" step="${sp.step}"
            value="${vol == null ? sp.min : vol}" data-dev="${this.escape(dev.name)}"
@@ -185,7 +204,7 @@ export class FhemvizMediaGroup extends FhemvizWidget {
     }
 
     return `
-      <div class="mgdev${!hasPower || on ? " on" : " off"}">
+      <div class="mgdev${on ? " on" : " off"}">
         <div class="mgtop"><span class="mgname">${this.escape(label)}</span>${power}</div>
         ${hasVol ? `<div class="mgctl">${ctl}</div>` : ""}
         ${extra}
