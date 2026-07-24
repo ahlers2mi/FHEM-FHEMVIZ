@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.22.3";
+const SPA_VERSION = "v0.22.4";
 
 const el = (id) => document.getElementById(id);
 
@@ -562,7 +562,7 @@ function setBodyScale(zoom) {
   b.height = `calc(100% / ${zoom})`;
 }
 
-function applyViewportWidth(urlValue, cfgValue) {
+function applyViewportWidth(urlValue, cfgValue, tv) {
   // attr width am Geraet ist der Default, ?width= in der URL geht vor
   // (wie bei zoom - Fully verschluckt URL-Parameter gern, darum das Attribut).
   const parse = (s) => {
@@ -571,14 +571,26 @@ function applyViewportWidth(urlValue, cfgValue) {
   };
   const w = parse(urlValue) ?? parse(cfgValue);
   if (!w) return "";
-  // KEIN meta-viewport-Hack mehr (screen.width ist im WebView unzuverlaessig
-  // -> Layout-Viewport groesser als sichtbar -> Rahmen/Inhalt ragten raus).
-  // Stattdessen aus der TATSAECHLICH sichtbaren Breite die Skalierung
-  // ableiten und ueber denselben transform-Pfad wie zoom anwenden. Damit
-  // stimmen Fit-Hoehe und Alert-Rahmen ohne Raterei.
-  const vw = window.innerWidth || w;
-  const zoom = Math.min(3, Math.max(0.2, vw / w));
-  if (Math.abs(zoom - 1) > 0.001) setBodyScale(zoom);
+  if (tv) {
+    // TV: transform-Pfad. Der Faktor kommt aus der TATSAECHLICH sichtbaren
+    // Breite (nicht screen.width) -> Fit-Hoehe und der Vollbild-Alarmrahmen
+    // sitzen buendig. Im TV gibt es keine Tab-Leiste, die der Transform
+    // stoeren koennte.
+    const vw = window.innerWidth || w;
+    const zoom = Math.min(3, Math.max(0.2, vw / w));
+    if (Math.abs(zoom - 1) > 0.001) setBodyScale(zoom);
+  } else {
+    // Tablet: das Geraet/der WebView skaliert selbst per Meta-Viewport -
+    // KEIN transform. So bleibt die per position:fixed unten verankerte
+    // Raum-Tab-Leiste unberuehrt (der Transform-Pfad zwingt sie sonst in
+    // eine sticky-Ersatzloesung, die in manchen Browsern die Leiste
+    // verschwinden liess).
+    const meta = document.querySelector('meta[name="viewport"]');
+    if (meta) {
+      const scale = Math.min(5, Math.max(0.2, (window.screen.width || w) / w));
+      meta.setAttribute("content", `width=${w}, initial-scale=${scale.toFixed(4)}`);
+    }
+  }
   return ` · Breite ${w}`;
 }
 
@@ -775,9 +787,17 @@ async function main() {
     // Konfiguration vom Modul holen; URL uebersteuert den Modus.
     const cfg = await client.getConfig(vizDevice);
     applyTheme(cfg.theme);
-    // width (feste Layout-Breite, Geraet skaliert selbst) geht vor zoom
-    // (transform-Skalierung) - beides zusammen ergibt keinen Sinn.
-    const widthLabel = applyViewportWidth(params.get("width"), cfg.width);
+
+    // Modus VOR der Breiten-/Zoom-Skalierung bestimmen: width verhaelt sich
+    // je Modus unterschiedlich (TV = transform, Tablet = Meta-Viewport).
+    const urlMode = (params.get("mode") || "").toLowerCase();
+    const mode = urlMode === "tv" || urlMode === "tablet" ? urlMode : cfg.mode || "tablet";
+    document.documentElement.dataset.vizmode = mode;
+    const tv = mode === "tv";
+
+    // width (feste Layout-Breite) geht vor zoom (transform-Skalierung) -
+    // beides zusammen ergibt keinen Sinn.
+    const widthLabel = applyViewportWidth(params.get("width"), cfg.width, tv);
     const zoomLabel = widthLabel || applyZoom(urlZoom, cfg.zoom);
 
     // Versions-Waechter: Modul- und SPA-Version muessen zusammenpassen.
@@ -786,10 +806,6 @@ async function main() {
         `Versionskonflikt: Modul ${cfg.version} / Oberfläche ${SPA_VERSION}` +
         ` – Strg+F5 (Browser-Cache) bzw. reload 98_FHEMVIZ`;
     }
-    const urlMode = (params.get("mode") || "").toLowerCase();
-    const mode = urlMode === "tv" || urlMode === "tablet" ? urlMode : cfg.mode || "tablet";
-    document.documentElement.dataset.vizmode = mode;
-    const tv = mode === "tv";
 
     if (!cfg.devspec) {
       setStatus(
