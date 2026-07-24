@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.22.6";
+const SPA_VERSION = "v0.22.7";
 
 const el = (id) => document.getElementById(id);
 
@@ -629,6 +629,52 @@ function applyZoom(urlValue, cfgValue, tv) {
 }
 
 /**
+ * On-Screen-Diagnose (?debug=1): zeigt oben links live Modus, Viewport-Masse,
+ * screen.width, Meta-Viewport und die Lage der Raum-Tab-Leiste. Fuer Geraete
+ * ohne DevTools (Fully/T510) - einfach abfotografieren. Oben links, damit es
+ * auch sichtbar ist, wenn unten etwas aus dem Bild laeuft.
+ */
+function setupDebug() {
+  const box = document.createElement("pre");
+  box.id = "viz-debug";
+  box.style.cssText =
+    "position:fixed;top:0;left:0;z-index:99999;margin:0;padding:6px 9px;" +
+    "font:12px/1.4 monospace;background:rgba(0,0,0,.82);color:#4ee27b;" +
+    "max-width:100vw;white-space:pre-wrap;pointer-events:none;border:1px solid #4ee27b;";
+  document.body.appendChild(box);
+  const upd = () => {
+    const t = document.querySelector(".viz-tabs");
+    const r = t ? t.getBoundingClientRect() : null;
+    const vv = window.visualViewport;
+    const meta = document.querySelector('meta[name="viewport"]');
+    box.textContent = [
+      "FHEMVIZ " + SPA_VERSION + "  mode=" + (document.documentElement.dataset.vizmode || "?"),
+      "inner " + window.innerWidth + "x" + window.innerHeight +
+        "  screen " + screen.width + "x" + screen.height,
+      vv
+        ? "visualVP " + Math.round(vv.width) + "x" + Math.round(vv.height) +
+          " scale=" + vv.scale.toFixed(2) + " offY=" + Math.round(vv.offsetTop)
+        : "visualVP -",
+      "vizzoom=" + (document.documentElement.dataset.vizzoom || "-") +
+        "  meta: " + (meta ? meta.getAttribute("content") : "-"),
+      "TAB-LEISTE: " +
+        (t
+          ? getComputedStyle(t).position +
+            " top=" + Math.round(r.top) + " bot=" + Math.round(r.bottom) +
+            (r.top < window.innerHeight && r.bottom > 0 ? " -> SICHTBAR" : " -> AUSSERHALB")
+          : "FEHLT IM DOM"),
+    ].join("\n");
+  };
+  upd();
+  setInterval(upd, 400);
+  window.addEventListener("scroll", upd, true);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", upd);
+    window.visualViewport.addEventListener("scroll", upd);
+  }
+}
+
+/**
  * Viewport-Masse als CSS-Variablen bereitstellen:
  *   --viz-vh       = sichtbare Hoehe in LOKALEN CSS-Pixeln. innerHeight ist
  *                    zoom-unabhaengig, der Inhalt skaliert aber per ?zoom=
@@ -972,6 +1018,9 @@ async function main() {
     // Modus, wo kein TvController laeuft) und bei Groessenaenderung nachziehen.
     measureViewport();
     window.addEventListener("resize", measureViewport);
+
+    // On-Screen-Diagnose fuer Geraete ohne DevTools: ?debug=1
+    if (params.get("debug")) setupDebug();
 
     // Datum + Uhrzeit im Tablet-Header (im TV-Modus zeigt der TvController
     // seine eigene grosse Uhr - der Ticker pausiert dort automatisch).
