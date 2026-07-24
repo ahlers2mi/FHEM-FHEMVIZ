@@ -19,6 +19,7 @@ import { FhemvizShutterGroup } from "./shuttergroup.js";
 import { FhemvizVent } from "./vent.js";
 import { FhemvizVentGroup } from "./ventgroup.js";
 import { FhemvizSolvis } from "./solvis.js";
+import { FhemvizMediaGroup } from "./mediagroup.js";
 import { FhemvizFlow } from "./flow.js";
 import { FhemvizForecast } from "./forecast.js";
 import { FhemvizWeather } from "./weather.js";
@@ -39,6 +40,7 @@ export const WIDGET_REGISTRY = {
   vent: "fhemviz-vent",
   ventgroup: "fhemviz-ventgroup",
   solvis: "fhemviz-solvis",
+  mediagroup: "fhemviz-mediagroup",
   flow: "fhemviz-flow",
   forecast: "fhemviz-forecast",
   weather: "fhemviz-weather",
@@ -76,6 +78,7 @@ export function registerCoreWidgets() {
     ["fhemviz-vent", FhemvizVent],
     ["fhemviz-ventgroup", FhemvizVentGroup],
     ["fhemviz-solvis", FhemvizSolvis],
+    ["fhemviz-mediagroup", FhemvizMediaGroup],
     ["fhemviz-flow", FhemvizFlow],
     ["fhemviz-forecast", FhemvizForecast],
     ["fhemviz-weather", FhemvizWeather],
@@ -118,6 +121,11 @@ export function selectWidget(device) {
     // "lueften"/"vent", z. B. define st_lueften structure lueften dev1 ...).
     if (/^(vent|l(ü|ue)ften)$/i.test(clientType)) {
       return WIDGET_REGISTRY.ventgroup;
+    }
+    // structure aus AV-Receivern/Playern -> mediagroup (clientstate
+    // "media"/"audio"/"multimedia", z. B. define st_denon structure media ...).
+    if (/^(media|audio|multimedia)$/i.test(clientType)) {
+      return WIDGET_REGISTRY.mediagroup;
     }
   }
   if (gdt && GDT_MAP[gdt]) {
