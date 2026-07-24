@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.22.8
+# Version:  v0.23.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.22.8";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.23.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -73,7 +73,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,actions,text,agenda,contact,vent,flow,forecast,weather,chart,watering,image",
+    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,actions,text,agenda,contact,vent,flow,forecast,weather,chart,watering,image",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:1,0",
     "vizHide:1,0",
@@ -297,7 +297,7 @@ sub FHEMVIZ_Get {
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.22.8"),
+            FHEMVIZ_jsonStr("v0.23.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -580,13 +580,14 @@ sub FHEMVIZ_Attr {
   registriert, erscheinen im Attribut-Dropdown jedes Geräts)
   <ul>
     <li><a id="FHEMVIZ-attr-vizWidget"></a><b>vizWidget</b>
-        switch|sensor|dimmer|shutter|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering<br>
+        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering<br>
         Widget-Typ erzwingen; übersteuert genericDeviceType/webCmd/Heuristik
         und die Rausch-Filter (Gerät wird immer angezeigt). Automatisch
         erkannt werden u. a. <code>genericDeviceType</code>
         (blind/shutter/light/window/door), <code>TYPE=SolarForecast</code>
         (&rarr; forecast), <code>TYPE=Gartenbewaesserung</code>
-        (&rarr; watering), <code>TYPE=structure</code> (&rarr; Gruppen-Kachel)
+        (&rarr; watering), <code>TYPE=structure</code> (Rollladen &rarr;
+        <code>shuttergroup</code>, sonst Kontakt-Gruppen-Kachel)
         und Kontakt-Zustände (open/closed/tilted); ein gesetztes
         <code>vizChart</code> bzw. <code>vizWatering</code> wählt ebenfalls
         automatisch das passende Widget. Besondere Widgets:
@@ -595,6 +596,16 @@ sub FHEMVIZ_Attr {
         mit Wochentag und hervorgehobenem nächstem Termin,
         <code>contact</code> = Fenster/Tür (offen = Bernstein; structure =
         Gruppen-Kachel "2 offen · 1 gekippt" mit Mini-Symbolen),
+        <code>shuttergroup</code> = Rollladen-Gruppe: EINE Kachel für ein
+        <code>structure</code>-Gerät aus Rollladen mit Master-Zeile (steuert
+        alle) und je Rollade einer Zeile mit Position + Auf/Stop/Zu.
+        Automatisch bei <code>structure</code> mit Rollladen-Mitgliedern
+        (DEF beginnt mit <code>blind</code> bzw. <code>genericDeviceType
+        blind</code>); die Mitglieder müssen im devspec liegen (dürfen per
+        <code>vizHide</code> aus dem Raster raus). Empfehlung
+        <code>vizSize 2x1/2x2</code>. Beispiel:<br>
+        <code>define st_rolladen structure blind HM_x HM_y HM_z</code><br>
+        <code>attr st_rolladen genericDeviceType blind</code>,
         <code>vent</code> = Lüftungsempfehlung (Skala &minus;3..+4),
         <code>flow</code> = Energiefluss mit Laufpunkt-Animation,
         <code>forecast</code> = PV-Prognose mit Stunden-Balkenchart

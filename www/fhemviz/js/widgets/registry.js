@@ -15,6 +15,7 @@ import { FhemvizText } from "./text.js";
 import { FhemvizAgenda } from "./agenda.js";
 import { FhemvizContact } from "./contact.js";
 import { FhemvizShutter } from "./shutter.js";
+import { FhemvizShutterGroup } from "./shuttergroup.js";
 import { FhemvizVent } from "./vent.js";
 import { FhemvizFlow } from "./flow.js";
 import { FhemvizForecast } from "./forecast.js";
@@ -32,6 +33,7 @@ export const WIDGET_REGISTRY = {
   agenda: "fhemviz-agenda",
   contact: "fhemviz-contact",
   shutter: "fhemviz-shutter",
+  shuttergroup: "fhemviz-shuttergroup",
   vent: "fhemviz-vent",
   flow: "fhemviz-flow",
   forecast: "fhemviz-forecast",
@@ -66,6 +68,7 @@ export function registerCoreWidgets() {
     ["fhemviz-agenda", FhemvizAgenda],
     ["fhemviz-contact", FhemvizContact],
     ["fhemviz-shutter", FhemvizShutter],
+    ["fhemviz-shuttergroup", FhemvizShutterGroup],
     ["fhemviz-vent", FhemvizVent],
     ["fhemviz-flow", FhemvizFlow],
     ["fhemviz-forecast", FhemvizForecast],
@@ -95,6 +98,17 @@ export function selectWidget(device) {
   // 2. genericDeviceType. Rollladen brauchen pct - Pegel-Proxies
   //    (gdt blind, aber nur state-Slider) bekommen den Dimmer.
   const gdt = attr.genericDeviceType || attr.gdt;
+  // structure aus Rollladen -> steuerbare Gruppen-Kachel (Master + je Rollade
+  // einzeln). Noch VOR der gdt-Einzelkachel, sonst wuerde ein structure mit
+  // genericDeviceType blind als einzelner Rollladen-Regler gerendert.
+  if ((device.internals || {}).TYPE === "structure") {
+    const clientType = String((device.internals || {}).DEF || "")
+      .trim()
+      .split(/\s+/)[0];
+    if (clientType === "blind" || gdt === "blind" || gdt === "shutter") {
+      return WIDGET_REGISTRY.shuttergroup;
+    }
+  }
   if (gdt && GDT_MAP[gdt]) {
     let key = GDT_MAP[gdt];
     if (key === "shutter" && !/\bpct\b/.test(String(device.possibleSets || ""))) {
