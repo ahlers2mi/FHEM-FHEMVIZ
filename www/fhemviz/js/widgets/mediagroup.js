@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Media-Gruppe (v0.26.0).
+ * FHEMVIZ - Media-Gruppe (v0.27.0).
  * Fuer ein FHEM-structure-Geraet aus AV-Receivern/Zonen (z. B. DENON_AVR /
  * DENON_AVR_ZONE): EINE Kachel, je Geraet eine Zeile mit Power-Toggle,
  * Lautstaerke-Regler und Mute. Befehle gehen an das jeweilige Mitglied.
@@ -12,6 +12,10 @@
  * Readings/Sets (DENON_AVR & _ZONE): power (on/off), volume (0..98) +
  * "volume <n>", mute (on/off) + "mute toggle". Slider-Bereich wird aus
  * PossibleSets gelesen (volume:slider,min,step,max).
+ *
+ * HEOS-Player (z. B. DoRemoteDevice-Proxy eines HEOSPlayer): kein on/off ->
+ * Power-Toggle entfaellt, dafuer Transport (play/pause/stop/prev/next) und
+ * Mute per mute on/off (kein toggle). Beides wird aus PossibleSets erkannt.
  */
 
 import { FhemvizWidget } from "./base-widget.js";
@@ -77,6 +81,21 @@ export class FhemvizMediaGroup extends FhemvizWidget {
     return /^(on|1|true)\b/i.test(this.plain((dev.readings || {}).mute));
   }
 
+  /** Hat das Geraet echte Ein/Aus-Steuerung (Denon-Zonen)? HEOS-Player nicht. */
+  _hasPower(dev) {
+    return this._has(dev, "on") && this._has(dev, "off");
+  }
+
+  /** Passender Mute-Befehl: "mute toggle" wenn unterstuetzt (Denon), sonst
+   *  explizit mute on/off je nach aktuellem Zustand (HEOS: mute:on,off). */
+  _muteCmd(name) {
+    const d = this.store && this.store.get(name);
+    const sets = d ? String(d.possibleSets || "") : "";
+    if (/(?:^|\s)mute:[^\s]*\btoggle\b/.test(sets)) return "mute toggle";
+    if (/(?:^|\s)mute(?=\s|$)/.test(sets)) return "mute toggle";
+    return d && this._muted(d) ? "mute off" : "mute on";
+  }
+
   _vol(dev) {
     const n = parseFloat(String((dev.readings || {}).volume).replace(",", "."));
     return isNaN(n) ? null : n;
@@ -108,14 +127,17 @@ export class FhemvizMediaGroup extends FhemvizWidget {
   }
 
   _devHtml(dev) {
-    const on = this._on(dev);
+    const hasPower = this._hasPower(dev);
+    const on = hasPower ? this._on(dev) : true;
     const muted = this._muted(dev);
     const vol = this._vol(dev);
     const sp = this._volSpec(dev);
     const label = (dev.attr && dev.attr.alias) || dev.name;
-    const power = this.readonly
-      ? `<span class="sub">${on ? "An" : "Aus"}</span>`
-      : `<button class="toggle${on ? " on" : ""}" data-dev="${this.escape(dev.name)}"
+    const power = !hasPower
+      ? ""
+      : this.readonly
+        ? `<span class="sub">${on ? "An" : "Aus"}</span>`
+        : `<button class="toggle${on ? " on" : ""}" data-dev="${this.escape(dev.name)}"
            data-act="power" role="switch" aria-checked="${on}"
            aria-label="${this.escape(label)} ein/aus"></button>`;
     const hasVol = this._vol(dev) !== null || /(?:^|\s)volume\b/.test(String(dev.possibleSets || ""));
@@ -163,7 +185,7 @@ export class FhemvizMediaGroup extends FhemvizWidget {
     }
 
     return `
-      <div class="mgdev${on ? " on" : " off"}">
+      <div class="mgdev${!hasPower || on ? " on" : " off"}">
         <div class="mgtop"><span class="mgname">${this.escape(label)}</span>${power}</div>
         ${hasVol ? `<div class="mgctl">${ctl}</div>` : ""}
         ${extra}
@@ -195,7 +217,7 @@ export class FhemvizMediaGroup extends FhemvizWidget {
       if (act === "power") {
         elm.addEventListener("click", () => this._send(dev, this._devOn(dev) ? "off" : "on"));
       } else if (act === "mute") {
-        elm.addEventListener("click", () => this._send(dev, "mute toggle"));
+        elm.addEventListener("click", () => this._send(dev, this._muteCmd(dev)));
       } else if (act === "vol") {
         elm.addEventListener("change", () => this._send(dev, `volume ${elm.value}`));
       } else if (act === "input") {
