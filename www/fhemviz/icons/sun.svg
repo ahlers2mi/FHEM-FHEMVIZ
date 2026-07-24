@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#151a22"/>
+      <stop offset="1" stop-color="#0a0c0f"/>
+    </linearGradient>
+    <radialGradient id="disc" cx="42%" cy="38%" r="70%">
+      <stop offset="0" stop-color="#ffe89a"/>
+      <stop offset="42%" stop-color="#ffc23e"/>
+      <stop offset="78%" stop-color="#f7981d"/>
+      <stop offset="100%" stop-color="#e8760f"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffb020" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#ffb020" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#ffb020" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="200" fill="url(#glow)"/>
+
+  <!-- Strahlen -->
+  <g stroke="#ffb020" stroke-width="20" stroke-linecap="round">
+    <g>
+      <line x1="256" y1="60"  x2="256" y2="104"/>
+      <line x1="256" y1="452" x2="256" y2="408"/>
+      <line x1="60"  y1="256" x2="104" y2="256"/>
+      <line x1="452" y1="256" x2="408" y2="256"/>
+    </g>
+    <g transform="rotate(45 256 256)">
+      <line x1="256" y1="72"  x2="256" y2="112"/>
+      <line x1="256" y1="440" x2="256" y2="400"/>
+      <line x1="72"  y1="256" x2="112" y2="256"/>
+      <line x1="440" y1="256" x2="400" y2="256"/>
+    </g>
+  </g>
+
+  <!-- Sonnenscheibe -->
+  <circle cx="256" cy="256" r="132" fill="url(#disc)"/>
+  <ellipse cx="212" cy="212" rx="52" ry="34" fill="#fff3cf" opacity="0.35"/>
+</svg>

@@ -129,8 +129,11 @@ html:not([data-vizmode="tv"]) .viz-clock {
   pointer-events: none; z-index: 9;
 }
 html:not([data-vizmode="tv"]) #viz-headinfo .hi-val { font-size: 1rem; }
+/* Tablet/Handy: das Header-Icon wird gedeckelt, egal wie gross es fuer den
+ * TV konfiguriert ist (--viz-headicon, z. B. 10rem). So ragt die Wetter-
+ * Grafik nicht ueber Uhr/Szenen. Kleinere konfigurierte Werte bleiben. */
 html:not([data-vizmode="tv"]) #viz-headinfo .hi-icon {
-  height: var(--viz-headicon, 6rem); top: 12px; right: 8px;
+  height: min(var(--viz-headicon, 6rem), 4.5rem); top: 10px; right: 8px;
 }
 
 /* Szenen-Fortschritt (TV): schmale Linie an der Unterkante des Headers */
