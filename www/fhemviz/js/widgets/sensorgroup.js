@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Sensor-/Thermometer-Gruppe (v0.29.2).
+ * FHEMVIZ - Sensor-/Thermometer-Gruppe (v0.29.3).
  * Fuer ein FHEM-structure-Geraet aus Temperatur-/Klima-Sensoren: EINE
  * kompakte Kachel, je Mitglied eine Zeile mit Temperatur (gross) und - falls
  * vorhanden - Feuchte klein daneben. Read-only (keine Bedienelemente) -
@@ -97,14 +97,33 @@ export class FhemvizSensorGroup extends FhemvizWidget {
       : n.toLocaleString("de-DE", { maximumFractionDigits: digits });
   }
 
+  // Farbskala wie im FHEM-notify n_Mobildata:
+  //   rel. Feuchte %:  >=75 rot, >=65 orange, sonst neutral.
+  //   abs. Feuchte g/m³: >=14 rot, >=13 orange, sonst neutral.
+  _humColor(rh) {
+    if (rh === null) return "";
+    if (rh >= 75) return "var(--viz-error, #ff5d5d)";
+    if (rh >= 65) return "var(--viz-warn, #ffab40)";
+    return "";
+  }
+
+  _ahColor(ah) {
+    if (ah === null) return "";
+    if (ah >= 14) return "var(--viz-error, #ff5d5d)";
+    if (ah >= 13) return "var(--viz-warn, #ffab40)";
+    return "";
+  }
+
   _rowHtml(dev) {
     const label = (dev.attr && dev.attr.alias) || dev.name;
     const t = this._temp(dev);
     const h = this._hum(dev);
     const ah = this._absHum(t, h);
+    const chip = (txt, color) =>
+      `<span${color ? ` style="color:${color}"` : ""}>${txt}</span>`;
     const humParts = [];
-    if (h !== null) humParts.push(`${this._fmt(h, 0)} %`);
-    if (ah !== null) humParts.push(`${this._fmt(ah, 1)} g/m³`);
+    if (h !== null) humParts.push(chip(`${this._fmt(h, 0)} %`, this._humColor(h)));
+    if (ah !== null) humParts.push(chip(`${this._fmt(ah, 1)} g/m³`, this._ahColor(ah)));
     return `
       <div class="sgr">
         <span class="sgn">${this.escape(label)}</span>
