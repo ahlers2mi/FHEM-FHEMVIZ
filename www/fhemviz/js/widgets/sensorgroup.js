@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Sensor-/Thermometer-Gruppe (v0.29.0).
+ * FHEMVIZ - Sensor-/Thermometer-Gruppe (v0.29.2).
  * Fuer ein FHEM-structure-Geraet aus Temperatur-/Klima-Sensoren: EINE
  * kompakte Kachel, je Mitglied eine Zeile mit Temperatur (gross) und - falls
  * vorhanden - Feuchte klein daneben. Read-only (keine Bedienelemente) -
@@ -10,7 +10,9 @@
  * muessen im devspec liegen (duerfen per vizHide aus dem Raster raus).
  *
  * Wert je Mitglied: Reading temperature|temp|temp_C, sonst die erste Zahl im
- * state. Feuchte: Reading humidity|hum. Einheiten °C / %.
+ * state. Feuchte: Reading humidity|hum (rel. %). Zusaetzlich wird - wenn Temp
+ * und rel. Feuchte vorliegen - die absolute Feuchte (g/m³) berechnet und
+ * daneben angezeigt. Einheiten °C / % / g/m³.
  */
 
 import { FhemvizWidget } from "./base-widget.js";
@@ -81,6 +83,14 @@ export class FhemvizSensorGroup extends FhemvizWidget {
     return null;
   }
 
+  /** Absolute Feuchte (g/m³) aus Temperatur (°C) + rel. Feuchte (%),
+   *  Magnus-Formel. Null, wenn eine Groesse fehlt. */
+  _absHum(t, rh) {
+    if (t === null || rh === null) return null;
+    const es = 6.112 * Math.exp((17.62 * t) / (243.12 + t)); // Saettigungsdruck hPa
+    return (216.7 * ((rh / 100) * es)) / (273.15 + t);
+  }
+
   _fmt(n, digits = 1) {
     return n === null
       ? "–"
@@ -91,12 +101,16 @@ export class FhemvizSensorGroup extends FhemvizWidget {
     const label = (dev.attr && dev.attr.alias) || dev.name;
     const t = this._temp(dev);
     const h = this._hum(dev);
+    const ah = this._absHum(t, h);
+    const humParts = [];
+    if (h !== null) humParts.push(`${this._fmt(h, 0)} %`);
+    if (ah !== null) humParts.push(`${this._fmt(ah, 1)} g/m³`);
     return `
       <div class="sgr">
         <span class="sgn">${this.escape(label)}</span>
         <span class="sgv">
           <span class="sgt">${this._fmt(t)}<span class="u">°C</span></span>
-          ${h !== null ? `<span class="sgh">${this._fmt(h, 0)} %</span>` : ""}
+          ${humParts.length ? `<span class="sgh">${humParts.join(" · ")}</span>` : ""}
         </span>
       </div>`;
   }
