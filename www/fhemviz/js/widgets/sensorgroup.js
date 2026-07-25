@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Sensor-/Thermometer-Gruppe (v0.29.0).
+ * FHEMVIZ - Sensor-/Thermometer-Gruppe (v0.29.3).
  * Fuer ein FHEM-structure-Geraet aus Temperatur-/Klima-Sensoren: EINE
  * kompakte Kachel, je Mitglied eine Zeile mit Temperatur (gross) und - falls
  * vorhanden - Feuchte klein daneben. Read-only (keine Bedienelemente) -
@@ -10,7 +10,9 @@
  * muessen im devspec liegen (duerfen per vizHide aus dem Raster raus).
  *
  * Wert je Mitglied: Reading temperature|temp|temp_C, sonst die erste Zahl im
- * state. Feuchte: Reading humidity|hum. Einheiten °C / %.
+ * state. Feuchte: Reading humidity|hum (rel. %). Zusaetzlich wird - wenn Temp
+ * und rel. Feuchte vorliegen - die absolute Feuchte (g/m³) berechnet und
+ * daneben angezeigt. Einheiten °C / % / g/m³.
  */
 
 import { FhemvizWidget } from "./base-widget.js";
@@ -81,22 +83,53 @@ export class FhemvizSensorGroup extends FhemvizWidget {
     return null;
   }
 
+  /** Absolute Feuchte (g/m³) aus Temperatur (°C) + rel. Feuchte (%),
+   *  Magnus-Formel. Null, wenn eine Groesse fehlt. */
+  _absHum(t, rh) {
+    if (t === null || rh === null) return null;
+    const es = 6.112 * Math.exp((17.62 * t) / (243.12 + t)); // Saettigungsdruck hPa
+    return (216.7 * ((rh / 100) * es)) / (273.15 + t);
+  }
+
   _fmt(n, digits = 1) {
     return n === null
       ? "–"
       : n.toLocaleString("de-DE", { maximumFractionDigits: digits });
   }
 
+  // Farbskala wie im FHEM-notify n_Mobildata:
+  //   rel. Feuchte %:  >=75 rot, >=65 orange, sonst neutral.
+  //   abs. Feuchte g/m³: >=14 rot, >=13 orange, sonst neutral.
+  _humColor(rh) {
+    if (rh === null) return "";
+    if (rh >= 75) return "var(--viz-error, #ff5d5d)";
+    if (rh >= 65) return "var(--viz-warn, #ffab40)";
+    return "";
+  }
+
+  _ahColor(ah) {
+    if (ah === null) return "";
+    if (ah >= 14) return "var(--viz-error, #ff5d5d)";
+    if (ah >= 13) return "var(--viz-warn, #ffab40)";
+    return "";
+  }
+
   _rowHtml(dev) {
     const label = (dev.attr && dev.attr.alias) || dev.name;
     const t = this._temp(dev);
     const h = this._hum(dev);
+    const ah = this._absHum(t, h);
+    const chip = (txt, color) =>
+      `<span${color ? ` style="color:${color}"` : ""}>${txt}</span>`;
+    const humParts = [];
+    if (h !== null) humParts.push(chip(`${this._fmt(h, 0)} %`, this._humColor(h)));
+    if (ah !== null) humParts.push(chip(`${this._fmt(ah, 1)} g/m³`, this._ahColor(ah)));
     return `
       <div class="sgr">
         <span class="sgn">${this.escape(label)}</span>
         <span class="sgv">
           <span class="sgt">${this._fmt(t)}<span class="u">°C</span></span>
-          ${h !== null ? `<span class="sgh">${this._fmt(h, 0)} %</span>` : ""}
+          ${humParts.length ? `<span class="sgh">${humParts.join(" · ")}</span>` : ""}
         </span>
       </div>`;
   }
