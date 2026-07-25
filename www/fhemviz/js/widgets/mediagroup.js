@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Media-Gruppe (v0.27.1).
+ * FHEMVIZ - Media-Gruppe (v0.29.1).
  * Fuer ein FHEM-structure-Geraet aus AV-Receivern/Zonen (z. B. DENON_AVR /
  * DENON_AVR_ZONE): EINE Kachel, je Geraet eine Zeile mit Power-Toggle,
  * Lautstaerke-Regler und Mute. Befehle gehen an das jeweilige Mitglied.
@@ -77,8 +77,17 @@ export class FhemvizMediaGroup extends FhemvizWidget {
 
   _on(dev) {
     const r = dev.readings || {};
-    const p = this.plain(r.power !== undefined ? r.power : dev.state).toLowerCase();
-    return /^(on|an|1|true)\b/.test(p);
+    // DENON_AVR-Main: "power" ist die GERAETE-Power (an, sobald irgendeine
+    // Zone laeuft) - die eigentliche Hauptzone steckt in "zoneMain". Darum
+    // zoneMain bevorzugen; Zonen (DENON_AVR_ZONE) haben kein zoneMain und
+    // fallen korrekt auf power zurueck.
+    const raw =
+      r.zoneMain !== undefined
+        ? r.zoneMain
+        : r.power !== undefined
+          ? r.power
+          : dev.state;
+    return /^(on|an|1|true)\b/.test(this.plain(raw).toLowerCase());
   }
 
   _muted(dev) {
