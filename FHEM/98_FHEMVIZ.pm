@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.29.4
+# Version:  v0.30.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.29.4";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.30.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -118,6 +118,8 @@ sub FHEMVIZ_Initialize {
           "tvTouch " .
           "statusBar:textField-long " .
           "headerInfo:textField-long " .
+          "background " .
+          "backgroundDim " .
           "showRooms " .
           "hideRooms " .
           "hideTypes " .
@@ -284,6 +286,8 @@ sub FHEMVIZ_Get {
         my $widthAttr  = AttrVal($name, "width", "");
         my $statusBar  = AttrVal($name, "statusBar", "");
         my $headerInfo = AttrVal($name, "headerInfo", "");
+        my $background    = AttrVal($name, "background", "");
+        my $backgroundDim = AttrVal($name, "backgroundDim", "");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
@@ -294,10 +298,11 @@ sub FHEMVIZ_Get {
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,"page":%s,'
+              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,'
+              . '"background":%s,"backgroundDim":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.29.4"),
+            FHEMVIZ_jsonStr("v0.30.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -308,6 +313,8 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($tvTouch),
             FHEMVIZ_jsonStr($statusBar),
             FHEMVIZ_jsonStr($headerInfo),
+            FHEMVIZ_jsonStr($background),
+            FHEMVIZ_jsonStr($backgroundDim),
             FHEMVIZ_jsonStr($page),
             FHEMVIZ_jsonStr($showRooms),
             FHEMVIZ_jsonStr($hideRooms),
@@ -553,6 +560,19 @@ sub FHEMVIZ_Attr {
         aus der Kopfzeile in die Seite ragen, ohne rechts aus dem Bild zu
         laufen. Live über den inform-Kanal. Beispiel:<br>
         <code>attr myViz headerInfo MQTT2_B0CBD8D5566F:temp_C:°C,icon=www_weather_icon_today:14rem</code></li>
+
+    <li><a id="FHEMVIZ-attr-background"></a><b>background</b><br>
+        URL oder Pfad eines Hintergrundbildes fuer das Dashboard (z. B. ein
+        von FHEMWEB aus <code>www/fhemviz/</code> ausgeliefertes Bild oder
+        eine externe URL). Das Bild liegt als fixe Ebene hinter dem Inhalt,
+        darueber ein abdunkelndes Overlay, damit Kacheln/Text lesbar bleiben.
+        Leer = kein Bild (Standard). Beispiele:<br>
+        <code>attr myViz background /fhem/fhemviz/backgrounds/cubes.png</code><br>
+        <code>attr myViz background https://example.org/wallpaper.jpg</code></li>
+    <li><a id="FHEMVIZ-attr-backgroundDim"></a><b>backgroundDim</b><br>
+        Staerke des Abdunkel-Overlays ueber dem Hintergrundbild, 0..100
+        (Prozent). Default 45. Hoehere Werte = dunkler/ruhiger, 0 = Bild
+        unveraendert. Nur wirksam mit gesetztem <code>background</code>.</li>
 
     <p><b>Raum-Filter</b></p>
     <li><a id="FHEMVIZ-attr-showRooms"></a><b>showRooms</b><br>

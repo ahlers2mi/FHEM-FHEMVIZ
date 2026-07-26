@@ -64,6 +64,31 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Optionales Hintergrundbild (attr background = URL/Pfad, backgroundDim =
+ * 0..100). app.js setzt body.viz-has-bg + --viz-bg-image/--viz-bg-dim.
+ * Bild und Abdunkel-Overlay liegen als FIXE Ebenen hinter dem Inhalt
+ * (z-index:-1), der body-Hintergrund wird transparent. Kacheln behalten
+ * ihren eigenen (deckenden) Hintergrund; das Bild scheint in Abstaenden,
+ * Kopf-/Fusszeile und der freien Flaeche durch. */
+body.viz-has-bg { background: transparent; }
+body.viz-has-bg::before,
+body.viz-has-bg::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
+body.viz-has-bg::before {
+  background: var(--viz-bg-image) center / cover no-repeat;
+}
+body.viz-has-bg::after {
+  background: var(--viz-bg);
+  opacity: var(--viz-bg-dim, 0.45);
+}
+/* Kopfzeile ueber dem Bild leicht durchscheinend + Blur, damit sie sich
+ * einfuegt statt das Bild oben hart abzuschneiden. */
+body.viz-has-bg #viz-header {
+  background: color-mix(in srgb, var(--viz-bg) 70%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+
 /* Zoom (transform-Pfad, app.js setzt data-vizzoom): der body ist der
  * Scroller, damit fixe Elemente (Tab-Leiste) am SICHTBAREN Rand haengen.
  * Die TV-Regel (overflow hidden) weiter unten gewinnt im TV-Modus.
