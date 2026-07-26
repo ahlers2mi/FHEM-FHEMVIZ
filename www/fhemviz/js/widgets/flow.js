@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Energiefluss-Widget (v0.8.0). Die Koenigsdisziplin.
+ * FHEMVIZ - Energiefluss-Widget (v0.29.4). Die Koenigsdisziplin.
  * Ersetzt das Floorplan-SolarDash (Pfeil-Dummies) durch EIN Widget:
  * Haus im Zentrum, PV links, Netz rechts, Batterie unten - verbunden
  * durch Laufpunkt-Ketten (Animation nach myhome.css animateDot).
@@ -16,11 +16,16 @@
 import { FhemvizWidget } from "./base-widget.js";
 
 const FLOW_CSS = `
+  /* Die Kachel selbst ist Groessen-Container: die Ziffern richten sich nach
+   * der TATSAECHLICHEN Kachelbreite, nicht nur nach vizSize. So passt die
+   * 2x2-Kachel auch auf dem schmalen Handy (kein Ueberlaufen mehr). */
+  .card { container-type: inline-size; }
   .fgrid { display: flex; flex-direction: column; align-items: center;
            gap: 4px; flex: 1; justify-content: center; }
   .frow { display: flex; align-items: center; gap: 6px; width: 100%;
-          justify-content: center; }
+          justify-content: center; min-width: 0; }
   .fnode { text-align: center; min-width: 0; }
+  .chain { flex-shrink: 1; min-width: 0; }
   .fnode .fv { font-size: 1.6rem; font-weight: 250; font-variant-numeric: tabular-nums;
                line-height: 1.05; }
   .fnode .fl { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em;
@@ -72,6 +77,18 @@ const FLOW_CSS = `
   :host([data-tv][data-size="2x2"]) .dot { width: 13px; height: 13px; }
   @media (prefers-reduced-motion: reduce) {
     .dot { animation: none; transform: scale(0.6); }
+  }
+  /* Schmale Kachel (Handy, ~330px): kompakt halten, damit die drei Spalten
+   * PV · Haus · Netz + Laufpunkt-Ketten NICHT ueber den Rand laufen. Deckelt
+   * die vizSize-/data-size-Vergroesserungen fuer kleine Container. */
+  @container (max-width: 460px) {
+    .fnode .fv { font-size: 1.35rem !important; }
+    .fcenter .fv { font-size: 1.7rem !important; }
+    .fnode .fl { font-size: 0.56rem !important; }
+    .frow { gap: 3px; }
+    .chain { gap: 4px; }
+    .dot { width: 6px !important; height: 6px !important; }
+    .fcenter { padding: 6px 10px; }
   }
 `;
 
