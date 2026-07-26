@@ -16,7 +16,7 @@ import { vizColorFor } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.29.4";
+const SPA_VERSION = "v0.30.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -35,6 +35,29 @@ function applyTheme(theme) {
   const rootAttr = document.documentElement;
   if (theme === "light" || theme === "dark") rootAttr.dataset.theme = theme;
   else delete rootAttr.dataset.theme; // auto -> Systemvorgabe
+}
+
+/**
+ * Hintergrundbild (attr background = URL/Pfad, backgroundDim = 0..100).
+ * Bild + Abdunkel-Overlay liegen als fixe Ebenen HINTER dem Inhalt (CSS
+ * body.viz-has-bg::before/::after); hier nur URL + Dim-Staerke setzen.
+ */
+function applyBackground(cfg) {
+  const root = document.documentElement;
+  const url = String((cfg && cfg.background) || "").trim();
+  if (!url) {
+    document.body.classList.remove("viz-has-bg");
+    root.style.removeProperty("--viz-bg-image");
+    root.style.removeProperty("--viz-bg-dim");
+    return;
+  }
+  // In url() nur Anfuehrungszeichen entschaerfen; Pfad/URL sonst unveraendert.
+  root.style.setProperty("--viz-bg-image", `url("${url.replace(/["\\]/g, encodeURI)}")`);
+  let dim = parseFloat(String((cfg && cfg.backgroundDim) || "").replace(",", "."));
+  if (isNaN(dim)) dim = 45; // Prozent Abdunklung (Default)
+  dim = Math.min(95, Math.max(0, dim)) / 100;
+  root.style.setProperty("--viz-bg-dim", dim.toFixed(2));
+  document.body.classList.add("viz-has-bg");
 }
 
 /* ------------------------------ TV-Controller ------------------------------ */
@@ -850,6 +873,7 @@ async function main() {
     // Konfiguration vom Modul holen; URL uebersteuert den Modus.
     const cfg = await client.getConfig(vizDevice);
     applyTheme(cfg.theme);
+    applyBackground(cfg);
 
     // Modus VOR der Breiten-/Zoom-Skalierung bestimmen: width verhaelt sich
     // je Modus unterschiedlich (TV = transform, Tablet = Meta-Viewport).
