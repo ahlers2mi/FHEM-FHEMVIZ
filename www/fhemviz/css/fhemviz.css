@@ -422,9 +422,14 @@ html[data-vizmode="tv"] #viz-toast .viz-toast-msg { font-size: 2rem; }
   line-height: 0.86;
   letter-spacing: -0.03em;
 }
+/* Datum: aus 2 m auf einem 10-Zoll-Panel lesbar. Die alte Groesse
+ * (2.4vh = ~19px) landete weit unter der Uhr und war aus der Entfernung
+ * nicht mehr zu entziffern; ausserdem war das Grau zu kontraststarm. */
 .cp-date {
-  font-size: clamp(0.9rem, 2.4vh, 1.8rem);
-  color: var(--viz-muted);
+  font-size: clamp(1.6rem, 5.5vh, 3.4rem);
+  font-weight: 300;
+  line-height: 1.1;
+  color: color-mix(in srgb, var(--viz-text) 78%, transparent);
 }
 .cp-kpis {
   display: grid;
@@ -443,7 +448,7 @@ html[data-vizmode="tv"] #viz-toast .viz-toast-msg { font-size: 2rem; }
 }
 .cp-v small { font-size: 0.42em; color: var(--viz-muted); margin-left: 0.15em; }
 .cp-l {
-  font-size: clamp(0.6rem, 1.6vh, 0.95rem);
+  font-size: clamp(1rem, 2.6vh, 1.5rem);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -460,7 +465,7 @@ html[data-vizmode="tv"] #viz-toast .viz-toast-msg { font-size: 2rem; }
   gap: 14px;
   padding: clamp(4px, 1.1vh, 12px) 0;
   border-bottom: 1px solid var(--viz-border);
-  font-size: clamp(0.85rem, 2.4vh, 1.5rem);
+  font-size: clamp(1.1rem, 3.2vh, 2rem);
 }
 .cp-r:last-child { border-bottom: 0; }
 .cp-n { flex: 1; min-width: 0; color: var(--viz-muted);
