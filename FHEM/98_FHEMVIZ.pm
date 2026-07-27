@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.32.0
+# Version:  v0.33.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.32.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.33.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -306,7 +306,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.32.0"),
+            FHEMVIZ_jsonStr("v0.33.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -778,10 +778,32 @@ sub FHEMVIZ_Attr {
         <code>attr rem_SILENO vizStates ok_cutting:Mäht:ok,ok_charging:Lädt:accent,parked.*:Geparkt</code></li>
     <li><a id="FHEMVIZ-attr-vizFlow"></a><b>vizFlow</b><br>
         Typ: textField-long. Readings-Zuordnung des flow-Widgets als
-        <code>rolle=reading</code>-Liste; Rollen: <code>pv</code>,
-        <code>haus</code>, <code>netz</code>, <code>batterie</code>,
-        <code>soc</code>. Vorzeichen: Netz &gt; 0 = Bezug, &lt; 0 =
-        Einspeisung; Batterie &gt; 0 = laden, &lt; 0 = entladen. Default:<br>
+        <code>rolle=reading</code>-Liste. Jeder Wert ist ein Reading
+        <b>dieses</b> Geräts oder &ndash; mit Doppelpunkt &ndash; eines
+        <b>fremden</b> Geräts (<code>rolle=gerät:reading</code>); fremde
+        Geräte werden automatisch live mitverfolgt. So kann z. B. der
+        Ladestand von einem Victron SmartShunt kommen, während die
+        Leistungen vom Wechselrichter stammen.<br>
+        Rollen: <code>pv</code>, <code>haus</code>, <code>netz</code>,
+        <code>batterie</code> (Leistungen in W), <code>soc</code>
+        (Ladestand %), <code>volt</code> (Batteriespannung, optional).<br>
+        Zusätzlich für den Inselbetrieb:<br>
+        <code>reserve</code> &ndash; Gerät/Reading, dessen <code>on</code>
+        den Sicherheitsbestand meldet (Batterie wird nicht leer gefahren,
+        Autarkie-Reserve). Ohne Doppelpunkt genügt der Gerätename, dann
+        zählt sein <code>state</code>.<br>
+        <code>reserveSoc</code> &ndash; Grenze der Reserve in %, als Zahl
+        (z. B. <code>reserveSoc=30</code>) oder Reading; wird im
+        Batteriesymbol als gestrichelte Marke gezeigt.<br>
+        <code>full</code> &ndash; Gerät/Reading, dessen <code>on</code>
+        meldet: Anlage am Anschlag, es kann nicht eingespeist werden
+        &rarr; die Kachel fordert mit einer roten Plakette
+        (🐢 „Strom verbrauchen") zum Verbrauch auf.<br>
+        <code>status</code> &ndash; Reading der Datenquelle; Werte wie
+        <code>offline</code> erzeugen den Hinweis „Ladestand veraltet",
+        damit ein eingefrorener Wert nicht still falsch angezeigt wird.<br>
+        Vorzeichen: Netz &gt; 0 = Bezug, &lt; 0 = Einspeisung;
+        Batterie &gt; 0 = laden, &lt; 0 = entladen. Default:<br>
         <code>pv=pv_leistung,haus=out_leistung,netz=netzleistung_all,batterie=batterie_leistung,soc=soc</code></li>
     <li><a id="FHEMVIZ-attr-vizChart"></a><b>vizChart</b><br>
         Typ: textField-long. Aktiviert das Diagramm-Widget (setzt implizit
