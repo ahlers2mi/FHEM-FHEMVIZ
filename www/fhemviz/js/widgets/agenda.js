@@ -2,9 +2,14 @@
  * FHEMVIZ - Agenda-Widget (v0.7.3).
  * Terminliste im Mockup-Stil: Zeilen der Form "DD.MM.YYYY HH:MM Text"
  * (z. B. Muellkalender rem_d_cal_muell) werden zu Zeilen-Karten mit
- * Wochentag ("Mo 21.07 · 06:00") und fettem Termin; der naechste Termin
- * ist bernstein-hervorgehoben. Nicht parsebare Zeilen erscheinen als
- * einfacher Text. Aktivierung: attr <geraet> vizWidget agenda
+ * Wochentag ("Mo 21.07 · 06:00") und fettem Termin.
+ *
+ * Hervorgehoben wird nach ECHTER Datumsnaehe, nicht nach Position in der
+ * Liste: heute (kraeftig) und morgen (bernstein) - alles danach bleibt
+ * neutral, Vergangenes wird zurueckgenommen. Sonst leuchtet auch ein Termin in fuenf Tagen, nur weil er der
+ * erste Eintrag ist. Heute/Morgen werden ausserdem so benannt, statt das
+ * Datum zu zeigen. Nicht parsebare Zeilen erscheinen als einfacher Text.
+ * Aktivierung: attr <geraet> vizWidget agenda
  */
 
 import { FhemvizWidget } from "./base-widget.js";
@@ -25,8 +30,18 @@ const AGENDA_CSS = `
     font-weight: 600; font-size: 0.95rem; min-width: 0;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .agrow.next { border-color: var(--viz-accent, #ffb020); }
-  .agrow.next .when { color: var(--viz-accent, #ffb020); font-weight: 400; }
+  /* Morgen: bernsteinfarbener Rahmen. Heute: zusaetzlich getoente Flaeche -
+   * das ist der Termin, bei dem noch heute etwas zu tun ist. */
+  .agrow.tomorrow { border-color: var(--viz-accent, #ffb020); }
+  .agrow.tomorrow .when { color: var(--viz-accent, #ffb020); font-weight: 400; }
+  .agrow.today {
+    border-color: var(--viz-accent, #ffb020);
+    background: color-mix(in srgb, var(--viz-accent, #ffb020) 16%, var(--viz-raised, #1c212a));
+  }
+  .agrow.today .when { color: var(--viz-accent, #ffb020); font-weight: 600; }
+  .agrow.today .what { font-weight: 700; }
+  /* Vorbei: nicht hervorheben, sondern zuruecknehmen - erledigt ist erledigt. */
+  .agrow.past { opacity: 0.5; }
   :host([data-tv]) .agrow { padding: 13px 18px; }
   :host([data-tv]) .agrow .when { font-size: 1.2rem; }
   :host([data-tv]) .agrow .what { font-size: 1.1rem; }
@@ -44,7 +59,17 @@ export class FhemvizAgenda extends FhemvizWidget {
       .trim();
   }
 
-  /** "21.07.2026 06:00 Bioabfall" -> {when: "Mo 21.07 · 06:00", what}. */
+  /** Mitternacht von heute - Basis fuer den Tagesabstand. */
+  _today() {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return t;
+  }
+
+  /**
+   * "21.07.2026 06:00 Bioabfall" -> {when, what, days}.
+   * days = Tage bis zum Termin (0 = heute, 1 = morgen, null = kein Datum).
+   */
   _rows() {
     const r = this.device.readings || {};
     const raw = r.STATE ?? this.device.state;
@@ -54,12 +79,19 @@ export class FhemvizAgenda extends FhemvizWidget {
       .filter(Boolean)
       .map((line) => {
         const m = line.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}:\d{2})\s+(.+)$/);
-        if (!m) return { when: "", what: line };
+        if (!m) return { when: "", what: line, days: null };
         const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
-        const wd = isNaN(d.getTime()) ? "" : WEEKDAYS[d.getDay()] + " ";
+        const valid = !isNaN(d.getTime());
+        const days = valid
+          ? Math.round((d - this._today()) / 86400000)
+          : null;
         const dd = String(m[1]).padStart(2, "0");
         const mm = String(m[2]).padStart(2, "0");
-        return { when: `${wd}${dd}.${mm} · ${m[4]}`, what: m[5] };
+        // Heute/Morgen ausschreiben - das liest sich schneller als ein Datum.
+        const day =
+          days === 0 ? "Heute" : days === 1 ? "Morgen"
+            : `${valid ? WEEKDAYS[d.getDay()] + " " : ""}${dd}.${mm}`;
+        return { when: `${day} · ${m[4]}`, what: m[5], days };
       });
   }
 
@@ -67,8 +99,18 @@ export class FhemvizAgenda extends FhemvizWidget {
     const rows = this._rows();
     const rowsHtml = rows
       .map(
-        (r, i) => `
-        <div class="agrow${i === 0 ? " next" : ""}">
+        (r) => `
+        <div class="agrow${
+          r.days === null
+            ? ""
+            : r.days < 0
+              ? " past"
+              : r.days === 0
+                ? " today"
+                : r.days === 1
+                  ? " tomorrow"
+                  : ""
+        }">
           ${r.when ? `<span class="when">${this.escape(r.when)}</span>` : ""}
           <span class="what">${this.escape(r.what)}</span>
         </div>`

@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.33.0
+# Version:  v0.34.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.33.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -306,7 +306,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.33.0"),
+            FHEMVIZ_jsonStr("v0.34.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -793,8 +793,11 @@ sub FHEMVIZ_Attr {
         Autarkie-Reserve). Ohne Doppelpunkt genügt der Gerätename, dann
         zählt sein <code>state</code>.<br>
         <code>reserveSoc</code> &ndash; Grenze der Reserve in %, als Zahl
-        (z. B. <code>reserveSoc=30</code>) oder Reading; wird im
-        Batteriesymbol als gestrichelte Marke gezeigt.<br>
+        (z. B. <code>reserveSoc=25</code>) oder Reading; wird im
+        Batteriesymbol als gestrichelte Marke gezeigt. Gilt <b>nur bei
+        eingeschaltetem <code>reserve</code></b> &ndash; ist der
+        Sicherheitsbestand aus, wird bis 0 % gefahren und es erscheint
+        keine Marke.<br>
         <code>full</code> &ndash; Gerät/Reading, dessen <code>on</code>
         meldet: Anlage am Anschlag, es kann nicht eingespeist werden
         &rarr; die Kachel fordert mit einer roten Plakette
