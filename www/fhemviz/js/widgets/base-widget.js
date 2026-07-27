@@ -150,7 +150,8 @@ const CARD_CSS = `
   :host([data-tv][data-size="2x2"]) .value.md { font-size: 3rem; }
   :host([data-tv][data-size="2x2"]) .value.sm { font-size: 2.3rem; }
 
-  /* Kurzes Aufleuchten bei Wertaenderung (base _paint setzt .viz-flash). */
+  /* Kurzes Aufleuchten bei Wertaenderung (base _paint setzt .viz-flash).
+   * Auf dem WERT ein kurzer Farbanflug hinter der Zahl. */
   @keyframes viz-flash {
     0%   { background-color: color-mix(in srgb, var(--viz-accent) 30%, transparent); }
     100% { background-color: transparent; }
@@ -158,6 +159,20 @@ const CARD_CSS = `
   .viz-flash {
     animation: viz-flash 0.7s ease-out;
     border-radius: 8px;
+  }
+  /* Auf der GANZEN Kachel (Gruppen-/Grafik-Kacheln ohne .value-Element)
+   * darf der Hintergrund NICHT animiert werden: die Animation wuerde die
+   * Kachelfuellung 0,7 s lang durch "transparent" ersetzen. Bei deckenden
+   * Kacheln faellt das kaum auf, bei halbtransparenten (Glas-Skin ueber
+   * einem Hintergrundbild) reisst es ein Loch - und backdrop-filter muesste
+   * je Frame neu rastern, was sichtbar flackert. Darum nur der Rahmen. */
+  @keyframes viz-flash-card {
+    0%   { border-color: var(--viz-accent, #ffb020); }
+    100% { border-color: var(--viz-border, #262c35); }
+  }
+  .card.viz-flash {
+    animation: viz-flash-card 0.7s ease-out;
+    border-radius: var(--viz-radius, 14px);
   }
 
   /* vizAlert: pulsierender roter Rahmen um die Kachel, solange aktiv. */
@@ -174,7 +189,7 @@ const CARD_CSS = `
 
   @media (prefers-reduced-motion: reduce) {
     button.toggle, button.toggle::after { transition: none; }
-    .viz-flash { animation: none; }
+    .viz-flash, .card.viz-flash { animation: none; }
     .card.viz-tile-alert {
       animation: none; box-shadow: 0 0 0 2px var(--viz-error, #ff5d5d);
     }
