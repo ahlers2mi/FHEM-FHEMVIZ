@@ -16,7 +16,7 @@ import { vizColorFor, setWidgetSkinCss } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.1";
+const SPA_VERSION = "v0.34.2";
 
 const el = (id) => document.getElementById(id);
 
@@ -164,7 +164,11 @@ function renderClockPage(root, store, cfg) {
     .map((it) => {
       const dev = store.get(it.dev);
       const v = vizPlain((dev.readings || {})[it.reading] ?? "–");
-      const label = it.label || it.reading;
+      // Beschriftung: ausdrueckliches Label, sonst der Geraete-Alias. Der
+      // rohe Reading-Name ("temp_C") ist nur die letzte Rueckfallebene - als
+      // Versalien gesetzt sah er wie ein Fehler aus.
+      const label =
+        it.label || (dev.attr && dev.attr.alias) || dev.name || it.reading;
       return `<div class="cp-k">
         <div class="cp-v">${escapeHtml(v)}${
           it.unit ? `<small>${escapeHtml(it.unit)}</small>` : ""
