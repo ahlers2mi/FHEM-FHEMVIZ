@@ -11,12 +11,12 @@ import { FhemClient } from "./fhem-client.js";
 import { Store } from "./store.js";
 import { renderLayout, collectRooms, resolveRoom, ALL_ROOMS, VIZ_ROOM_PREFIX } from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
-import { vizColorFor } from "./widgets/base-widget.js";
+import { vizColorFor, setWidgetSkinCss } from "./widgets/base-widget.js";
 
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.30.0";
+const SPA_VERSION = "v0.31.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -35,6 +35,70 @@ function applyTheme(theme) {
   const rootAttr = document.documentElement;
   if (theme === "light" || theme === "dark") rootAttr.dataset.theme = theme;
   else delete rootAttr.dataset.theme; // auto -> Systemvorgabe
+}
+
+/**
+ * Skin (attr skin, URL ?skin= geht vor): alternative Optik OHNE das
+ * bestehende Layout zu verlieren. "classic" = unveraendert, laedt nichts.
+ * Je Skin bis zu zwei Dateien, beide optional:
+ *   css/skin-<name>.css         - Seiten-Ebene (Raster, Tab-Leiste, Kopf)
+ *   css/skin-<name>.widget.css  - Kachel-Innenleben (in jeden Shadow DOM)
+ * Ausserdem: html[data-vizskin=<name>] fuer eigene Regeln, data-vizblur=0
+ * schaltet Glas-/Blur-Effekte ab (attr skinBlur 0 - schwache Panels).
+ */
+const SKIN_NAME_RE = /^[a-z][a-z0-9_-]{0,31}$/;
+
+async function applySkin(urlSkin, cfg) {
+  const root = document.documentElement;
+  const want = String(urlSkin || cfg.skin || "classic").trim().toLowerCase();
+  const skin = SKIN_NAME_RE.test(want) ? want : "classic";
+  root.dataset.vizskin = skin;
+  // Blur/Glas abschaltbar (schwache Tablets): attr skinBlur 0.
+  // Ueber eine Custom Property, weil die in den Shadow DOM erbt - und
+  // "backdrop-filter: none" kostet keine Compositing-Ebene.
+  if (/^(0|off|no|false)$/i.test(String(cfg.skinBlur || "").trim())) {
+    root.dataset.vizblur = "0";
+    root.style.setProperty("--viz-blur-filter", "none");
+  } else {
+    delete root.dataset.vizblur;
+    root.style.removeProperty("--viz-blur-filter");
+  }
+  if (skin === "classic") {
+    setWidgetSkinCss("");
+    return skin;
+  }
+  // Beide Dateien holen. Kachel-CSS MUSS als Text kommen (Shadow DOM ist
+  // fuer <link> unerreichbar); das Seiten-CSS wird geprueft, damit ein
+  // Tippfehler im Skin-Namen nicht still zu "sieht aus wie classic" fuehrt.
+  const get = async (file) => {
+    try {
+      const res = await fetch(`./css/${file}`, { cache: "no-cache" });
+      return res.ok ? await res.text() : null;
+    } catch (e) {
+      return null;
+    }
+  };
+  const [pageCss, widgetCss] = await Promise.all([
+    get(`skin-${skin}.css`),
+    get(`skin-${skin}.widget.css`),
+  ]);
+  if (pageCss === null && widgetCss === null) {
+    // Skin gibt es nicht -> sauber zurueck auf classic, sichtbar melden.
+    configWarn = [configWarn, `Skin "${skin}" nicht gefunden (css/skin-${skin}.css)`]
+      .filter(Boolean)
+      .join(" · ");
+    root.dataset.vizskin = "classic";
+    setWidgetSkinCss("");
+    return "classic";
+  }
+  if (pageCss !== null && !document.querySelector(`style[data-vizskin-css="${skin}"]`)) {
+    const style = document.createElement("style");
+    style.dataset.vizskinCss = skin;
+    style.textContent = pageCss;
+    document.head.appendChild(style);
+  }
+  setWidgetSkinCss(widgetCss || "");
+  return skin;
 }
 
 /**
@@ -874,6 +938,8 @@ async function main() {
     const cfg = await client.getConfig(vizDevice);
     applyTheme(cfg.theme);
     applyBackground(cfg);
+    // Skin VOR dem ersten Rendern setzen (URL ?skin= geht vor attr skin).
+    await applySkin(params.get("skin"), cfg);
 
     // Modus VOR der Breiten-/Zoom-Skalierung bestimmen: width verhaelt sich
     // je Modus unterschiedlich (TV = transform, Tablet = Meta-Viewport).

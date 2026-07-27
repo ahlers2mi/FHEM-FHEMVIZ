@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.30.0
+# Version:  v0.31.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.30.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.31.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -120,6 +120,8 @@ sub FHEMVIZ_Initialize {
           "headerInfo:textField-long " .
           "background " .
           "backgroundDim " .
+          "skin " .
+          "skinBlur:1,0 " .
           "showRooms " .
           "hideRooms " .
           "hideTypes " .
@@ -288,6 +290,8 @@ sub FHEMVIZ_Get {
         my $headerInfo = AttrVal($name, "headerInfo", "");
         my $background    = AttrVal($name, "background", "");
         my $backgroundDim = AttrVal($name, "backgroundDim", "");
+        my $skin          = AttrVal($name, "skin", "");
+        my $skinBlur      = AttrVal($name, "skinBlur", "");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
@@ -299,10 +303,10 @@ sub FHEMVIZ_Get {
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,'
-              . '"background":%s,"backgroundDim":%s,"page":%s,'
+              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.30.0"),
+            FHEMVIZ_jsonStr("v0.31.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -315,6 +319,8 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($headerInfo),
             FHEMVIZ_jsonStr($background),
             FHEMVIZ_jsonStr($backgroundDim),
+            FHEMVIZ_jsonStr($skin),
+            FHEMVIZ_jsonStr($skinBlur),
             FHEMVIZ_jsonStr($page),
             FHEMVIZ_jsonStr($showRooms),
             FHEMVIZ_jsonStr($hideRooms),
@@ -569,6 +575,28 @@ sub FHEMVIZ_Attr {
         Leer = kein Bild (Standard). Beispiele:<br>
         <code>attr myViz background /fhem/fhemviz/backgrounds/cubes.png</code><br>
         <code>attr myViz background https://example.org/wallpaper.jpg</code></li>
+    <li><a id="FHEMVIZ-attr-skin"></a><b>skin</b><br>
+        Alternative Optik, ohne das bestehende Layout zu verlieren. Ohne
+        Angabe gilt <code>classic</code> &ndash; das gewohnte Kachel-Layout,
+        es wird dann auch nichts zusaetzlich geladen. Mitgelieferte Skins:<br>
+        <code>zeilen</code> &ndash; Handy-Ansicht: keine Kachelkaesten, sondern
+        Abschnitte aus Zeilen (Name links, Wert und Bedienelement rechts).
+        Eine Spalte, deutlich mehr Inhalt pro Blick. Grafische Kacheln
+        (Fluss, Heizung, Prognose, Wetter, Diagramm, Bild) behalten ihren
+        Kasten.<br>
+        <code>bento</code> &ndash; Wandtablet: dichteres Raster, halbtransparente
+        Glaskacheln (sinnvoll mit <code>background</code>), und im
+        <b>Querformat</b> wandert die Raum-Umschaltung als Schiene an die linke
+        Kante; im Hochformat bleibt die Leiste unten.<br>
+        Je Geraet uebersteuerbar per URL: <code>?skin=zeilen</code> &ndash; so
+        koennen Handy und Wandtablet dasselbe FHEMVIZ-Geraet nutzen und
+        trotzdem anders aussehen. Beispiel:<br>
+        <code>attr myViz skin bento</code></li>
+    <li><a id="FHEMVIZ-attr-skinBlur"></a><b>skinBlur</b> 1|0<br>
+        Glas-/Weichzeichnen-Effekte des Skins (backdrop-filter). Default 1.
+        <code>0</code> schaltet sie ab &ndash; die Kacheln bleiben
+        halbtransparent, kosten aber keine Compositing-Ebene. Fuer schwache
+        Panels (z. B. Yicty T510) empfohlen, wenn das Scrollen ruckelt.</li>
     <li><a id="FHEMVIZ-attr-backgroundDim"></a><b>backgroundDim</b><br>
         Staerke des Abdunkel-Overlays ueber dem Hintergrundbild, 0..100
         (Prozent). Default 45. Hoehere Werte = dunkler/ruhiger, 0 = Bild

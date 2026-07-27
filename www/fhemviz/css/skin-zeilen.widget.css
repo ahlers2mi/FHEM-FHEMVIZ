@@ -1,0 +1,145 @@
+/*
+ * FHEMVIZ - Skin "zeilen" (Kachel-Innenleben), v0.31.0.
+ * Wird von app.js als TEXT geladen und in JEDEN Shadow DOM gehaengt (hinter
+ * CARD_CSS) - externe Stylesheets erreichen den Shadow DOM nicht.
+ *
+ * Prinzip: Wert- und Schalt-Kacheln werden ZEILEN (Name links, Wert und
+ * Bedienelement rechts). Gruppen-Kacheln bleiben Abschnitte mit ihrer
+ * eigenen Zeilenliste. Grafische Kacheln (Fluss, Heizung, Prognose, Wetter,
+ * Diagramm, Bild) behalten ihren Kasten - sie brauchen die Flaeche.
+ */
+
+/* --- Basis: Kachelkasten weg, Trennlinie statt Rahmen ------------------- */
+.card {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--viz-border, #262c35);
+  border-radius: 0;
+  padding: 11px 14px;
+  height: auto;
+  gap: 5px;
+}
+/* Statusleiste nur noch bei echtem Zustand (on/ok/bad behalten ihre Farbe -
+ * hoehere Spezifitaet in CARD_CSS gewinnt). */
+.card::before {
+  top: 9px;
+  bottom: 9px;
+  left: 0;
+  background: transparent;
+}
+
+/* --- Wert-/Schalt-Kacheln werden eine Zeile ---------------------------- */
+:host(fhemviz-switch) .card,
+:host(fhemviz-sensor) .card,
+:host(fhemviz-dimmer) .card,
+:host(fhemviz-contact) .card,
+:host(fhemviz-vent) .card,
+:host(fhemviz-actions) .card {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  row-gap: 4px;
+}
+
+/* Gerätename: keine Versalien-Marke mehr, sondern Klartext links. */
+:host(fhemviz-switch) .card > .label,
+:host(fhemviz-sensor) .card > .label,
+:host(fhemviz-dimmer) .card > .label,
+:host(fhemviz-contact) .card > .label,
+:host(fhemviz-vent) .card > .label,
+:host(fhemviz-actions) .card > .label {
+  flex: 1 1 auto;
+  min-width: 6em;
+  order: 1;
+  font-size: 0.88rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--viz-text, #e8eaed);
+}
+
+/* Wert + Bedienelement rechts, auf derselben Zeile. */
+:host(fhemviz-switch) .card > .row.grow,
+:host(fhemviz-sensor) .card > .row.grow,
+:host(fhemviz-dimmer) .card > .row.grow,
+:host(fhemviz-contact) .card > .row.grow,
+:host(fhemviz-vent) .card > .row.grow,
+:host(fhemviz-actions) .card > .row.grow {
+  flex: 0 0 auto;
+  order: 2;
+  margin-top: 0;
+  justify-content: flex-end;
+}
+/* Nur DIREKTE Kinder umsortieren - innerhalb der Wertzeile (.row.grow)
+ * muss die Reihenfolge Wert -> Bedienelement erhalten bleiben. */
+:host(fhemviz-switch) .card > .value,
+:host(fhemviz-sensor) .card > .value,
+:host(fhemviz-contact) .card > .value,
+:host(fhemviz-vent) .card > .value {
+  order: 3;
+  flex: 0 0 auto;
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+/* Beschriftung des Hauptwerts bleibt in derselben Zeile, klein und links
+ * vom Wert ("Temp 22,9 °C") statt als eigene Zeile darunter. */
+:host(fhemviz-sensor) .card > .sub,
+:host(fhemviz-vent) .card > .sub {
+  order: 2;
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+}
+/* Zusatz-Readings: je eine eigene, eingerueckte Unterzeile. */
+:host(fhemviz-switch) .card > .row:not(.grow),
+:host(fhemviz-sensor) .card > .row:not(.grow),
+:host(fhemviz-dimmer) .card > .row:not(.grow),
+:host(fhemviz-contact) .card > .row:not(.grow),
+:host(fhemviz-actions) .card > .row:not(.grow) {
+  order: 4;
+  flex: 1 1 100%;
+  padding-left: 2px;
+}
+/* Regler und Knopfreihen brauchen die ganze Breite. */
+:host(fhemviz-dimmer) .card > input[type="range"],
+:host(fhemviz-actions) .card .ctlrow,
+:host(fhemviz-actions) .card .btnrow {
+  order: 5;
+  flex: 1 1 100%;
+}
+
+/* --- Gruppen-Kacheln: Abschnitt mit eigener Zeilenliste ---------------- */
+:host(fhemviz-shuttergroup) .card,
+:host(fhemviz-switchgroup) .card,
+:host(fhemviz-sensorgroup) .card,
+:host(fhemviz-mediagroup) .card,
+:host(fhemviz-ventgroup) .card,
+:host(fhemviz-agenda) .card {
+  padding-bottom: 6px;
+}
+:host(fhemviz-shuttergroup) .card > .label,
+:host(fhemviz-switchgroup) .card > .label,
+:host(fhemviz-sensorgroup) .card > .label,
+:host(fhemviz-mediagroup) .card > .label,
+:host(fhemviz-ventgroup) .card > .label {
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+}
+
+/* --- Grafische Kacheln behalten ihren Kasten -------------------------- */
+:host(fhemviz-flow) .card,
+:host(fhemviz-solvis) .card,
+:host(fhemviz-forecast) .card,
+:host(fhemviz-weather) .card,
+:host(fhemviz-chart) .card,
+:host(fhemviz-watering) .card,
+:host(fhemviz-image) .card,
+:host(fhemviz-text) .card {
+  background: var(--viz-surface, #151920);
+  border: 1px solid var(--viz-border, #262c35);
+  border-radius: var(--viz-radius, 14px);
+  margin: 8px 12px;
+  padding: 13px 15px 13px 19px;
+}

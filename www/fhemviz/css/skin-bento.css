@@ -1,0 +1,82 @@
+/*
+ * FHEMVIZ - Skin "bento" (Seiten-Ebene), v0.31.0.
+ * Wandtablet-Skin: dichteres, ungleiches Raster; die Raum-Umschaltung wird
+ * im QUERFORMAT zur Schiene an der linken Kante - im Hochformat bleibt die
+ * gewohnte Leiste unten. Kein zusaetzliches DOM: dieselbe .viz-tabs-Leiste
+ * wird nur anders gesetzt.
+ *
+ * Aktivierung: attr <viz> skin bento   bzw.  ?skin=bento
+ * Glas/Blur abschalten (schwache Tablets): attr <viz> skinBlur 0
+ */
+
+html[data-vizskin="bento"] {
+  /* Dichter als classic: mehr Kacheln pro Blick, kleinere Mindestbreite. */
+  --viz-tile-min: 148px;
+  --viz-gap: 10px;
+  --viz-radius: 14px;
+}
+
+/* --- Querformat: Raum-Schiene links ------------------------------------ */
+@media (orientation: landscape) {
+  html[data-vizskin="bento"] .viz-tabs {
+    top: 0;
+    right: auto;
+    bottom: 0;
+    width: 116px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 12px 8px calc(12px + env(safe-area-inset-bottom, 0px));
+    border-top: 0;
+    border-right: 1px solid var(--viz-border);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  /* Einzeilig mit Auslassung - ein Umbruch mitten im Wort ("Wohnz immer")
+   * ist schlechter lesbar als eine gekuerzte Zeile. */
+  html[data-vizskin="bento"] .viz-tabs > * {
+    width: 100%;
+    text-align: center;
+    border-radius: 11px;
+    padding: 11px 6px;
+    font-size: 0.66rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Platz fuer die Schiene - Inhalt UND Kopfzeile ruecken nach rechts. */
+  html[data-vizskin="bento"] #viz-header { padding-left: 130px; }
+  html[data-vizskin="bento"] #fhemviz-app { padding: 14px 18px 20px 130px; }
+}
+
+/* --- Hochformat: Leiste bleibt unten (Standardverhalten) --------------- */
+@media (orientation: portrait) {
+  html[data-vizskin="bento"] .viz-tabs {
+    flex-direction: row;
+  }
+}
+
+/* --- Ungleiches Raster ------------------------------------------------- */
+/* Die erste Kachel einer Gruppe OHNE eigenes vizSize wird breiter - damit
+ * bekommt jeder Abschnitt einen Anker, ohne dass du etwas konfigurierst.
+ * Ein gesetztes vizSize gewinnt weiterhin (Inline-Style aus registry.js). */
+html[data-vizskin="bento"] .viz-grid > *:not([data-size]):first-child {
+  grid-column: span 2;
+}
+@media (max-width: 720px) {
+  html[data-vizskin="bento"] .viz-grid > *:not([data-size]):first-child {
+    grid-column: auto;
+  }
+}
+
+/* --- Glas: Kacheln lassen den Hintergrund durchscheinen ---------------- */
+/* Nur wenn ein Hintergrundbild gesetzt ist - sonst gaebe es nichts zu sehen.
+ * data-vizblur="0" (attr skinBlur 0) schaltet den Effekt ganz ab. */
+html[data-vizskin="bento"] body.viz-has-bg #viz-header {
+  background: color-mix(in srgb, var(--viz-bg) 62%, transparent);
+}
+html[data-vizskin="bento"] .viz-tabs {
+  background: color-mix(in srgb, var(--viz-bg) 82%, transparent);
+}

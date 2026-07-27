@@ -1,0 +1,52 @@
+/*
+ * FHEMVIZ - Skin "bento" (Kachel-Innenleben), v0.31.0.
+ * Wird von app.js als TEXT geladen und in JEDEN Shadow DOM gehaengt.
+ *
+ * Kacheln werden Glasflaechen: halbtransparent, damit das Hintergrundbild
+ * durchscheint. Blur ist bewusst OPTIONAL - auf schwachen Tablets (T510)
+ * kostet backdrop-filter Leistung. Abschalten mit attr <viz> skinBlur 0;
+ * dann bleiben die Kacheln einfach halbtransparent ohne Weichzeichnen.
+ */
+
+.card {
+  /* Halbtransparent statt deckend - traegt den Glas-Eindruck auch ohne Blur. */
+  background: color-mix(in srgb, var(--viz-surface, #151920) 72%, transparent);
+  border-color: color-mix(in srgb, var(--viz-text, #e8eaed) 12%, transparent);
+  padding: 11px 13px 11px 17px;
+}
+
+/* Blur nur wenn unterstuetzt. Abschalten laeuft ueber die Custom Property
+ * --viz-blur-filter (app.js setzt sie bei skinBlur 0 auf "none"); Custom
+ * Properties erben - anders als :host-context() geht das in jedem Browser,
+ * und "backdrop-filter: none" kostet keine Compositing-Ebene. */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .card {
+    -webkit-backdrop-filter: var(--viz-blur-filter, blur(10px) saturate(1.1));
+    backdrop-filter: var(--viz-blur-filter, blur(10px) saturate(1.1));
+  }
+}
+
+/* Statusleiste etwas kraeftiger - auf Glas verliert eine 3px-Kante sonst. */
+.card::before {
+  width: 4px;
+  top: 10px;
+  bottom: 10px;
+}
+
+/* Etwas kompaktere Typografie: bento zeigt mehr Kacheln gleichzeitig. */
+.label {
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+}
+.value {
+  font-weight: 250;
+}
+
+/* Gruppen-Kacheln sind die Anker des Rasters - ihre Zeilen duerfen atmen. */
+:host(fhemviz-sensorgroup) .card,
+:host(fhemviz-mediagroup) .card,
+:host(fhemviz-shuttergroup) .card,
+:host(fhemviz-switchgroup) .card,
+:host(fhemviz-ventgroup) .card {
+  justify-content: space-between;
+}

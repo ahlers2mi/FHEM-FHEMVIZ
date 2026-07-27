@@ -1,0 +1,52 @@
+/*
+ * FHEMVIZ - Skin "zeilen" (Seiten-Ebene), v0.31.0.
+ * Handy-Skin: keine Kachelkaesten, sondern Abschnitte aus Zeilen. Eine
+ * Spalte, keine Luecken - die Kacheln stossen zu einer Liste zusammen.
+ * Das Kachel-Innenleben macht css/skin-zeilen.widget.css.
+ *
+ * Aktivierung: attr <viz> skin zeilen   bzw.  ?skin=zeilen
+ */
+
+html[data-vizskin="zeilen"] {
+  --viz-gap: 0px;
+}
+
+/* Eine Spalte, ohne Zwischenraum: die Zeilen bilden eine durchgehende Liste. */
+html[data-vizskin="zeilen"] .viz-grid {
+  grid-template-columns: 1fr;
+  grid-auto-rows: auto;
+  gap: 0;
+}
+/* vizSize-Spans sind in einer Spalte sinnlos - zuruecknehmen. */
+html[data-vizskin="zeilen"] .viz-grid > * {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+html[data-vizskin="zeilen"] .viz-groups { display: block; }
+html[data-vizskin="zeilen"] .viz-group { margin-bottom: 18px; }
+
+/* Gruppen-Ueberschrift wird der Abschnittskopf der Liste. */
+html[data-vizskin="zeilen"] .viz-group > h3 {
+  margin: 0 0 2px;
+  padding: 0 14px;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+}
+html[data-vizskin="zeilen"] .viz-room > h2 {
+  padding: 0 14px;
+}
+
+/* Hero-Band: in der Liste ebenfalls einspaltig, ohne Mindesthoehe. */
+html[data-vizskin="zeilen"] .viz-hero {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+html[data-vizskin="zeilen"] .viz-hero > * {
+  min-height: 0;
+}
+
+/* Kopfzeile schlanker - auf dem Handy zaehlt jede Zeile Inhalt. */
+html[data-vizskin="zeilen"] #viz-header {
+  padding-top: calc(9px + env(safe-area-inset-top, 0px));
+  padding-bottom: 9px;
+}

@@ -225,6 +225,22 @@ export function vizColorFor(spec, num) {
   return "";
 }
 
+/*
+ * Skin-CSS fuer das Kachel-Innenleben. Externe Stylesheets erreichen den
+ * Shadow DOM nicht - app.js laedt css/skin-<name>.widget.css als Text und
+ * setzt sie hier; _paint haengt sie hinter CARD_CSS in JEDE Kachel.
+ * Leer = Skin "classic" (unveraendertes Aussehen).
+ */
+let SKIN_CSS = "";
+
+/** Setzt das Kachel-Skin-CSS und rendert bereits sichtbare Kacheln neu. */
+export function setWidgetSkinCss(css) {
+  SKIN_CSS = String(css || "");
+  document.querySelectorAll("*").forEach((el) => {
+    if (el instanceof FhemvizWidget) el._paint();
+  });
+}
+
 export class FhemvizWidget extends HTMLElement {
   constructor() {
     super();
@@ -258,7 +274,8 @@ export class FhemvizWidget extends HTMLElement {
     const changed = this._rendered && html !== this._prevHtml;
     this._prevHtml = html;
     this._rendered = true;
-    this.shadowRoot.innerHTML = `<style>${CARD_CSS}</style>` + html;
+    this.shadowRoot.innerHTML =
+      `<style>${CARD_CSS}${SKIN_CSS}</style>` + html;
     this.afterRender && this.afterRender();
     // vizAlert: pulsierender roter Rahmen, solange die Bedingung wahr ist.
     if (this.alertActive()) {
