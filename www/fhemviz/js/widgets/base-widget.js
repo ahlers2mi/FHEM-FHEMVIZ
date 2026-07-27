@@ -256,6 +256,22 @@ export function setWidgetSkinCss(css) {
   });
 }
 
+/*
+ * Aufleuchten bei Wertaenderung, global abschaltbar (attr flash am
+ * FHEMVIZ-Geraet, URL ?flash= geht vor):
+ *   "all"    - Wertfeld blinkt, Kacheln ohne Wertfeld pulsen im Rahmen (Default)
+ *   "values" - nur Wertfelder; Gruppen-/Grafik-Kacheln bleiben ruhig
+ *   "off"    - nichts blinkt
+ * app.js normalisiert die Attributwerte auf diese drei Namen.
+ */
+let FLASH_MODE = "all";
+
+/** Setzt den Blink-Modus. Unbekannte Werte -> "all". */
+export function setFlashMode(mode) {
+  const m = String(mode || "").trim().toLowerCase();
+  FLASH_MODE = m === "off" || m === "values" ? m : "all";
+}
+
 export class FhemvizWidget extends HTMLElement {
   constructor() {
     super();
@@ -297,16 +313,33 @@ export class FhemvizWidget extends HTMLElement {
       const card = this.shadowRoot.querySelector(".card");
       if (card) card.classList.add("viz-tile-alert");
     }
-    if (changed) {
-      const t =
-        this.shadowRoot.querySelector(".value,.tval,.vstate,.cval") ||
-        this.shadowRoot.querySelector(".card");
-      if (t) {
-        t.classList.remove("viz-flash");
-        void t.offsetWidth; // Reflow -> Animation neu starten
-        t.classList.add("viz-flash");
-      }
-    }
+    if (changed) this._flash();
+  }
+
+  /**
+   * Kurzes Aufleuchten nach einer Wertaenderung.
+   * Global: FLASH_MODE (attr flash / ?flash=). Je Geraet uebersteuerbar mit
+   * attr vizFlash 0|1 - so laesst sich eine einzelne zappelige Kachel
+   * (Leistung im Sekundentakt) beruhigen, ohne alle anderen abzuschalten,
+   * bzw. eine wichtige trotz globalem "off" blinken lassen.
+   */
+  _flash() {
+    const per = String(((this.device || {}).attr || {}).vizFlash || "").trim();
+    const mode = /^(0|off|no|false)$/i.test(per)
+      ? "off"
+      : /^(1|on|yes|true)$/i.test(per)
+        ? "all"
+        : FLASH_MODE;
+    if (mode === "off") return;
+    const val = this.shadowRoot.querySelector(".value,.tval,.vstate,.cval");
+    // Kacheln ohne Wertfeld (Gruppen-/Grafik-Kacheln) pulsen im Rahmen -
+    // bei "values" bleiben sie ganz ruhig.
+    const t =
+      val || (mode === "values" ? null : this.shadowRoot.querySelector(".card"));
+    if (!t) return;
+    t.classList.remove("viz-flash");
+    void t.offsetWidth; // Reflow -> Animation neu starten
+    t.classList.add("viz-flash");
   }
 
   /**

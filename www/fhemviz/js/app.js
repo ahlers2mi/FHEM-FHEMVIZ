@@ -11,12 +11,12 @@ import { FhemClient } from "./fhem-client.js";
 import { Store } from "./store.js";
 import { renderLayout, collectRooms, resolveRoom, ALL_ROOMS, VIZ_ROOM_PREFIX } from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
-import { vizColorFor, setWidgetSkinCss } from "./widgets/base-widget.js";
+import { vizColorFor, setWidgetSkinCss, setFlashMode } from "./widgets/base-widget.js";
 
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.4";
+const SPA_VERSION = "v0.34.5";
 
 const el = (id) => document.getElementById(id);
 
@@ -113,6 +113,34 @@ async function applySkin(urlSkin, cfg) {
   }
   setWidgetSkinCss(widgetCss || "");
   return skin;
+}
+
+/**
+ * Aufleuchten bei Wertaenderung (attr flash, URL ?flash= geht vor).
+ *   1 (Default) - Wertfeld blinkt, Kacheln ohne Wertfeld pulsen im Rahmen
+ *   values      - nur Wertfelder; Gruppen-/Grafik-Kacheln bleiben ruhig
+ *   0           - nichts blinkt
+ * Je Geraet uebersteuerbar mit attr vizFlash 0|1 (siehe base-widget _flash).
+ */
+function applyFlash(urlFlash, cfg) {
+  // Wie beim Skin: mitkopierter Zeilenkommentar landet in FHEM im Wert.
+  const raw = String(urlFlash || (cfg && cfg.flash) || "")
+    .replace(/#.*$/, "")
+    .trim()
+    .toLowerCase();
+  let mode = "all";
+  if (!raw || /^(1|on|yes|true|all|alle)$/.test(raw)) mode = "all";
+  else if (/^(0|off|no|false|none|aus)$/.test(raw)) mode = "off";
+  else if (/^(value|values|wert|werte)$/.test(raw)) mode = "values";
+  else {
+    // Nicht still auf Default zurueckfallen - sonst sucht man lange.
+    configWarn = [configWarn, `flash: "${raw}" unbekannt (1 | 0 | values)`]
+      .filter(Boolean)
+      .join(" · ");
+  }
+  document.documentElement.dataset.vizflash = mode;
+  setFlashMode(mode);
+  return mode;
 }
 
 /**
@@ -1079,6 +1107,7 @@ async function main() {
     applyBackground(cfg);
     // Skin VOR dem ersten Rendern setzen (URL ?skin= geht vor attr skin).
     await applySkin(params.get("skin"), cfg);
+    applyFlash(params.get("flash"), cfg);
 
     // Modus VOR der Breiten-/Zoom-Skalierung bestimmen: width verhaelt sich
     // je Modus unterschiedlich (TV = transform, Tablet = Meta-Viewport).
