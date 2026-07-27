@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.31.0
+# Version:  v0.32.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.31.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.32.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -306,7 +306,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.31.0"),
+            FHEMVIZ_jsonStr("v0.32.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -538,7 +538,14 @@ sub FHEMVIZ_Attr {
         Läuft eine Szene über, wird die Szenenzeit auf Seiten verteilt und an
         Kachelzeilen ausgerichtet weitergeblättert. Ohne Angabe rotieren alle
         sichtbaren Räume mit je 20 s. Unbekannte Räume werden übersprungen
-        und in der Statuszeile gemeldet.</li>
+        und in der Statuszeile gemeldet.<br>
+        <b>Sonderziel <code>#uhr</code></b> (auch <code>#uebersicht</code>):
+        keine Raumseite, sondern eine <b>Uhr-Seite</b> als Teil der Rotation
+        &ndash; große Uhrzeit und Datum, darunter die Kennzahlen aus
+        <code>headerInfo</code> und je <code>statusBar</code>-Eintrag eine
+        Zeile. Braucht keine eigene Konfiguration: gezeigt wird, was für
+        Kopfzeile und Statusleiste schon eingerichtet ist. Beispiel:<br>
+        <code>attr myViz tvScenes #uhr:20,Solar:30,Wohnzimmer:20</code></li>
     <li><a id="FHEMVIZ-attr-tvTouch"></a><b>tvTouch</b><br>
         Typ: textField (Sekunden). Touch-Übernahme im TV-Modus: ein Tipp auf
         den Schirm wechselt in die bedienbare Tablet-Ansicht; nach

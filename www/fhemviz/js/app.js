@@ -16,7 +16,7 @@ import { vizColorFor, setWidgetSkinCss } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.31.0";
+const SPA_VERSION = "v0.32.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -124,6 +124,81 @@ function applyBackground(cfg) {
   document.body.classList.add("viz-has-bg");
 }
 
+/* ---------------------------- Uhr-Seite (#uhr) ----------------------------- */
+
+/**
+ * Sonderziel fuer tvScenes: keine Raumseite, sondern eine grosse Uhr-/
+ * Uebersichtsseite. Damit taucht sie in der ROTATION auf, statt Dauerbild
+ * zu sein:  attr <viz> tvScenes #uhr:20,Solar:30,Wohnzimmer:20
+ */
+const CLOCK_PAGE = "#uhr";
+const CLOCK_PAGE_RE = /^#(uhr|clock|uebersicht|übersicht)$/i;
+
+/** Ist dieses Szenen-Ziel die Uhr-Seite? */
+function isClockPage(room) {
+  return CLOCK_PAGE_RE.test(String(room || "").trim());
+}
+
+const WEEKDAYS = [
+  "Sonntag", "Montag", "Dienstag", "Mittwoch",
+  "Donnerstag", "Freitag", "Samstag",
+];
+const MONTHS = [
+  "Januar", "Februar", "März", "April", "Mai", "Juni",
+  "Juli", "August", "September", "Oktober", "November", "Dezember",
+];
+
+/**
+ * Rendert die Uhr-Seite: grosse Uhrzeit + Datum, darunter die Kennzahlen aus
+ * attr headerInfo und je statusBar-Eintrag eine Zeile. Bewusst OHNE eigene
+ * Attribute - es wird gezeigt, was fuer Kopfzeile und Statusleiste schon
+ * konfiguriert ist.
+ */
+function renderClockPage(root, store, cfg) {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  const kpis = parseHeaderItems(store, cfg.headerInfo).filter((it) => it.kind === "val");
+  const rows = parseStatusEntries(store, cfg.statusBar);
+
+  const kpiHtml = kpis
+    .map((it) => {
+      const dev = store.get(it.dev);
+      const v = vizPlain((dev.readings || {})[it.reading] ?? "–");
+      const label = it.label || it.reading;
+      return `<div class="cp-k">
+        <div class="cp-v">${escapeHtml(v)}${
+          it.unit ? `<small>${escapeHtml(it.unit)}</small>` : ""
+        }</div>
+        <div class="cp-l">${escapeHtml(label)}</div>
+      </div>`;
+    })
+    .join("");
+
+  const rowHtml = rows
+    .map((c) => {
+      const st = vizStatusData(store, c);
+      const cls = st.warn ? " warn" : "";
+      const style = st.color ? ` style="color:${st.color}"` : "";
+      return `<div class="cp-r">
+        <span class="cp-n">${escapeHtml(st.alias)}</span>
+        <span class="cp-s${cls}"${style}>${escapeHtml(st.value)}</span>
+      </div>`;
+    })
+    .join("");
+
+  root.innerHTML = `
+    <div class="viz-clockpage">
+      <div class="cp-head">
+        <div class="cp-time">${p(d.getHours())}:${p(d.getMinutes())}</div>
+        <div class="cp-date">${WEEKDAYS[d.getDay()]}, ${d.getDate()}. ${
+          MONTHS[d.getMonth()]
+        }</div>
+      </div>
+      ${kpiHtml ? `<div class="cp-kpis">${kpiHtml}</div>` : ""}
+      ${rowHtml ? `<div class="cp-rows">${rowHtml}</div>` : ""}
+    </div>`;
+}
+
 /* ------------------------------ TV-Controller ------------------------------ */
 
 /**
@@ -201,10 +276,12 @@ function computePageOffsets(container) {
  * Live ueber Store-Abos (inkl. structure-Mitglieder); Tablet: Chip tippen
  * springt zum ersten FHEMVIZ->-Raum des Geraets.
  */
-function setupStatusBar(store, spec, opts) {
-  const bar = el("viz-statusbar");
-  const plain = (x) => String(x ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  const entries = String(spec || "")
+/** HTML-Markup entfernen, Whitespace normalisieren. */
+const vizPlain = (x) => String(x ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+/** statusBar-Spezifikation -> Eintraege (nur vorhandene Geraete). */
+function parseStatusEntries(store, spec) {
+  return String(spec || "")
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean)
@@ -213,52 +290,71 @@ function setupStatusBar(store, spec, opts) {
       return { dev, reading, unit, color, device: store.get(dev) };
     })
     .filter((c) => c.device);
+}
+
+// Praefix-tolerant: "closed (battery low)" u. ae. zaehlen als closed.
+function vizContactState(st) {
+  st = vizPlain(st).toLowerCase();
+  if (/^(open|opened|auf|offen|on)\b/.test(st)) return "open";
+  if (/^(tilted|gekippt)\b/.test(st)) return "tilted";
+  return "closed";
+}
+
+/** Mitglieder eines structure-Geraets (sonst leer). */
+function vizMembers(store, d) {
+  return (d.internals && d.internals.TYPE) === "structure"
+    ? String(d.internals.DEF || "")
+        .split(/\s+/)
+        .slice(1)
+        .map((n) => n.replace(/,$/, ""))
+        .map((n) => store.get(n))
+        .filter(Boolean)
+    : [];
+}
+
+/**
+ * Zustand eines statusBar-Eintrags. "text" ist der fertige Chip-Text,
+ * alias/value dieselbe Aussage getrennt - die Uhr-Seite setzt Name links
+ * und Wert rechts, die Chips brauchen eine Zeile.
+ */
+function vizStatusData(store, c) {
+  const alias = (c.device.attr && c.device.attr.alias) || c.device.name;
+  if (c.reading) {
+    const v = vizPlain((c.device.readings || {})[c.reading] ?? "–");
+    const num = parseFloat(String(v).replace(",", "."));
+    const color = c.color ? vizColorFor(c.color, num) : "";
+    const value = `${v}${c.unit ? " " + c.unit : ""}`;
+    return { text: `${alias} ${value}`, alias, value, warn: false, color };
+  }
+  const mem = vizMembers(store, c.device);
+  if (mem.length) {
+    const st = mem.map((m) => vizContactState(m.state));
+    const open = st.filter((x) => x === "open").length;
+    const tilted = st.filter((x) => x === "tilted").length;
+    const parts = [];
+    if (open) parts.push(`${open} offen`);
+    if (tilted) parts.push(`${tilted} gekippt`);
+    if (parts.length) {
+      const value = parts.join(" · ");
+      return { text: `${alias}: ${value}`, alias, value, warn: true };
+    }
+    return { text: `${alias} zu`, alias, value: "zu", warn: false };
+  }
+  const st = vizPlain(c.device.state);
+  // Nichtssagende Zustaende (structure "undefined" u. ae.) nicht anzeigen.
+  if (/^(undefined|unknown|\?+)?$/i.test(st)) {
+    return { text: `${alias} –`, alias, value: "–", warn: false };
+  }
+  const warn = /^(on|an|open|offen|auf|true|running|l(ä|ae)uft|1)$/i.test(st);
+  return { text: `${alias} ${st}`, alias, value: st, warn };
+}
+
+function setupStatusBar(store, spec, opts) {
+  const bar = el("viz-statusbar");
+  const entries = parseStatusEntries(store, spec);
   if (!entries.length) return;
   bar.hidden = false;
-
-  // Praefix-tolerant: "closed (battery low)" u. ae. zaehlen als closed.
-  const contactState = (st) => {
-    st = plain(st).toLowerCase();
-    if (/^(open|opened|auf|offen|on)\b/.test(st)) return "open";
-    if (/^(tilted|gekippt)\b/.test(st)) return "tilted";
-    return "closed";
-  };
-  const members = (d) =>
-    (d.internals && d.internals.TYPE) === "structure"
-      ? String(d.internals.DEF || "")
-          .split(/\s+/)
-          .slice(1)
-          .map((n) => n.replace(/,$/, ""))
-          .map((n) => store.get(n))
-          .filter(Boolean)
-      : [];
-
-  function chipData(c) {
-    const alias = (c.device.attr && c.device.attr.alias) || c.device.name;
-    if (c.reading) {
-      const v = plain((c.device.readings || {})[c.reading] ?? "–");
-      const num = parseFloat(String(v).replace(",", "."));
-      const color = c.color ? vizColorFor(c.color, num) : "";
-      return { text: `${alias} ${v}${c.unit ? " " + c.unit : ""}`, warn: false, color };
-    }
-    const mem = members(c.device);
-    if (mem.length) {
-      const st = mem.map((m) => contactState(m.state));
-      const open = st.filter((x) => x === "open").length;
-      const tilted = st.filter((x) => x === "tilted").length;
-      const parts = [];
-      if (open) parts.push(`${open} offen`);
-      if (tilted) parts.push(`${tilted} gekippt`);
-      return parts.length
-        ? { text: `${alias}: ${parts.join(" · ")}`, warn: true }
-        : { text: `${alias} zu`, warn: false };
-    }
-    const st = plain(c.device.state);
-    // Nichtssagende Zustaende (structure "undefined" u. ae.) nicht anzeigen.
-    if (/^(undefined|unknown|\?+)?$/i.test(st)) return { text: `${alias} –`, warn: false };
-    const warn = /^(on|an|open|offen|auf|true|running|l(ä|ae)uft|1)$/i.test(st);
-    return { text: `${alias} ${st}`, warn };
-  }
+  const chipData = (c) => vizStatusData(store, c);
 
   function jumpRoom(c) {
     const rooms = String((c.device.attr || {}).room || "")
@@ -286,24 +382,20 @@ function setupStatusBar(store, spec, opts) {
   const watch = new Set();
   entries.forEach((c) => {
     watch.add(c.device.name);
-    members(c.device).forEach((m) => watch.add(m.name));
+    vizMembers(store, c.device).forEach((m) => watch.add(m.name));
   });
   watch.forEach((n) => store.subscribe(n, render));
   render();
 }
 
 /**
- * Glance-Header (attr headerInfo): kompakte Live-Info rechts neben dem
- * Datum. Kommaseparierte Items:
- *   <geraet>:<reading>[:einheit][:label]  -> Wert (gross)
- *   icon=<geraet>                          -> Icon aus weblink-image-DEF
- * Live ueber Store-Abos. Macht die sonst leere Kopfzeile lebendig.
+ * headerInfo-Spezifikation -> Items. Wird von der Kopfzeile UND von der
+ * Uhr-Seite (Rotationsziel #uhr) genutzt:
+ *   <geraet>:<reading>[:einheit][:label]  -> Wert
+ *   icon=<geraet>[:<groesse>]             -> Icon aus weblink-image-DEF
  */
-function setupHeaderInfo(store, spec) {
-  const host = el("viz-headinfo");
-  if (!host) return;
-  const plain = (x) => String(x ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  const items = String(spec || "")
+function parseHeaderItems(store, spec) {
+  return String(spec || "")
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean)
@@ -318,6 +410,20 @@ function setupHeaderInfo(store, spec) {
       return { kind: "val", dev, reading, unit, label };
     })
     .filter((it) => store.get(it.dev));
+}
+
+/**
+ * Glance-Header (attr headerInfo): kompakte Live-Info rechts neben dem
+ * Datum. Kommaseparierte Items:
+ *   <geraet>:<reading>[:einheit][:label]  -> Wert (gross)
+ *   icon=<geraet>                          -> Icon aus weblink-image-DEF
+ * Live ueber Store-Abos. Macht die sonst leere Kopfzeile lebendig.
+ */
+function setupHeaderInfo(store, spec) {
+  const host = el("viz-headinfo");
+  if (!host) return;
+  const plain = vizPlain;
+  const items = parseHeaderItems(store, spec);
   if (!items.length) return;
   host.hidden = false;
 
@@ -366,12 +472,13 @@ function escapeHtml(s) {
 }
 
 class TvController {
-  constructor(root, store, client, baseOpts, scenes) {
+  constructor(root, store, client, baseOpts, scenes, cfg) {
     this.root = root;
     this.store = store;
     this.client = client;
     this.baseOpts = baseOpts;
     this.scenes = scenes;
+    this.cfg = cfg || {}; // fuer die Uhr-Seite (headerInfo/statusBar)
     this.idx = 0;
     this.timer = null;
     this.eventTimer = null;
@@ -414,6 +521,7 @@ class TvController {
     this.pageTimers.forEach(clearTimeout);
     this.pageTimers = [];
     clearInterval(this._clockTimer);
+    clearInterval(this._cpTimer); // Uhr-Seite (#uhr) nicht weiterlaufen lassen
     document.body.classList.remove("viz-alert");
     el("viz-clock").hidden = true;
     el("viz-progress").hidden = true;
@@ -503,6 +611,19 @@ class TvController {
   }
 
   _show(scene) {
+    // Uhr-Seite ist kein Raum: eigener Renderer, im Sekundentakt aktualisiert
+    // (kein Auto-Paging - die Seite passt immer auf einen Schirm).
+    clearInterval(this._cpTimer);
+    if (isClockPage(scene.room)) {
+      const draw = () => renderClockPage(this.root, this.store, this.cfg || {});
+      draw();
+      this._cpTimer = setInterval(draw, 1000);
+      el("viz-scene").textContent = "Übersicht";
+      this._progress(scene.sec);
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => this._next(), scene.sec * 1000);
+      return;
+    }
     this._render(scene.room);
     const label = scene.room === ALL_ROOMS ? "Alle" : sceneLabel(scene.room);
     this._page(scene.sec, label);
@@ -1053,7 +1174,12 @@ async function main() {
       const scenes = [];
       const missing = [];
       for (const sc of wanted) {
-        const r = sc.room === ALL_ROOMS ? sc.room : resolveRoom(roomsAvail, sc.room);
+        // #uhr ist ein Sonderziel (Uhr-Seite), kein Raum -> nicht aufloesen.
+        const r = isClockPage(sc.room)
+          ? CLOCK_PAGE
+          : sc.room === ALL_ROOMS
+            ? sc.room
+            : resolveRoom(roomsAvail, sc.room);
         if (r) scenes.push({ room: r, sec: sc.sec });
         else missing.push(sc.room);
       }
@@ -1063,7 +1189,7 @@ async function main() {
       if (scenes.length === 0) {
         scenes.push(...roomsAvail.map((r) => ({ room: r, sec: 20 })));
       }
-      tvc = new TvController(root, store, client, baseOpts, scenes);
+      tvc = new TvController(root, store, client, baseOpts, scenes, cfg);
       if (startRoom) {
         const r = resolveRoom(roomsAvail, startRoom);
         if (!r) {

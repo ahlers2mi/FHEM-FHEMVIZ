@@ -397,3 +397,73 @@ html[data-vizmode="tv"] #viz-toast .viz-toast-msg { font-size: 2rem; }
   #viz-progress.run i { animation: none; transform: scaleX(1); }
   .viz-tabs { backdrop-filter: none; }
 }
+
+/* Uhr-Seite (Rotationsziel #uhr in attr tvScenes) ------------------------
+ * Grosse Uhrzeit, darunter die Kennzahlen aus headerInfo und je
+ * statusBar-Eintrag eine Zeile. Randlos und ohne Bedienelemente: sie ist
+ * eine SEITE der Rotation, kein Dauerbild - aus vier Metern lesbar. */
+.viz-clockpage {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 2vh, 26px);
+  /* Der TV-Container ist eine Flex-Spalte mit fester Hoehe - die Seite fuellt
+   * sie und verteilt selbst: Uhr oben, Kennzahlen mittig, Zeilen unten. */
+  flex: 1;
+  min-height: 0;
+  justify-content: space-between;
+  padding: clamp(8px, 2vh, 28px) clamp(4px, 1.5vw, 24px);
+}
+/* Uhrzeit und Datum bleiben ein Block - die Verteilung der Seite darf sie
+ * nicht auseinanderziehen. */
+.cp-head { display: flex; flex-direction: column; gap: 0.25em; }
+.cp-time {
+  font-size: clamp(4rem, 17vh, 12rem);
+  font-weight: 200;
+  line-height: 0.86;
+  letter-spacing: -0.03em;
+}
+.cp-date {
+  font-size: clamp(0.9rem, 2.4vh, 1.8rem);
+  color: var(--viz-muted);
+}
+.cp-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5em), 1fr));
+  gap: clamp(8px, 2vw, 28px);
+  padding: clamp(8px, 2vh, 22px) 0;
+  border-top: 1px solid var(--viz-border);
+  border-bottom: 1px solid var(--viz-border);
+}
+.cp-k { min-width: 0; }
+.cp-v {
+  font-size: clamp(1.6rem, 6.5vh, 4rem);
+  font-weight: 250;
+  line-height: 1;
+  white-space: nowrap;
+}
+.cp-v small { font-size: 0.42em; color: var(--viz-muted); margin-left: 0.15em; }
+.cp-l {
+  font-size: clamp(0.6rem, 1.6vh, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--viz-muted);
+  margin-top: 0.4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-rows { display: flex; flex-direction: column; }
+.cp-r {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: clamp(4px, 1.1vh, 12px) 0;
+  border-bottom: 1px solid var(--viz-border);
+  font-size: clamp(0.85rem, 2.4vh, 1.5rem);
+}
+.cp-r:last-child { border-bottom: 0; }
+.cp-n { flex: 1; min-width: 0; color: var(--viz-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-s { font-weight: 600; white-space: nowrap; }
+.cp-s.warn { color: var(--viz-accent); }
