@@ -793,8 +793,11 @@ sub FHEMVIZ_Attr {
         Autarkie-Reserve). Ohne Doppelpunkt genügt der Gerätename, dann
         zählt sein <code>state</code>.<br>
         <code>reserveSoc</code> &ndash; Grenze der Reserve in %, als Zahl
-        (z. B. <code>reserveSoc=30</code>) oder Reading; wird im
-        Batteriesymbol als gestrichelte Marke gezeigt.<br>
+        (z. B. <code>reserveSoc=25</code>) oder Reading; wird im
+        Batteriesymbol als gestrichelte Marke gezeigt. Gilt <b>nur bei
+        eingeschaltetem <code>reserve</code></b> &ndash; ist der
+        Sicherheitsbestand aus, wird bis 0 % gefahren und es erscheint
+        keine Marke.<br>
         <code>full</code> &ndash; Gerät/Reading, dessen <code>on</code>
         meldet: Anlage am Anschlag, es kann nicht eingespeist werden
         &rarr; die Kachel fordert mit einer roten Plakette

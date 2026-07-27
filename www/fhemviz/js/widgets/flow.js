@@ -16,8 +16,10 @@
  *   reserve                   Geraet/Reading, dessen "on" den Sicherheits-
  *                             bestand meldet (Batterie wird nicht leer
  *                             gefahren - Autarkie-Reserve)
- *   reserveSoc                Grenze der Reserve in % (Zahl ODER Reading) -
- *                             wird im Symbol als Zone markiert
+ *   reserveSoc                Grenze der Reserve in % (Zahl ODER Reading).
+ *                             Gilt NUR bei eingeschaltetem "reserve" - ist
+ *                             der Sicherheitsbestand aus, wird bis 0 %
+ *                             gefahren und es erscheint keine Marke.
  *   full                      Geraet/Reading, dessen "on" meldet: Anlage am
  *                             Anschlag, Strom kann nicht eingespeist werden
  *                             -> Verbrauchen! (Schildkroete)
@@ -34,7 +36,7 @@
  *     soc=rem_MQTT2_SMART_SHUNT1:data_state_of_charge_shunt_state,
  *     volt=rem_MQTT2_SMART_SHUNT1:data_battery_voltage_shunt_state,
  *     status=rem_MQTT2_SMART_SHUNT1:status,
- *     reserve=d_batterie_save,reserveSoc=30,full=d_www_wechselrichter_100
+ *     reserve=d_batterie_save,reserveSoc=25,full=d_www_wechselrichter_100
  */
 
 import { FhemvizWidget } from "./base-widget.js";
@@ -395,6 +397,9 @@ export class FhemvizFlow extends FhemvizWidget {
     const fullOn = this._flag("full");
     const stale = this._stale();
     const reserveSoc = m.reserveSoc ? this._num("reserveSoc", NaN) : NaN;
+    // Die Reserve gilt nur, wenn der Sicherheitsbestand EINGESCHALTET ist -
+    // sonst wird die Batterie bis 0 % gefahren und eine Marke waere gelogen.
+    const effReserve = reserveOn && !isNaN(reserveSoc) ? reserveSoc : null;
 
     const ok = "var(--viz-ok)";
     const warn = "var(--viz-warn)";
@@ -433,8 +438,7 @@ export class FhemvizFlow extends FhemvizWidget {
     )}</div>`;
     const batteryBlock = m.soc
       ? battChain +
-        this._batteryHtml(soc, socColor, isNaN(reserveSoc) ? null : reserveSoc,
-          batt, battColor, battWord, volt)
+        this._batteryHtml(soc, socColor, effReserve, batt, battColor, battWord, volt)
       : `${this._chain(true, batt, batt < 0 ? "rev" : "fwd", battColor)}
          ${this._node("Batterie", batt, " W", battColor)}`;
 
