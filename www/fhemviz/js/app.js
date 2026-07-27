@@ -16,7 +16,7 @@ import { vizColorFor, setWidgetSkinCss } from "./widgets/base-widget.js";
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.1";
+const SPA_VERSION = "v0.34.3";
 
 const el = (id) => document.getElementById(id);
 
@@ -50,8 +50,22 @@ const SKIN_NAME_RE = /^[a-z][a-z0-9_-]{0,31}$/;
 
 async function applySkin(urlSkin, cfg) {
   const root = document.documentElement;
-  const want = String(urlSkin || cfg.skin || "classic").trim().toLowerCase();
+  // Ein mitkopierter Zeilenkommentar landet in FHEM IM Attributwert
+  // ("bento   # Wandtablet"), weil attr den Rest der Zeile nimmt. Den Teil
+  // ab '#' abschneiden, statt den Skin deswegen zu verwerfen.
+  const raw = String(urlSkin || cfg.skin || "")
+    .replace(/#.*$/, "")
+    .trim()
+    .toLowerCase();
+  const want = raw || "classic";
   const skin = SKIN_NAME_RE.test(want) ? want : "classic";
+  // Ungueltiger Name: nicht still auf classic zurueckfallen, sondern melden -
+  // sonst sucht man lange, warum der Skin "nicht wirkt".
+  if (want !== skin) {
+    configWarn = [configWarn, `Skin-Name ungültig: "${want}" (erlaubt: a-z, 0-9, -, _)`]
+      .filter(Boolean)
+      .join(" · ");
+  }
   root.dataset.vizskin = skin;
   // Blur/Glas abschaltbar (schwache Tablets): attr skinBlur 0.
   // Ueber eine Custom Property, weil die in den Shadow DOM erbt - und
@@ -164,7 +178,11 @@ function renderClockPage(root, store, cfg) {
     .map((it) => {
       const dev = store.get(it.dev);
       const v = vizPlain((dev.readings || {})[it.reading] ?? "–");
-      const label = it.label || it.reading;
+      // Beschriftung: ausdrueckliches Label, sonst der Geraete-Alias. Der
+      // rohe Reading-Name ("temp_C") ist nur die letzte Rueckfallebene - als
+      // Versalien gesetzt sah er wie ein Fehler aus.
+      const label =
+        it.label || (dev.attr && dev.attr.alias) || dev.name || it.reading;
       return `<div class="cp-k">
         <div class="cp-v">${escapeHtml(v)}${
           it.unit ? `<small>${escapeHtml(it.unit)}</small>` : ""
