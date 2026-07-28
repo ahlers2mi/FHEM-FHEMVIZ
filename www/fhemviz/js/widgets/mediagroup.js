@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Media-Gruppe (v0.29.1).
+ * FHEMVIZ - Media-Gruppe (v0.34.7).
  * Fuer ein FHEM-structure-Geraet aus AV-Receivern/Zonen (z. B. DENON_AVR /
  * DENON_AVR_ZONE): EINE Kachel, je Geraet eine Zeile mit Power-Toggle,
  * Lautstaerke-Regler und Mute. Befehle gehen an das jeweilige Mitglied.
@@ -12,6 +12,10 @@
  * Readings/Sets (DENON_AVR & _ZONE): power (on/off), volume (0..98) +
  * "volume <n>", mute (on/off) + "mute toggle". Slider-Bereich wird aus
  * PossibleSets gelesen (volume:slider,min,step,max).
+ *
+ * Hauptzone eines DENON_AVR: Zustand steht in zoneMain (power ist an, sobald
+ * IRGENDEINE Zone laeuft), und geschaltet wird mit "zoneMain on|off" - ein
+ * blankes "off" wuerde den ganzen Receiver samt Zone 2/3 abschalten.
  *
  * HEOS-Player (z. B. DoRemoteDevice-Proxy eines HEOSPlayer): kein on/off ->
  * Power-Toggle entfaellt, dafuer Transport (play/pause/stop/prev/next) und
@@ -107,6 +111,23 @@ export class FhemvizMediaGroup extends FhemvizWidget {
     if (/(?:^|\s)mute:[^\s]*\btoggle\b/.test(sets)) return "mute toggle";
     if (/(?:^|\s)mute(?=\s|$)/.test(sets)) return "mute toggle";
     return d && this._muted(d) ? "mute off" : "mute on";
+  }
+
+  /**
+   * Power-Befehl fuer eine Zeile. Bei einem DENON_AVR-Hauptgeraet schaltet
+   * "off" das GANZE Geraet ab (alle Zonen mit) - die Hauptzone hat ihren
+   * eigenen Befehl "zoneMain on|off". Wir zeigen den Zustand ohnehin aus dem
+   * Reading zoneMain an (siehe _on), also muss auch dorthin geschrieben
+   * werden, sonst reisst ein Klick auf die Hauptzone Zone 2/3 mit runter.
+   * Kennt das Geraet den Befehl nicht (Zonen, andere Typen), bleibt on/off.
+   */
+  _powerCmd(name, on) {
+    const d = this.store && this.store.get(name);
+    const target = on ? "on" : "off";
+    if (!d) return target;
+    const hasZoneMain =
+      (d.readings || {}).zoneMain !== undefined && this._has(d, "zoneMain");
+    return hasZoneMain ? `zoneMain ${target}` : target;
   }
 
   _vol(dev) {
@@ -243,7 +264,9 @@ export class FhemvizMediaGroup extends FhemvizWidget {
       const dev = elm.dataset.dev;
       const act = elm.dataset.act;
       if (act === "power") {
-        elm.addEventListener("click", () => this._send(dev, this._devOn(dev) ? "off" : "on"));
+        elm.addEventListener("click", () =>
+          this._send(dev, this._powerCmd(dev, !this._devOn(dev)))
+        );
       } else if (act === "mute") {
         elm.addEventListener("click", () => this._send(dev, this._muteCmd(dev)));
       } else if (act === "vol") {
