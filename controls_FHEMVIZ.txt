@@ -1,4 +1,4 @@
-UPD 2026-07-27_22:14:28 52959 FHEM/98_FHEMVIZ.pm
+UPD 2026-07-28_07:39:06 53192 FHEM/98_FHEMVIZ.pm
 UPD 2026-07-26_16:02:19 203778 www/fhemviz/backgrounds/cubes.png
 UPD 2026-07-27_20:13:52 18584 www/fhemviz/css/fhemviz.css
 UPD 2026-07-27_22:14:28 3735 www/fhemviz/css/skin-bento.css
@@ -11,7 +11,7 @@ UPD 2026-07-24_21:02:31 19921 www/fhemviz/icons/icon-192.png
 UPD 2026-07-24_21:02:31 92580 www/fhemviz/icons/icon-512.png
 UPD 2026-07-24_21:02:31 1667 www/fhemviz/icons/sun.svg
 UPD 2026-07-24_21:02:31 2021 www/fhemviz/index.html
-UPD 2026-07-27_22:14:28 54379 www/fhemviz/js/app.js
+UPD 2026-07-28_07:39:06 54379 www/fhemviz/js/app.js
 UPD 2026-07-22_05:23:28 5898 www/fhemviz/js/fhem-client.js
 UPD 2026-07-24_12:47:46 15234 www/fhemviz/js/layout.js
 UPD 2026-07-24_11:49:08 4293 www/fhemviz/js/store.js
@@ -24,7 +24,7 @@ UPD 2026-07-20_20:37:07 2031 www/fhemviz/js/widgets/dimmer.js
 UPD 2026-07-27_19:13:01 19330 www/fhemviz/js/widgets/flow.js
 UPD 2026-07-21_06:35:25 6109 www/fhemviz/js/widgets/forecast.js
 UPD 2026-07-23_08:51:10 2841 www/fhemviz/js/widgets/image.js
-UPD 2026-07-25_07:00:17 10903 www/fhemviz/js/widgets/mediagroup.js
+UPD 2026-07-28_07:39:06 11922 www/fhemviz/js/widgets/mediagroup.js
 UPD 2026-07-24_21:19:20 10103 www/fhemviz/js/widgets/registry.js
 UPD 2026-07-21_06:21:39 3887 www/fhemviz/js/widgets/sensor.js
 UPD 2026-07-25_09:34:00 5528 www/fhemviz/js/widgets/sensorgroup.js
