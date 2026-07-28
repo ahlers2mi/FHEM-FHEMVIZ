@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.6
+# Version:  v0.34.7
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.6";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.7";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -311,7 +311,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.6"),
+            FHEMVIZ_jsonStr("v0.34.7"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -706,7 +706,10 @@ sub FHEMVIZ_Attr {
         (Play/Pause/Stop/…). Automatisch für <code>structure</code> mit
         clientstate <code>media</code>/<code>audio</code> (erzwingbar per
         <code>vizWidget mediagroup</code>); Mitglieder im devspec, Empfehlung
-        <code>vizSize 2x2</code>,
+        <code>vizSize 2x2</code>. Bei einem <code>DENON_AVR</code>-Hauptgerät
+        zeigt und schaltet die Zeile die <b>Hauptzone</b>
+        (<code>zoneMain</code>) &ndash; ein blankes <code>off</code> würde den
+        ganzen Receiver samt Zone 2/3 abschalten,
         <code>ventgroup</code> = Lüften-Gruppe: EINE Kachel für ein
         <code>structure</code>-Gerät aus Lüftungs-Dummies, je Raum eine Zeile
         mit Empfehlung/Farbe (rein anzeigend, per
