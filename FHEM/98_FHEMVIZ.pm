@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.7
+# Version:  v0.34.8
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.7";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.8";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -91,6 +91,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizImage",
     "vizAlert",
     "vizFlash:1,0",
+    "vizVolumeMax",
 );
 
 # ----------------------------------------------------------------------------
@@ -311,7 +312,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.7"),
+            FHEMVIZ_jsonStr("v0.34.8"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -915,6 +916,14 @@ sub FHEMVIZ_Attr {
         eine wichtige Kachel auch dann blinken, wenn global
         <code>flash 0</code> gesetzt ist. Beispiel:<br>
         <code>attr d_Wechselrichter_all vizFlash 0</code></li>
+    <li><a id="FHEMVIZ-attr-vizVolumeMax"></a><b>vizVolumeMax</b><br>
+        Obergrenze des Lautstärke-Reglers in der <code>mediagroup</code>-Kachel
+        (am AV-Receiver/Player, nicht am <code>structure</code>). Die Schiene
+        endet dann dort, ein Griff ans rechte Ende kann also nicht lauter
+        werden als der Deckel. Ohne das Attribut gilt der Bereich aus
+        <code>PossibleSets</code> (<code>volume:slider,min,step,max</code>,
+        bei DENON_AVR 0..98). Beispiel:<br>
+        <code>attr Denon vizVolumeMax 55</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>
