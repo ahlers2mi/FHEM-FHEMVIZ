@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Media-Gruppe (v0.34.7).
+ * FHEMVIZ - Media-Gruppe (v0.34.8).
  * Fuer ein FHEM-structure-Geraet aus AV-Receivern/Zonen (z. B. DENON_AVR /
  * DENON_AVR_ZONE): EINE Kachel, je Geraet eine Zeile mit Power-Toggle,
  * Lautstaerke-Regler und Mute. Befehle gehen an das jeweilige Mitglied.
@@ -139,9 +139,16 @@ export class FhemvizMediaGroup extends FhemvizWidget {
     const m = String(dev.possibleSets || "").match(
       /(?:^|\s)volume:slider,(-?[\d.]+),([\d.]+),(-?[\d.]+)/
     );
-    return m
+    const sp = m
       ? { min: +m[1], step: +m[2], max: +m[3] }
       : { min: 0, step: 1, max: 98 };
+    // Deckel je Geraet: attr <dev> vizVolumeMax 55 - die Schiene endet dann
+    // dort. Selbst ein Griff ans rechte Ende kann nicht lauter werden.
+    const cap = parseFloat(
+      String((dev.attr || {}).vizVolumeMax || "").replace(",", ".")
+    );
+    if (!isNaN(cap)) sp.max = Math.max(sp.min, Math.min(sp.max, cap));
+    return sp;
   }
 
   _has(dev, cmd) {
@@ -195,7 +202,8 @@ export class FhemvizMediaGroup extends FhemvizWidget {
       : `${showInlineMute ? `<button class="mgmute${muted ? " on" : ""}" data-dev="${this.escape(dev.name)}"
            data-act="mute" aria-label="${this.escape(label)} stumm">${muted ? "🔇" : "🔊"}</button>` : ""}
          <input type="range" min="${sp.min}" max="${sp.max}" step="${sp.step}"
-           value="${vol == null ? sp.min : vol}" data-dev="${this.escape(dev.name)}"
+           value="${vol == null ? sp.min : Math.min(Math.max(vol, sp.min), sp.max)}"
+           data-dev="${this.escape(dev.name)}"
            data-act="vol" aria-label="${this.escape(label)} Lautstärke">
          <span class="mgvol">${vol == null ? "–" : vol}</span>`;
 
@@ -270,7 +278,9 @@ export class FhemvizMediaGroup extends FhemvizWidget {
       } else if (act === "mute") {
         elm.addEventListener("click", () => this._send(dev, this._muteCmd(dev)));
       } else if (act === "vol") {
-        elm.addEventListener("change", () => this._send(dev, `volume ${elm.value}`));
+        // Nur ziehen zaehlt - ein Antippen der Schiene wuerde sonst direkt
+        // auf volle Lautstaerke springen (siehe bindSlider).
+        this.bindSlider(elm, (wert) => this._send(dev, `volume ${wert}`));
       } else if (act === "input") {
         elm.addEventListener("change", () => this._send(dev, `${elm.dataset.cmd} ${elm.value}`));
       } else if (act === "cmd") {

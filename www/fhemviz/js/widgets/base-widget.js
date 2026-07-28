@@ -377,6 +377,43 @@ export class FhemvizWidget extends HTMLElement {
     return (this.device.attr && this.device.attr.alias) || this.device.name;
   }
 
+  /**
+   * Schiebe-Regler sicher anbinden: cb(wert) laeuft nur, wenn der Regler
+   * wirklich GEZOGEN (oder per Tastatur bewegt) wurde.
+   *
+   * Ein <input type=range> springt beim ANTIPPEN der Schiene sofort auf die
+   * getippte Stelle und meldet den Wert - auf einem Wandtablet ist eine
+   * Handkante am rechten Rand damit "volle Lautstaerke" bzw. "Rollade ganz
+   * auf". Gemessen: ein Tipp bei 95 % einer 390 px breiten Schiene schickte
+   * "volume 95", ausgehend von 35. Ein reines Antippen stellt jetzt den alten
+   * Wert wieder her und schickt nichts; Pfeiltasten gelten als Absicht, weil
+   * sie in step-Schritten laufen und nicht springen koennen.
+   */
+  bindSlider(elm, cb) {
+    let start = elm.value;
+    let gezogen = false;
+    let x0 = null;
+    elm.addEventListener("pointerdown", (e) => {
+      start = elm.value;
+      gezogen = false;
+      x0 = e.clientX;
+    });
+    elm.addEventListener("pointermove", (e) => {
+      if (x0 !== null && Math.abs(e.clientX - x0) > 6) gezogen = true;
+    });
+    elm.addEventListener("keydown", () => {
+      gezogen = true;
+    });
+    elm.addEventListener("change", () => {
+      if (!gezogen) {
+        elm.value = start; // Antippen: Regler zurueck, kein Befehl
+        return;
+      }
+      x0 = null;
+      cb(elm.value);
+    });
+  }
+
   escape(s) {
     return String(s ?? "").replace(/[&<>"]/g, (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
