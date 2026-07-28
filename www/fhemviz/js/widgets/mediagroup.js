@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Media-Gruppe (v0.34.8).
+ * FHEMVIZ - Media-Gruppe (v0.34.9).
  * Fuer ein FHEM-structure-Geraet aus AV-Receivern/Zonen (z. B. DENON_AVR /
  * DENON_AVR_ZONE): EINE Kachel, je Geraet eine Zeile mit Power-Toggle,
  * Lautstaerke-Regler und Mute. Befehle gehen an das jeweilige Mitglied.
@@ -200,7 +200,9 @@ export class FhemvizMediaGroup extends FhemvizWidget {
     const ctl = this.readonly
       ? `<span class="mgvol">${vol == null ? "" : vol}</span>`
       : `${showInlineMute ? `<button class="mgmute${muted ? " on" : ""}" data-dev="${this.escape(dev.name)}"
-           data-act="mute" aria-label="${this.escape(label)} stumm">${muted ? "🔇" : "🔊"}</button>` : ""}
+           data-act="mute" aria-label="${this.escape(label)} stumm">${this.mediaIconHtml(
+             muted ? "mute" : "volume"
+           )}</button>` : ""}
          <input type="range" min="${sp.min}" max="${sp.max}" step="${sp.step}"
            value="${vol == null ? sp.min : Math.min(Math.max(vol, sp.min), sp.max)}"
            data-dev="${this.escape(dev.name)}"
@@ -210,13 +212,16 @@ export class FhemvizMediaGroup extends FhemvizWidget {
     // Zusatzzeile: Eingang (Denon) und/oder Transport (HEOS).
     const inp = this._inputs(dev);
     const cur = this.plain((dev.readings || {})[inp ? inp.cmd : "input"]);
+    // Symbole als einfarbiges Inline-SVG (siehe mediaIconHtml): die
+    // Unicode-Zeichen ⏸/⏹ landen auf Android in der Farb-Emoji-Schrift und
+    // waren dort orange, waehrend ⏮ ▶ ⏭ weiss blieben.
     const trans = [];
-    if (this._has(dev, "previous")) trans.push(["previous", "⏮"]);
-    else if (this._has(dev, "prev")) trans.push(["prev", "⏮"]);
-    if (this._has(dev, "play")) trans.push(["play", "▶"]);
-    if (this._has(dev, "pause")) trans.push(["pause", "⏸"]);
-    if (this._has(dev, "stop")) trans.push(["stop", "⏹"]);
-    if (this._has(dev, "next")) trans.push(["next", "⏭"]);
+    if (this._has(dev, "previous")) trans.push("previous");
+    else if (this._has(dev, "prev")) trans.push("prev");
+    if (this._has(dev, "play")) trans.push("play");
+    if (this._has(dev, "pause")) trans.push("pause");
+    if (this._has(dev, "stop")) trans.push("stop");
+    if (this._has(dev, "next")) trans.push("next");
 
     let extra = "";
     if (inp || trans.length) {
@@ -233,9 +238,11 @@ export class FhemvizMediaGroup extends FhemvizWidget {
         ? ""
         : trans
             .map(
-              ([c, sym]) =>
+              (c) =>
                 `<button class="mgmute" data-dev="${this.escape(dev.name)}" data-act="cmd"
-                   data-cmd="${c}" aria-label="${this.escape(label + " " + c)}">${sym}</button>`
+                   data-cmd="${c}" aria-label="${this.escape(
+                     label + " " + c
+                   )}">${this.mediaIconHtml(c)}</button>`
             )
             .join("");
       extra = `<div class="mgctl mgextra">${sel}${tb}</div>`;

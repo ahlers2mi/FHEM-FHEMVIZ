@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.8
+# Version:  v0.34.9
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.8";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.9";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -82,6 +82,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power",
     "vizGroup",
     "vizReadings:textField-long",
+    "vizState",
     "vizStates:textField-long",
     "vizFlow:textField-long",
     "vizChart:textField-long",
@@ -312,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.8"),
+            FHEMVIZ_jsonStr("v0.34.9"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -791,6 +792,16 @@ sub FHEMVIZ_Attr {
         Beispiele:<br>
         <code>attr Mobil5data vizReadings temperature:Temperatur:C,humidity:Feuchtigkeit:%:bad@75|warn@65,moisturecontent:Wasser:g/m3:bad@14|warn@13</code><br>
         <code>...:blau@&lt;=5|bad@&gt;=30|warn@&gt;=25</code> (kalt blau, heiß rot)</li>
+    <li><a id="FHEMVIZ-attr-vizState"></a><b>vizState</b><br>
+        Reading, aus dem die <b>Zustandszeile</b> der Kachel kommt (statt
+        <code>state</code>). Nützlich bei Modulen und Proxys
+        (<code>DoRemoteDevice</code>), die in <code>state</code> den letzten
+        Set-Befehl oder den Namen des letzten Readings ablegen &ndash; im
+        Dashboard steht dann „<code>resume</code>" oder
+        „<code>currentImageUrl</code>" als Überschrift. Ist das Reading leer
+        oder fehlt es, bleibt es bei <code>state</code>. Wirkt auch als
+        Eingabe für <code>vizStates</code>. Beispiel:<br>
+        <code>attr rem_HEOSPlayer1579933734 vizState playStatus</code></li>
     <li><a id="FHEMVIZ-attr-vizStates"></a><b>vizStates</b><br>
         Typ: textField-long. Übersetzt technische Status-Codes in Klartext +
         Farbe: <code>pattern:Label[:Farbe]</code> kommasepariert, pattern =

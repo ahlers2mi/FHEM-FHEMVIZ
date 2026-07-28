@@ -50,6 +50,12 @@ const CARD_CSS = `
   .sub { color: var(--viz-muted, #77808c); font-size: 0.8rem; min-width: 0;
          overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-width: 0; }
+  /* In einer schmalen Kachel darf der WERT kuerzen, nicht das Label - aus
+   * "Titel" wurde sonst "T…", waehrend daneben der lange Songtitel stand. */
+  .row > .sub:first-child { flex: 0 0 auto; }
+  .row > .sub:last-child {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .grow { margin-top: auto; }
 
   /* Bedienelemente ---------------------------------------------------------- */
@@ -61,6 +67,9 @@ const CARD_CSS = `
     cursor: pointer;
   }
   button.pill:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 1px; }
+  /* Transport-Symbole: Inline-SVG in Textfarbe (siehe mediaIconHtml). */
+  button.pill:has(> svg.vicon) { padding: 8px 12px; }
+  svg.vicon { width: 1.15em; height: 1.15em; display: block; margin: 0 auto; }
 
   button.toggle {
     width: 52px; height: 30px; flex-shrink: 0;
@@ -270,6 +279,54 @@ let FLASH_MODE = "all";
 export function setFlashMode(mode) {
   const m = String(mode || "").trim().toLowerCase();
   FLASH_MODE = m === "off" || m === "values" ? m : "all";
+}
+
+/*
+ * Transport-Symbole als Inline-SVG, einfarbig in der Textfarbe.
+ *
+ * Warum nicht die Unicode-Zeichen (⏮ ▶ ⏸ ⏹ ⏭): fuer U+23F8 (Pause) und
+ * U+23F9 (Stop) hat kaum eine System-Schrift eine einfarbige Glyphe. Der
+ * Browser faellt dann auf die FARB-Emoji-Schrift zurueck - auf Android/Samsung
+ * werden genau diese zwei orange, waehrend ⏮ ▶ ⏭ weiss bleiben. Als SVG sehen
+ * alle Symbole gleich aus und folgen der Textfarbe (auch im Alarm-/Aktiv-Rot).
+ */
+const MEDIA_ICONS = {
+  play: '<path d="M8 5v14l11-7z"/>',
+  pause: '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>',
+  stop: '<path d="M6 6h12v12H6z"/>',
+  prev: '<path d="M6 6h2.5v12H6zM18 6v12l-9-6z"/>',
+  next: '<path d="M15.5 6H18v12h-2.5zM6 6l9 6-9 6z"/>',
+  volume:
+    '<path d="M4 9h3l4-4v14l-4-4H4z"/>' +
+    '<path d="M14.5 8.6a5 5 0 010 6.8" fill="none" stroke="currentColor" stroke-width="1.8"/>',
+  mute:
+    '<path d="M4 9h3l4-4v14l-4-4H4z"/>' +
+    '<path d="M14.8 9.6l4.8 4.8m0-4.8l-4.8 4.8" fill="none" stroke="currentColor" stroke-width="1.8"/>',
+};
+
+/** Befehlsname -> Symbolschluessel (Modul-Schreibweisen zusammengefasst). */
+const MEDIA_ALIAS = {
+  play: "play",
+  resume: "play",
+  pause: "pause",
+  stop: "stop",
+  prev: "prev",
+  previous: "prev",
+  skiptoprevious: "prev",
+  next: "next",
+  skiptonext: "next",
+  mute: "mute",
+  unmute: "volume",
+  volume: "volume",
+};
+
+/** Inline-SVG fuer einen Transport-Befehl, "" wenn keins passt. */
+export function mediaIconHtml(cmd) {
+  const key = MEDIA_ALIAS[String(cmd || "").trim().toLowerCase()];
+  const body = key && MEDIA_ICONS[key];
+  return body
+    ? `<svg class="vicon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${body}</svg>`
+    : "";
 }
 
 export class FhemvizWidget extends HTMLElement {
@@ -551,7 +608,28 @@ export class FhemvizWidget extends HTMLElement {
    * technische Status-Codes (ok_cutting, In Betrieb) in Klartext + Farbe.
    * Pattern = Regex (Volltreffer, case-insensitiv). null wenn kein Treffer.
    */
-  vizStateInfo(raw = this.device.state) {
+  /** Inline-SVG fuer einen Transport-Befehl (Instanz-Zugriff). */
+  mediaIconHtml(cmd) {
+    return mediaIconHtml(cmd);
+  }
+
+  /**
+   * Rohwert fuer die angezeigte Zustandszeile. Normalerweise "state" - manche
+   * Module und Proxys (DoRemoteDevice) schreiben dort aber den letzten
+   * SET-Befehl oder den Namen des letzten Readings ("resume",
+   * "currentImageUrl", "groupWithMember HEOSPlayer…"), was als Kachel-
+   * Ueberschrift nichts taugt. attr <dev> vizState <reading> bestimmt dann,
+   * woraus die Ueberschrift kommt (z. B. playStatus). Ist das Reading leer
+   * oder fehlt es, bleibt es bei state.
+   */
+  stateRaw() {
+    const n = String((this.device.attr || {}).vizState || "").trim();
+    if (!n) return this.device.state;
+    const v = (this.device.readings || {})[n];
+    return v === undefined || v === "" ? this.device.state : v;
+  }
+
+  vizStateInfo(raw = this.stateRaw()) {
     const spec = this.device.attr && this.device.attr.vizStates;
     if (!spec) return null;
     const st = this.plain(raw);
