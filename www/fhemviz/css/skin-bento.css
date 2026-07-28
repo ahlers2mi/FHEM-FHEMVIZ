@@ -1,24 +1,35 @@
 /*
- * FHEMVIZ - Skin "bento" (Seiten-Ebene), v0.31.0.
+ * FHEMVIZ - Skin "bento" (Seiten-Ebene), v0.34.6.
  * Wandtablet-Skin: dichteres, ungleiches Raster; die Raum-Umschaltung wird
  * im QUERFORMAT zur Schiene an der linken Kante - im Hochformat bleibt die
  * gewohnte Leiste unten. Kein zusaetzliches DOM: dieselbe .viz-tabs-Leiste
  * wird nur anders gesetzt.
  *
+ * TV-Modus: dort blendet fhemviz.css die Raum-Schiene aus - also darf auch
+ * der Platz dafuer nicht reserviert bleiben (sonst steht links eine leere
+ * Spalte), und die groben TV-Masse (grosse Kacheln, mehr Luft) muessen
+ * gewinnen. Darum haengt alles Dichte/Schienen-artige unten an
+ * :not([data-vizmode="tv"]); das Glas-Aussehen gilt in beiden Modi.
+ *
  * Aktivierung: attr <viz> skin bento   bzw.  ?skin=bento
  * Glas/Blur abschalten (schwache Tablets): attr <viz> skinBlur 0
  */
 
-html[data-vizskin="bento"] {
-  /* Dichter als classic: mehr Kacheln pro Blick, kleinere Mindestbreite. */
+html[data-vizskin="bento"]:not([data-vizmode="tv"]) {
+  /* Dichter als classic: mehr Kacheln pro Blick, kleinere Mindestbreite.
+   * Im TV-Modus NICHT - dort gelten die Fernblick-Masse aus fhemviz.css
+   * (260px Kachelbreite, 16px Abstand), sonst schrumpfen die Kacheln auf
+   * Handbreite und die Seite wirkt kleinteilig. */
   --viz-tile-min: 148px;
   --viz-gap: 10px;
+}
+html[data-vizskin="bento"] {
   --viz-radius: 14px;
 }
 
 /* --- Querformat: Raum-Schiene links ------------------------------------ */
 @media (orientation: landscape) {
-  html[data-vizskin="bento"] .viz-tabs {
+  html[data-vizskin="bento"]:not([data-vizmode="tv"]) .viz-tabs {
     top: 0;
     right: auto;
     bottom: 0;
@@ -35,7 +46,7 @@ html[data-vizskin="bento"] {
   }
   /* Einzeilig mit Auslassung - ein Umbruch mitten im Wort ("Wohnz immer")
    * ist schlechter lesbar als eine gekuerzte Zeile. */
-  html[data-vizskin="bento"] .viz-tabs > * {
+  html[data-vizskin="bento"]:not([data-vizmode="tv"]) .viz-tabs > * {
     width: 100%;
     text-align: center;
     border-radius: 11px;
@@ -46,9 +57,15 @@ html[data-vizskin="bento"] {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* Platz fuer die Schiene - Inhalt UND Kopfzeile ruecken nach rechts. */
-  html[data-vizskin="bento"] #viz-header { padding-left: 130px; }
-  html[data-vizskin="bento"] #fhemviz-app { padding: 14px 18px 20px 130px; }
+  /* Platz fuer die Schiene - Inhalt UND Kopfzeile ruecken nach rechts.
+   * Im TV-Modus gibt es keine Schiene -> auch keinen Rand (die Seite soll
+   * die ganze Breite nutzen). */
+  html[data-vizskin="bento"]:not([data-vizmode="tv"]) #viz-header {
+    padding-left: 130px;
+  }
+  html[data-vizskin="bento"]:not([data-vizmode="tv"]) #fhemviz-app {
+    padding: 14px 18px 20px 130px;
+  }
 }
 
 /* --- Hochformat: Leiste bleibt unten (Standardverhalten) --------------- */

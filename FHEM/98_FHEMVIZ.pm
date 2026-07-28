@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.3
+# Version:  v0.34.6
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.3";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.6";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -64,6 +64,8 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #   vizSize     - Kachelgroesse im Raster (1x1, 2x1, 1x2, 2x2)
 #   vizHero     - Geraet als breiter Blickfang ganz oben im Raum
 #   vizHide     - Geraet aus der Sicht ausblenden
+#   vizFlash    - Aufleuchten dieser Kachel bei Wertaenderung (0 = ruhig,
+#                 1 = auch bei globalem "attr flash 0"); Default: global
 #   vizReadings - Kachelinhalt direkt aus Readings statt state-Parsing:
 #                 "reading[:Label[:Einheit[:Farbe]]]" kommasepariert,
 #                 erster Eintrag = Hauptwert. Farbe: ok|warn|bad|accent|blau
@@ -88,6 +90,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizText:textField-long",
     "vizImage",
     "vizAlert",
+    "vizFlash:1,0",
 );
 
 # ----------------------------------------------------------------------------
@@ -122,6 +125,7 @@ sub FHEMVIZ_Initialize {
           "backgroundDim " .
           "skin " .
           "skinBlur:1,0 " .
+          "flash:1,0,values " .
           "showRooms " .
           "hideRooms " .
           "hideTypes " .
@@ -292,6 +296,7 @@ sub FHEMVIZ_Get {
         my $backgroundDim = AttrVal($name, "backgroundDim", "");
         my $skin          = AttrVal($name, "skin", "");
         my $skinBlur      = AttrVal($name, "skinBlur", "");
+        my $flash         = AttrVal($name, "flash", "");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
@@ -303,10 +308,10 @@ sub FHEMVIZ_Get {
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,'
-              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"page":%s,'
+              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.3"),
+            FHEMVIZ_jsonStr("v0.34.6"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -321,6 +326,7 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($backgroundDim),
             FHEMVIZ_jsonStr($skin),
             FHEMVIZ_jsonStr($skinBlur),
+            FHEMVIZ_jsonStr($flash),
             FHEMVIZ_jsonStr($page),
             FHEMVIZ_jsonStr($showRooms),
             FHEMVIZ_jsonStr($hideRooms),
@@ -604,6 +610,16 @@ sub FHEMVIZ_Attr {
         <code>0</code> schaltet sie ab &ndash; die Kacheln bleiben
         halbtransparent, kosten aber keine Compositing-Ebene. Fuer schwache
         Panels (z. B. Yicty T510) empfohlen, wenn das Scrollen ruckelt.</li>
+    <li><a id="FHEMVIZ-attr-flash"></a><b>flash</b> 1|0|values<br>
+        Kurzes Aufleuchten einer Kachel, wenn sich ihr Inhalt aendert.
+        Default <code>1</code>: das Wertfeld blinkt, Kacheln ohne Wertfeld
+        (Gruppen- und Grafik-Kacheln wie <code>sensorgroup</code>,
+        <code>mediagroup</code>, <code>flow</code>) pulsen im Rahmen.<br>
+        <code>values</code> = nur die Wertfelder blinken, die Gruppen-/
+        Grafik-Kacheln bleiben ganz ruhig. <code>0</code> = nichts blinkt.<br>
+        Je Geraet uebersteuerbar per URL: <code>?flash=0</code> &ndash; und je
+        Kachel mit <code>vizFlash</code> am visualisierten Geraet. Beispiel:<br>
+        <code>attr myViz flash values</code></li>
     <li><a id="FHEMVIZ-attr-backgroundDim"></a><b>backgroundDim</b><br>
         Staerke des Abdunkel-Overlays ueber dem Hintergrundbild, 0..100
         (Prozent). Default 45. Hoehere Werte = dunkler/ruhiger, 0 = Bild
@@ -888,6 +904,14 @@ sub FHEMVIZ_Attr {
         <code>attr rauchmelder vizAlert state=alarm</code><br>
         Für den zusätzlichen Vollbild-Alarm im TV-Modus siehe
         <code>set scene</code> (Event-Übernahme).</li>
+    <li><a id="FHEMVIZ-attr-vizFlash"></a><b>vizFlash</b> 1|0<br>
+        Aufleuchten <b>dieser</b> Kachel bei Wertänderung. Ohne das Attribut
+        gilt <code>attr &lt;viz&gt; flash</code> für alle Kacheln.
+        <code>0</code> beruhigt eine einzelne zappelige Kachel (z. B. eine
+        Leistung, die im Sekundentakt neue Werte liefert), <code>1</code> lässt
+        eine wichtige Kachel auch dann blinken, wenn global
+        <code>flash 0</code> gesetzt ist. Beispiel:<br>
+        <code>attr d_Wechselrichter_all vizFlash 0</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-readings"></a>
