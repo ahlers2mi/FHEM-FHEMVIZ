@@ -86,12 +86,16 @@ export class FhemvizContact extends FhemvizWidget {
     if (!this.store) return [];
     const internals = this.device.internals || {};
     if (internals.TYPE !== "structure") return [];
-    return String(internals.DEF || "")
-      .split(/\s+/)
-      .slice(1) // erstes Token ist der struct_type (z. B. "onoff")
-      .map((n) => n.replace(/,$/, ""))
-      .map((n) => this.store.get(n))
-      .filter(Boolean);
+    // Reihenfolge: wie in der DEF - oder nach sortby, sobald eines gesetzt
+    // ist (siehe sortMembers in base-widget).
+    return this.sortMembers(
+      String(internals.DEF || "")
+        .split(/\s+/)
+        .slice(1) // erstes Token ist der struct_type (z. B. "onoff")
+        .map((n) => n.replace(/,$/, ""))
+        .map((n) => this.store.get(n))
+        .filter(Boolean)
+    );
   }
 
   /**

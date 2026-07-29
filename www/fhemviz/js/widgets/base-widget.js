@@ -617,6 +617,25 @@ export class FhemvizWidget extends HTMLElement {
   }
 
   /**
+   * Mitglieder einer Gruppen-Kachel sortieren. Standard bleibt die Reihenfolge
+   * aus der structure-DEF. Sobald MINDESTENS EIN Mitglied ein sortby hat, wird
+   * danach sortiert (Rueckfall: alias, dann Name); Geraete ohne sortby landen
+   * dahinter. Dadurch aendert sich an bestehenden Kacheln nichts, bis man
+   * bewusst ein sortby setzt - dasselbe FHEM-Attribut, mit dem auch das Raster
+   * sortiert (layout.js sortKey). "10" wird numerisch nach "2" einsortiert,
+   * fuehrende Nullen sind also nicht noetig.
+   */
+  sortMembers(list) {
+    const sortby = (d) => String((d.attr || {}).sortby || "").trim();
+    if (!list.some((d) => sortby(d) !== "")) return list;
+    const key = (d) =>
+      (sortby(d) || "￿") + " " + ((d.attr || {}).alias || d.name);
+    return [...list].sort((a, b) =>
+      key(a).localeCompare(key(b), "de", { numeric: true })
+    );
+  }
+
+  /**
    * Rohwert fuer die angezeigte Zustandszeile. Normalerweise "state" - manche
    * Module und Proxys (DoRemoteDevice) schreiben dort aber den letzten
    * SET-Befehl oder den Namen des letzten Readings ("resume",
