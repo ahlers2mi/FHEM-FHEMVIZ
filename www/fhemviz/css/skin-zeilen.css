@@ -39,7 +39,11 @@ html[data-vizskin="zeilen"] .viz-room > h2 {
 /* Hero-Band: in der Liste ebenfalls einspaltig, ohne Mindesthoehe. */
 html[data-vizskin="zeilen"] .viz-hero {
   grid-template-columns: 1fr;
-  gap: 0;
+  /* NICHT gap:0 - Hero-Kacheln tragen einen 1px-Akzentring plus Schlagschatten
+   * (fhemviz.css .viz-hero > *). Stossen zwei davon aneinander, liegen die
+   * Ringe uebereinander und sehen aus, als ueberschnitten sich die Kacheln.
+   * Die normalen Zeilen bleiben flush, nur das Hero-Band bekommt Luft. */
+  gap: 8px;
 }
 html[data-vizskin="zeilen"] .viz-hero > * {
   min-height: 0;
