@@ -200,10 +200,18 @@ export function selectWidget(device) {
   //     vizReadings stattdessen als Info-Zeilen in der Kachel.
   if (attr.vizReadings) return WIDGET_REGISTRY.sensor;
 
-  // 4. Heuristik aus PossibleSets
+  // 4. Heuristik aus PossibleSets - nur BEFEHLSNAMEN zaehlen.
+  //    PossibleSets ist "befehl[:spec] befehl[:spec] …", die Werte stehen
+  //    HINTER dem Doppelpunkt. Ein \b-Test findet "on"/"off" auch dort und
+  //    machte aus jedem Geraet mit einem on/off-Parameter einen Schalter:
+  //    PoolControl hat "control:on,off filter:on,off,auto …" und bekam einen
+  //    Ein/Aus-Toggle, der "set poolControl on" geschickt haette - ein Befehl,
+  //    den das Modul nicht kennt. Darum muss der Name am Token-Anfang stehen.
   const sets = String(device.possibleSets || "");
-  if (/\bpct\b|\bdim\b/.test(sets)) return WIDGET_REGISTRY.dimmer;
-  if (/\bon\b/.test(sets) && /\boff\b/.test(sets)) return WIDGET_REGISTRY.switch;
+  const hasCmd = (c) =>
+    new RegExp("(?:^|\\s)" + c + "(?::|\\s|$)").test(sets);
+  if (hasCmd("pct") || hasCmd("dim")) return WIDGET_REGISTRY.dimmer;
+  if (hasCmd("on") && hasCmd("off")) return WIDGET_REGISTRY.switch;
 
   // 5. Kontakt-Erkennung am Zustand (MAX-Fensterkontakte u. ae. haben
   //    weder GDT noch webCmd - der state verraet sie).

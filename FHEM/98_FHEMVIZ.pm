@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.12
+# Version:  v0.34.14
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.12";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.14";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -313,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.12"),
+            FHEMVIZ_jsonStr("v0.34.14"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -675,8 +675,13 @@ sub FHEMVIZ_Attr {
         Automatisch bei <code>structure</code> mit Rollladen-Mitgliedern
         (DEF beginnt mit <code>blind</code> bzw. <code>genericDeviceType
         blind</code>); die Mitglieder müssen im devspec liegen (dürfen per
-        <code>vizHide</code> aus dem Raster raus). Empfehlung
-        <code>vizSize 2x1/2x2</code>. Beispiel:<br>
+        <code>vizHide</code> aus dem Raster raus). Auf/Zu fahren die
+        <b>Endlagen</b> an: bevorzugt <code>pct &lt;max&gt;</code> /
+        <code>pct &lt;min&gt;</code> aus <code>PossibleSets</code>, sonst
+        <code>open</code>/<code>close</code> bzw. <code>closed</code> (ROLLO)
+        &ndash; <code>up</code>/<code>down</code> nur als Rückfall, weil sie
+        z. B. bei CUL_HM <b>relativ</b> sind (ein Schritt, Standard 10 %).
+        Empfehlung <code>vizSize 2x1/2x2</code>. Beispiel:<br>
         <code>define st_rolladen structure blind HM_x HM_y HM_z</code><br>
         <code>attr st_rolladen genericDeviceType blind</code>,
         <code>switchgroup</code> = Schalter-/Licht-Gruppe: EINE Kachel für ein
