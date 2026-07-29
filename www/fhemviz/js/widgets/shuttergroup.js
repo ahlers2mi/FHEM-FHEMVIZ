@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Rollladen-Gruppe (v0.23.0).
+ * FHEMVIZ - Rollladen-Gruppe (v0.34.13).
  * Fuer ein FHEM-structure-Geraet aus Rollladen (DEF "blind HM_x HM_y ..."):
  * EINE Kachel mit einer Master-Zeile (steuert ALLE gemeinsam) und darunter
  * je Rollade eine eigene Zeile mit Position + Auf/Stop/Zu. Master-Befehle
@@ -89,15 +89,33 @@ export class FhemvizShutterGroup extends FhemvizWidget {
     return isNaN(n) ? null : Math.max(0, Math.min(100, n));
   }
 
-  /** Auf-/Zu-/Stop-Befehle aus PossibleSets: up/down/stop bevorzugt, sonst pct. */
+  /**
+   * Auf-/Zu-/Stop-Befehle aus PossibleSets. Absolute Befehle haben Vorrang!
+   *
+   * Bei CUL_HM sind up/down RELATIV: "dim up/down one step", Standard 10 %
+   * (10_CUL_HM.pm: "down [changeValue] … Granularity is 0.5%, default is
+   * 10%"). Ein Klick auf ▼ fuhr die Rollade damit nur 10 % weiter statt ganz
+   * zu. Darum zuerst pct mit den Endlagen aus dem Slider (pct:slider,min,
+   * step,max), dann close/open - und up/down nur noch als Rueckfall fuer
+   * Module, bei denen sie die Endlage anfahren (ROLLO, DUOFERN, MQTT2).
+   * Eine structure liefert die Vereinigung der Mitglieds-Sets
+   * (98_structure.pm, .cachedHelp), die Master-Zeile bekommt also dasselbe.
+   */
   _cmds(dev) {
     const sets = String(dev.possibleSets || "");
     const has = (w) => new RegExp("(?:^|\\s)" + w + "(?:\\b|:)").test(sets);
-    return {
-      up: has("up") ? "up" : "pct 100",
-      down: has("down") ? "down" : "pct 0",
-      stop: has("stop") ? "stop" : null,
-    };
+    const m = sets.match(
+      /(?:^|\s)pct(?::slider,(-?[\d.]+),([\d.]+),(-?[\d.]+))?/
+    );
+    // Namen der Endlagen je Modul: open/close, ROLLO nutzt "closed".
+    const ersterTreffer = (...w) => w.find((x) => has(x));
+    const auf = m
+      ? `pct ${m[3] ?? 100}`
+      : ersterTreffer("open", "opened", "up") || "pct 100";
+    const zu = m
+      ? `pct ${m[1] ?? 0}`
+      : ersterTreffer("close", "closed", "down") || "pct 0";
+    return { up: auf, down: zu, stop: has("stop") ? "stop" : null };
   }
 
   _send(name, cmd) {
