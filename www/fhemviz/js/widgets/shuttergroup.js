@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Rollladen-Gruppe (v0.34.13).
+ * FHEMVIZ - Rollladen-Gruppe (v0.34.16).
  * Fuer ein FHEM-structure-Geraet aus Rollladen (DEF "blind HM_x HM_y ..."):
  * EINE Kachel mit einer Master-Zeile (steuert ALLE gemeinsam) und darunter
  * je Rollade eine eigene Zeile mit Position + Auf/Stop/Zu. Master-Befehle
@@ -66,12 +66,16 @@ export class FhemvizShutterGroup extends FhemvizWidget {
     if (!this.store) return [];
     const internals = this.device.internals || {};
     if (internals.TYPE !== "structure") return [];
-    return String(internals.DEF || "")
-      .split(/\s+/)
-      .slice(1) // erstes Token = struct_type (z. B. "blind")
-      .map((n) => n.replace(/,$/, ""))
-      .map((n) => this.store.get(n))
-      .filter(Boolean);
+    // Reihenfolge: wie in der DEF - oder nach sortby, sobald eines gesetzt
+    // ist (siehe sortMembers in base-widget).
+    return this.sortMembers(
+      String(internals.DEF || "")
+        .split(/\s+/)
+        .slice(1) // erstes Token = struct_type (z. B. "blind")
+        .map((n) => n.replace(/,$/, ""))
+        .map((n) => this.store.get(n))
+        .filter(Boolean)
+    );
   }
 
   /** Aktuelle Position 0..100 (100 = offen) oder null, wenn unbekannt. */

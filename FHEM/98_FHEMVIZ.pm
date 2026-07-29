@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.15
+# Version:  v0.34.16
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.15";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.16";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -313,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.15"),
+            FHEMVIZ_jsonStr("v0.34.16"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -683,7 +683,16 @@ sub FHEMVIZ_Attr {
         z. B. bei CUL_HM <b>relativ</b> sind (ein Schritt, Standard 10 %).
         Empfehlung <code>vizSize 2x1/2x2</code>. Beispiel:<br>
         <code>define st_rolladen structure blind HM_x HM_y HM_z</code><br>
-        <code>attr st_rolladen genericDeviceType blind</code>,
+        <code>attr st_rolladen genericDeviceType blind</code>,<br>
+        <b>Reihenfolge der Zeilen</b> (gilt für alle Gruppen-Kacheln:
+        shuttergroup, switchgroup, sensorgroup, ventgroup, mediagroup,
+        contact): normalerweise die Reihenfolge aus der <code>structure</code>-DEF.
+        Sobald <b>mindestens ein</b> Mitglied ein <code>sortby</code> hat, wird
+        danach sortiert (Rückfall Alias, dann Name; Geräte ohne
+        <code>sortby</code> landen dahinter). Es ist dasselbe FHEM-Attribut,
+        mit dem auch das Kachel-Raster sortiert &ndash; „10" wird numerisch
+        nach „2" einsortiert, führende Nullen sind unnötig:<br>
+        <code>attr HM_x sortby 1</code>, <code>attr HM_y sortby 2</code>,
         <code>switchgroup</code> = Schalter-/Licht-Gruppe: EINE Kachel für ein
         <code>structure</code>-Gerät aus on/off-Schaltern mit Master-Zeile
         (alle an/aus) und je Schalter einer Zeile mit eigenem Toggle.
