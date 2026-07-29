@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.10
+# Version:  v0.34.12
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.10";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.12";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -313,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.10"),
+            FHEMVIZ_jsonStr("v0.34.12"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -743,7 +743,15 @@ sub FHEMVIZ_Attr {
         mit <code>setList state:Aus,Kiepenkerl,…</code> bzw.
         <code>setList state:slider,0,2,100</code>), wird &ndash; wie in FHEMWEB
         &ndash; nur der Wert gesendet: <code>set &lt;dev&gt; Kiepenkerl</code>,
-        nicht <code>set &lt;dev&gt; state Kiepenkerl</code>.</li>
+        nicht <code>set &lt;dev&gt; state Kiepenkerl</code>. Das FHEM-Attribut
+        <code>eventMap</code> wird in <b>Anzeigerichtung</b> ausgewertet
+        (Gerätewert &rarr; Klartext, wie <code>ReplaceEventMap(…,1)</code>):
+        ein <code>readingsProxy</code> auf einen Kanalzähler mit
+        <code>eventMap /1:RADIO_BOB/…/27:WDR4/</code> zeigt also „WDR4" statt
+        „27". Beim Senden ist nichts zu tun &ndash; die Rückrichtung macht FHEM
+        selbst in <code>DoSet</code>. Nicht ausgewertet wird die
+        <b>Perl-Notation</b> (<code>eventMap {…}</code>), dort bleibt der
+        Rohwert stehen.</li>
     <li><a id="FHEMVIZ-attr-vizSize"></a><b>vizSize</b> 1x1|2x1|1x2|2x2<br>
         Kachelgröße im Raster; 2x2 vergrößert Fläche und Schrift der
         Kachel (bleibt aber im Raster). Für einen echten, seitenbreiten

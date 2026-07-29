@@ -627,9 +627,52 @@ export class FhemvizWidget extends HTMLElement {
    */
   stateRaw() {
     const n = String((this.device.attr || {}).vizState || "").trim();
-    if (!n) return this.device.state;
-    const v = (this.device.readings || {})[n];
-    return v === undefined || v === "" ? this.device.state : v;
+    const v = n ? (this.device.readings || {})[n] : undefined;
+    const raw = v === undefined || v === "" ? this.device.state : v;
+    return this.mapEvent(raw);
+  }
+
+  /**
+   * eventMap (FHEM-Attribut) in Anzeigerichtung anwenden: Gerätewert ->
+   * Klartext. Portierung von ReplaceEventMap($dev, $str, 1) aus fhem.pl:
+   *   - Trennzeichen ist das ERSTE Zeichen, wenn es "," oder "/" ist,
+   *     sonst Leerzeichen (attrSplit).
+   *   - Je Eintrag "re:wert[:modifier]"; ist "re" ein Wort (^\w*$), wird mit
+   *     \b…\b ersetzt, sonst als Regex. Der ERSTE Treffer gewinnt.
+   * Warum ueberhaupt: jsonlist2 liefert das state-READING roh (z. B. die
+   * Kanalnummer 27), waehrend FHEM das Internal STATE bereits gemappt hat
+   * ("WDR4"). Das Internal traegt aber ggf. einen stateFormat-Text, den wir
+   * bewusst nicht als Zustand nehmen - also mappen wir selbst.
+   * Beim SENDEN ist nichts zu tun: fhem.pl macht in DoSet die Rueckrichtung
+   * (ReplaceEventMap(..., 0)), der angezeigte Wert ist also auch der, den man
+   * schickt.
+   * Perl-Notation (eventMap {...}) laesst sich im Browser nicht auswerten und
+   * bleibt unveraendert.
+   */
+  mapEvent(raw) {
+    const em = String((this.device.attr || {}).eventMap || "").trim();
+    let s = String(raw ?? "");
+    if (!em || em.startsWith("{")) return s;
+    const sep = em[0] === "," || em[0] === "/" ? em[0] : " ";
+    const list = (sep === " " ? em : em.slice(1)).split(sep).filter(Boolean);
+    for (const rv of list) {
+      const p1 = rv.indexOf(":");
+      if (p1 < 0) continue;
+      const re = rv.slice(0, p1);
+      const rest = rv.slice(p1 + 1);
+      const p2 = rest.indexOf(":"); // dritter Teil = modifier, ignorieren
+      const val = p2 < 0 ? rest : rest.slice(0, p2);
+      if (!re) continue;
+      try {
+        const rx = /^\w*$/.test(re)
+          ? new RegExp("\\b" + re + "\\b")
+          : new RegExp(re);
+        if (rx.test(s)) return s.replace(rx, val);
+      } catch {
+        /* ungueltige Regex im eventMap ignorieren */
+      }
+    }
+    return s;
   }
 
   vizStateInfo(raw = this.stateRaw()) {
