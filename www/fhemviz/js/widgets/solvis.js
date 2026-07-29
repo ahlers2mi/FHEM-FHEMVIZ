@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Solvis-Heizung/Solarthermie (v0.25.0).
+ * FHEMVIZ - Solvis-Heizung/Solarthermie (v0.34.15).
  * Anlagenschema-Kachel fuer ein SolvisClient-Geraet: Solar (Kollektor/
  * Leistung/Ertrag/Durchfluss) links, Schichtspeicher (oben/mitte/unten) als
  * Zylinder in der Mitte, Verbraucher (Warmwasser/Heizkreise) rechts,
@@ -39,22 +39,19 @@ const SOLVIS_CSS = `
   .sv.solar-on .sv-solar .sv-panel { color: var(--viz-ok, #34c77b); }
   .sv.solar-on .sv-solar .sv-h { color: var(--viz-ok, #34c77b); }
 
-  /* Schichtspeicher als Zylinder mit Stratifikations-Verlauf */
+  /* Schichtspeicher als Zylinder. Der Verlauf wird aus den ECHTEN
+   * Temperaturen gebaut (Inline-Style in render), nicht dekorativ gesetzt -
+   * ein durchgehend heisser Speicher ist damit auf einen Blick zu sehen. */
   .sv-tank { display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .sv-cyl {
-    position: relative; width: 66px; height: 100%; min-height: 150px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    width: 66px; height: 100%; min-height: 150px; padding: 7px 0;
     border: 2px solid var(--viz-border, #262c35); border-radius: 16px;
-    background: linear-gradient(180deg,
-      color-mix(in srgb, var(--viz-error, #ff5d5d) 55%, transparent) 0%,
-      color-mix(in srgb, var(--viz-warn, #ffab40) 45%, transparent) 42%,
-      color-mix(in srgb, var(--viz-action, #4c8dff) 40%, transparent) 100%);
     overflow: hidden;
   }
-  .sv-cyl .seg { position: absolute; left: 0; right: 0; text-align: center;
+  .sv-cyl .seg { text-align: center;
     font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums;
     color: var(--viz-text, #e8eaed); text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
-  .sv-cyl .seg.top { top: 8px; } .sv-cyl .seg.mid { top: 50%; transform: translateY(-50%); }
-  .sv-cyl .seg.bot { bottom: 8px; }
   .sv-tank .sv-cap { margin-top: 5px; font-size: 0.62rem; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--viz-muted, #77808c); }
 
@@ -73,8 +70,7 @@ const SOLVIS_CSS = `
   @media (max-width: 520px) {
     .sv-grid { grid-template-columns: 1fr; }
     .sv-tank { order: -1; }
-    .sv-cyl { width: 100%; min-height: 90px; height: 90px; }
-    .sv-cyl .seg.top { top: 6px; } .sv-cyl .seg.bot { bottom: 6px; }
+    .sv-cyl { width: 100%; min-height: 112px; height: 112px; }
   }
 `;
 
@@ -118,12 +114,46 @@ export class FhemvizSolvis extends FhemvizWidget {
       <span class="sv-v">${txt}${n === null ? "" : `<span class="u">${unit}</span>`}</span></div>`;
   }
 
+  /**
+   * Farbe einer Speicherschicht aus ihrer eigenen Temperatur - stufenlos:
+   * 25 °C = blau, 55 °C = orange, 95 °C = rot, dazwischen gemischt. Drei
+   * feste Farbstufen wuerden einen komplett durchgeheizten Speicher (94/88/
+   * 85/72 °C) als eine einzige rote Flaeche zeigen; so bleibt die Schichtung
+   * sichtbar.
+   */
+  _segColor(n) {
+    if (n === null || isNaN(n)) return "var(--viz-raised, #1c212a)";
+    const p = (x) => Math.max(0, Math.min(100, Math.round(x)));
+    const c =
+      n <= 55
+        ? `color-mix(in srgb, var(--viz-warn, #ffab40) ${p(
+            ((n - 25) / 30) * 100
+          )}%, var(--viz-action, #4c8dff))`
+        : `color-mix(in srgb, var(--viz-error, #ff5d5d) ${p(
+            ((n - 55) / 40) * 100
+          )}%, var(--viz-warn, #ffab40))`;
+    return `color-mix(in srgb, ${c} 52%, transparent)`;
+  }
+
   render() {
     const solarOn = (this._num("A01") || 0) > 0 || (this._num("SL") || 0) > 0.1;
     const brenner = /^(on|an|1)$/i.test(this.plain(this._raw("A12")));
-    const oben = this._temp("S04");
-    const mid = this._temp("S03");
-    const unten = this._temp("S09");
+    // Schichtung von OBEN nach UNTEN, wie im Solvis-Anlagenschema:
+    //   S01 Warmwasserpuffer (ganz oben)
+    //   S04 Heizungspuffer oben
+    //   S09 Heizungspuffer unten
+    //   S03 Speicherreferenz (unten)
+    // Frueher standen hier nur S04/S03/S09 - S03 und S09 waren vertauscht
+    // (die Mitte war kaelter als der Boden) und S01, der heisseste und
+    // wichtigste Wert, fehlte ganz.
+    const schichten = [
+      ["S01", "Warmwasserpuffer"],
+      ["S04", "Heizungspuffer oben"],
+      ["S09", "Heizungspuffer unten"],
+      ["S03", "Speicherreferenz"],
+    ]
+      .map(([p, name]) => ({ p, name, t: this._temp(p), n: this._num(p) }))
+      .filter((s) => s.t.txt !== "–"); // nicht angeschlossene Fuehler weglassen
     const aussen = this._temp("S10");
 
     const panel = `<svg class="sv-panel" viewBox="0 0 60 20" fill="none" stroke="currentColor"
@@ -146,10 +176,32 @@ export class FhemvizSolvis extends FhemvizWidget {
             ${this._valRow("Durchfluss", "S17", "l/h", 0)}
           </div>
           <div class="sv-tank">
-            <div class="sv-cyl">
-              <span class="seg top">${oben.txt === "–" ? "–" : oben.txt + "°"}</span>
-              <span class="seg mid">${mid.txt === "–" ? "–" : mid.txt + "°"}</span>
-              <span class="seg bot">${unten.txt === "–" ? "–" : unten.txt + "°"}</span>
+            <div class="sv-cyl" style="background:linear-gradient(180deg,${
+              schichten.length
+                ? schichten
+                    .map(
+                      (s, i) =>
+                        `${this._segColor(s.n)} ${
+                          schichten.length === 1
+                            ? 100
+                            : Math.round((i / (schichten.length - 1)) * 100)
+                        }%`
+                    )
+                    .join(",")
+                : "var(--viz-raised, #1c212a) 0%,var(--viz-raised, #1c212a) 100%"
+            });">
+              ${
+                schichten.length
+                  ? schichten
+                      .map(
+                        (s) =>
+                          `<span class="seg" title="${this.escape(
+                            s.name + " (" + s.p + ")"
+                          )}">${s.t.txt}°</span>`
+                      )
+                      .join("")
+                  : `<span class="seg">–</span>`
+              }
             </div>
             <span class="sv-cap">Speicher</span>
           </div>
