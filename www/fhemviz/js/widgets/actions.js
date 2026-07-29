@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Aktions-Widget (webCmd), v0.34.11.
+ * FHEMVIZ - Aktions-Widget (webCmd), v0.34.12.
  * Rendert webCmd-Eintraege passend zur PossibleSets-Beschreibung:
  *   cmd:slider,min,step,max  -> Schieberegler (z. B. desiredTemperature)
  *   cmd:wert1,wert2,...      -> Dropdown (z. B. Mode:manuel,auto,winter)
@@ -39,22 +39,15 @@ export class FhemvizActions extends FhemvizWidget {
   /**
    * Welche Option ist gerade aktiv? Rueckgabe { value, extra }.
    *
-   * 1. Exakter Treffer gewinnt (Normalfall).
-   * 2. Sonst gilt eine ganze Zahl 1..N als INDEX in die Liste: readingsProxys
-   *    auf einen Kanal-Zaehler liefern als Wert die Kanalnummer, die Auswahl
-   *    besteht aber aus Namen (HEOS: state = 27, setList = 27 Sendernamen in
-   *    Kanal-Reihenfolge). So steht im Feld der Sender, der wirklich laeuft.
-   * 3. Passt gar nichts, wird der Rohwert als zusaetzliche Option gezeigt.
+   * 1. Exakter Treffer gewinnt (Normalfall). Der Wert kommt schon durch die
+   *    eventMap (mapEvent), damit z. B. die Kanalnummer 27 als "WDR4" ankommt.
+   * 2. Passt gar nichts, wird der Rohwert als zusaetzliche Option gezeigt.
    *    FHEMWEB laesst in diesem Fall die ERSTE Option stehen (fhemweb.js,
    *    FW_createSelect setzt den Wert nur bei Treffer) - die Kachel behauptete
    *    damit einen falschen Sender, obwohl ein anderer lief.
    */
   _selInfo(options, cur) {
     if (options.includes(cur)) return { value: cur };
-    if (/^\d+$/.test(cur)) {
-      const i = parseInt(cur, 10);
-      if (i >= 1 && i <= options.length) return { value: options[i - 1] };
-    }
     return { value: cur, extra: cur === "" ? "–" : cur };
   }
 
@@ -77,12 +70,16 @@ export class FhemvizActions extends FhemvizWidget {
   _controls() {
     const specs = this._setSpecs();
     const readings = this.device.readings || {};
+    // Aktueller Wert wie in FHEMWEB durch die eventMap (FW_widgetFallbackFn:
+    // $current = ReplaceEventMap($d, $current, 1)) - sonst sucht das
+    // Auswahlfeld die Kanalnummer 27 in einer Liste aus Sendernamen.
+    const wert = (n) => this.mapEvent(this.plain(readings[n]));
     return this._cmds().map((entry, idx) => {
       if (/\s/.test(entry)) return { kind: "button", entry, idx };
       const spec = specs.get(entry) || "";
       const slider = spec.match(/^slider,(-?[\d.]+),([\d.]+),(-?[\d.]+)/);
       if (slider) {
-        const cur = parseFloat(this.plain(readings[entry]));
+        const cur = parseFloat(wert(entry));
         return {
           kind: "slider", entry, idx,
           min: +slider[1], step: +slider[2], max: +slider[3],
@@ -93,7 +90,7 @@ export class FhemvizActions extends FhemvizWidget {
         const options = spec.split(",");
         return {
           kind: "select", entry, idx, options,
-          ...this._selInfo(options, this.plain(readings[entry])),
+          ...this._selInfo(options, wert(entry)),
         };
       }
       return { kind: "button", entry, idx };
