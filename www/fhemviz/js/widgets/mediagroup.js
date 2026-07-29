@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Media-Gruppe (v0.34.9).
+ * FHEMVIZ - Media-Gruppe (v0.34.10).
  * Fuer ein FHEM-structure-Geraet aus AV-Receivern/Zonen (z. B. DENON_AVR /
  * DENON_AVR_ZONE): EINE Kachel, je Geraet eine Zeile mit Power-Toggle,
  * Lautstaerke-Regler und Mute. Befehle gehen an das jeweilige Mitglied.

@@ -463,7 +463,10 @@ export class FhemvizWidget extends HTMLElement {
     });
     elm.addEventListener("change", () => {
       if (!gezogen) {
-        elm.value = start; // Antippen: Regler zurueck, kein Befehl
+        // Antippen: Regler zurueck, kein Befehl. Das input-Event laesst eine
+        // mitlaufende Wertanzeige den alten Wert wieder uebernehmen.
+        elm.value = start;
+        elm.dispatchEvent(new Event("input", { bubbles: true }));
         return;
       }
       x0 = null;

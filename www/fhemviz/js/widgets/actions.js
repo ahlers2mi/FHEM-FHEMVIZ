@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Aktions-Widget (webCmd), v0.34.9.
+ * FHEMVIZ - Aktions-Widget (webCmd), v0.34.10.
  * Rendert webCmd-Eintraege passend zur PossibleSets-Beschreibung:
  *   cmd:slider,min,step,max  -> Schieberegler (z. B. desiredTemperature)
  *   cmd:wert1,wert2,...      -> Dropdown (z. B. Mode:manuel,auto,winter)
@@ -34,6 +34,22 @@ export class FhemvizActions extends FhemvizWidget {
       else map.set(tok.slice(0, i), tok.slice(i + 1));
     }
     return map;
+  }
+
+  /**
+   * "set <dev> <cmd> <wert>" - AUSSER der webCmd-Eintrag heisst "state":
+   * dann wird der Eintrag WEGGELASSEN. Dummies und readingsProxys mit
+   * "setList state:Aus,Kiepenkerl,…" bzw. "setList state:slider,0,2,100"
+   * erwarten den Wert direkt ("set radiosender Kiepenkerl"). FHEMWEB macht es
+   * genauso - fhemweb.js, FW_replaceWidgets:
+   *   params[0]=="state" ? "" : " "+params[0]
+   * Mit vorangestelltem "state" schrieb 98_dummy.pm den Text
+   * "state Kiepenkerl" ins state-Reading (dummy_Set: state = join(" ", @a)),
+   * ein darauf horchendes notify sah den Sendernamen nie - die Auswahl blieb
+   * wirkungslos.
+   */
+  _cmdFor(entry, value) {
+    return entry === "state" ? String(value) : `${entry} ${value}`;
   }
 
   _controls() {
@@ -148,13 +164,16 @@ export class FhemvizActions extends FhemvizWidget {
         const v = this.shadowRoot.querySelector(`[data-val="${sl.dataset.idx}"]`);
         if (v) v.textContent = sl.value;
       });
-      sl.addEventListener("change", () =>
-        this.sendCommand(`${sl.dataset.cmd} ${sl.value}`)
+      // Nur ziehen zaehlt - ein Antippen der Schiene wuerde sonst direkt auf
+      // den getippten Wert springen (siehe bindSlider). Hier sitzen auch
+      // Lautstaerke-Regler (readingsProxy mit "setList state:slider,0,2,100").
+      this.bindSlider(sl, (wert) =>
+        this.sendCommand(this._cmdFor(sl.dataset.cmd, wert))
       );
     });
     this.shadowRoot.querySelectorAll("select[data-cmd]").forEach((se) => {
       se.addEventListener("change", () =>
-        this.sendCommand(`${se.dataset.cmd} ${se.value}`)
+        this.sendCommand(this._cmdFor(se.dataset.cmd, se.value))
       );
     });
   }

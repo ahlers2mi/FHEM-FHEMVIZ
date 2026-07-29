@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.9
+# Version:  v0.34.10
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.9";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.10";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -313,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.9"),
+            FHEMVIZ_jsonStr("v0.34.10"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -735,7 +735,15 @@ sub FHEMVIZ_Attr {
         <code>vizImage</code>). Das <code>actions</code>-Widget (aus
         <code>webCmd</code>) rendert Buttons/Slider/Dropdown und beschriftet
         sie mit dem FHEM-Attribut <code>webCmdLabel</code> (":"-getrennt, je
-        webCmd-Eintrag), falls gesetzt.</li>
+        webCmd-Eintrag), falls gesetzt. Transport-Befehle (play, pause, stop,
+        prev/previous, next, mute &ndash; auch <code>resume</code>,
+        <code>skipToNext</code>, <code>skipToPrevious</code>) bekommen
+        einfarbige Symbole; ein Wort-Label aus <code>webCmdLabel</code> bleibt
+        Text. Heißt der webCmd-Eintrag <code>state</code> (Dummy/readingsProxy
+        mit <code>setList state:Aus,Kiepenkerl,…</code> bzw.
+        <code>setList state:slider,0,2,100</code>), wird &ndash; wie in FHEMWEB
+        &ndash; nur der Wert gesendet: <code>set &lt;dev&gt; Kiepenkerl</code>,
+        nicht <code>set &lt;dev&gt; state Kiepenkerl</code>.</li>
     <li><a id="FHEMVIZ-attr-vizSize"></a><b>vizSize</b> 1x1|2x1|1x2|2x2<br>
         Kachelgröße im Raster; 2x2 vergrößert Fläche und Schrift der
         Kachel (bleibt aber im Raster). Für einen echten, seitenbreiten
