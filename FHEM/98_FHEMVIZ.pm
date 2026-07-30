@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.16
+# Version:  v0.34.17
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.16";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.17";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -313,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.16"),
+            FHEMVIZ_jsonStr("v0.34.17"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -713,7 +713,15 @@ sub FHEMVIZ_Attr {
         Heizkreise rechts, Außen/Brenner in der Fußzeile) &ndash; automatisch
         für <code>TYPE=SolvisClient</code>; Readings über die festen Präfixe
         (<code>S01</code>..<code>S18</code>, <code>SL</code>, <code>SE</code>,
-        <code>A01</code>, <code>A12</code>), Wert 250 = „nicht verbunden";
+        <code>A01</code>, <code>A12</code>), Wert 250 = „nicht verbunden".
+        Der Zylinder zeigt die Schichtung von <b>oben nach unten</b> in der
+        Reihenfolge des Solvis-Anlagenschemas: <code>S01</code>
+        (Warmwasserpuffer), <code>S04</code> (Heizungspuffer oben),
+        <code>S09</code> (Heizungspuffer unten), <code>S03</code>
+        (Speicherreferenz); nicht angeschlossene Fühler fallen heraus, die
+        Segmentzahl passt sich an. Der Farbverlauf kommt aus den <b>echten
+        Temperaturen</b> (stufenlos: 25 °C blau, 55 °C orange, 95 °C rot), ein
+        durchgeheizter Speicher ist also auf einen Blick zu sehen.
         Empfehlung <code>vizSize 2x2</code>,
         <code>mediagroup</code> = Media-Gruppe: EINE Kachel für ein
         <code>structure</code>-Gerät aus AV-Receivern/Playern (Denon, HEOS …),
