@@ -191,6 +191,16 @@ export function renderLayout(root, store, client, opts = {}) {
   const showTabs = opts.showTabs !== false;
   const rooms = buildRooms(store, opts);
 
+  // Scrollposition der Tab-Leiste ueber den Neuaufbau retten: die Leiste wird
+  // bei jedem renderLayout komplett neu erzeugt und startet sonst wieder bei 0.
+  // Ein Klick auf einen weit rechts liegenden Raum sprang damit zurueck an den
+  // linken Anfang (im bento-Querformat, wo die Leiste eine Schiene ist: nach
+  // oben) - der gerade gewaehlte Tab war anschliessend nicht mehr zu sehen.
+  const altNav = root.querySelector(".viz-tabs");
+  const navScroll = altNav
+    ? { x: altNav.scrollLeft, y: altNav.scrollTop }
+    : null;
+
   root.textContent = "";
 
   const roomNames = [...rooms.keys()].sort((a, b) =>
@@ -398,5 +408,31 @@ export function renderLayout(root, store, client, opts = {}) {
   // Tab-Leiste ganz am Ende einhaengen (siehe oben): fixed (ohne Zoom)
   // ignoriert die Position ohnehin, sticky (mit Zoom) klebt so korrekt
   // unten statt oben.
-  if (nav) root.appendChild(nav);
+  if (nav) {
+    root.appendChild(nav);
+    restoreNavScroll(nav, navScroll);
+  }
+}
+
+/**
+ * Scrollposition der Tab-Leiste wiederherstellen und danach sicherstellen,
+ * dass der AKTIVE Tab sichtbar ist. scrollIntoView() waere naheliegend, wuerde
+ * aber die ganze Seite mitscrollen (die Leiste ist fixed bzw. sticky) - darum
+ * die minimale Verschiebung selbst rechnen. Deckt beide Richtungen ab: Leiste
+ * unten (waagerecht) und bento-Schiene im Querformat (senkrecht).
+ */
+function restoreNavScroll(nav, prev) {
+  if (prev) {
+    nav.scrollLeft = prev.x;
+    nav.scrollTop = prev.y;
+  }
+  const tab = nav.querySelector(".viz-tab.active");
+  if (!tab) return;
+  const luft = 8;
+  const nb = nav.getBoundingClientRect();
+  const tb = tab.getBoundingClientRect();
+  if (tb.left < nb.left) nav.scrollLeft -= nb.left - tb.left + luft;
+  else if (tb.right > nb.right) nav.scrollLeft += tb.right - nb.right + luft;
+  if (tb.top < nb.top) nav.scrollTop -= nb.top - tb.top + luft;
+  else if (tb.bottom > nb.bottom) nav.scrollTop += tb.bottom - nb.bottom + luft;
 }
