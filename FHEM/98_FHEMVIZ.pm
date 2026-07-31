@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.19
+# Version:  v0.34.20
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.19";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.20";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -313,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.19"),
+            FHEMVIZ_jsonStr("v0.34.20"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -564,7 +564,9 @@ sub FHEMVIZ_Attr {
         Typ: textField-long. Immer sichtbare Status-Chips im Kopf:
         kommaseparierte Liste <code>gerät[:reading[:einheit[:farbe]]]</code>.
         structure-Geräte werden zu "Alias: n offen · m gekippt" (Warnfarbe),
-        Readings zu Wert-Chips, sonst Zustands-Chip. Das optionale 4. Feld
+        Readings zu Wert-Chips, sonst Zustands-Chip. Ein Zustands-Chip
+        berücksichtigt <code>vizStates</code> am Gerät, „Abregelung on" lässt
+        sich damit als „Abregelung aktiv" in Rot zeigen. Das optionale 4. Feld
         <b>farbe</b> färbt einen Reading-Chip &ndash; fester Name
         (<code>ok</code>/<code>warn</code>/<code>bad</code>/…) oder
         <b>Schwellwerte</b> wie bei vizReadings

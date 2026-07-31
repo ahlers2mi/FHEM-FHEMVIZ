@@ -320,6 +320,30 @@ const MEDIA_ALIAS = {
   volume: "volume",
 };
 
+/**
+ * vizStates-Spezifikation auf einen Zustandstext anwenden:
+ * "pattern:Label[:Farbe]" kommasepariert, pattern = Regex (Volltreffer,
+ * case-insensitiv). Ergebnis {text, color} oder null (kein Treffer/kein Spec).
+ * Als freie Funktion, damit sie auch ausserhalb der Widgets nutzbar ist -
+ * die Statusleiste (app.js) zeigt Zustaende genauso an.
+ */
+export function vizStatesInfo(spec, text) {
+  if (!spec) return null;
+  const st = String(text ?? "").trim();
+  for (const t of String(spec).split(",")) {
+    const [pat, label, color] = t.split(":").map((x) => (x || "").trim());
+    if (!pat) continue;
+    try {
+      if (new RegExp("^(?:" + pat + ")$", "i").test(st)) {
+        return { text: label || st, color: vizColorVar(color) };
+      }
+    } catch {
+      /* ungueltige Regex ignorieren */
+    }
+  }
+  return null;
+}
+
 /** Inline-SVG fuer einen Transport-Befehl, "" wenn keins passt. */
 export function mediaIconHtml(cmd) {
   const key = MEDIA_ALIAS[String(cmd || "").trim().toLowerCase()];
@@ -695,21 +719,10 @@ export class FhemvizWidget extends HTMLElement {
   }
 
   vizStateInfo(raw = this.stateRaw()) {
-    const spec = this.device.attr && this.device.attr.vizStates;
-    if (!spec) return null;
-    const st = this.plain(raw);
-    for (const t of String(spec).split(",")) {
-      const [pat, label, color] = t.split(":").map((x) => (x || "").trim());
-      if (!pat) continue;
-      try {
-        if (new RegExp("^(?:" + pat + ")$", "i").test(st)) {
-          return { text: label || st, color: this.colorVar(color) };
-        }
-      } catch {
-        /* ungueltige Regex ignorieren */
-      }
-    }
-    return null;
+    return vizStatesInfo(
+      this.device.attr && this.device.attr.vizStates,
+      this.plain(raw)
+    );
   }
 
   /** Muss von abgeleiteten Widgets ueberschrieben werden. */
