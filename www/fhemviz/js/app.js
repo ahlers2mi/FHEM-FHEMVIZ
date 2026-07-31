@@ -11,12 +11,17 @@ import { FhemClient } from "./fhem-client.js";
 import { Store } from "./store.js";
 import { renderLayout, collectRooms, resolveRoom, ALL_ROOMS, VIZ_ROOM_PREFIX } from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
-import { vizColorFor, setWidgetSkinCss, setFlashMode } from "./widgets/base-widget.js";
+import {
+  vizColorFor,
+  vizStatesInfo,
+  setWidgetSkinCss,
+  setFlashMode,
+} from "./widgets/base-widget.js";
 
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.18";
+const SPA_VERSION = "v0.34.20";
 
 const el = (id) => document.getElementById(id);
 
@@ -211,8 +216,11 @@ function renderClockPage(root, store, cfg) {
       // Versalien gesetzt sah er wie ein Fehler aus.
       const label =
         it.label || (dev.attr && dev.attr.alias) || dev.name || it.reading;
+      // Farbe/Schwellwerte aus dem 5. headerInfo-Feld - auf der Uhr-Seite
+      // sind die Zahlen gross, ein roter Batteriestand faellt dort auf.
+      const col = vizColorFor(it.color, parseFloat(String(v).replace(",", ".")));
       return `<div class="cp-k">
-        <div class="cp-v">${escapeHtml(v)}${
+        <div class="cp-v"${col ? ` style="color:${col}"` : ""}>${escapeHtml(v)}${
           it.unit ? `<small>${escapeHtml(it.unit)}</small>` : ""
         }</div>
         <div class="cp-l">${escapeHtml(label)}</div>
@@ -392,6 +400,19 @@ function vizStatusData(store, c) {
     return { text: `${alias} –`, alias, value: "–", warn: false };
   }
   const warn = /^(on|an|open|offen|auf|true|running|l(ä|ae)uft|1)$/i.test(st);
+  // vizStates am Geraet auch hier auswerten: ein Chip "Abregelung on" liest
+  // sich schlechter als "Abregelung aktiv", und die Kacheln uebersetzen den
+  // Zustand laengst. Farbe aus vizStates gewinnt gegen die warn-Heuristik.
+  const mapped = vizStatesInfo(c.device.attr && c.device.attr.vizStates, st);
+  if (mapped) {
+    return {
+      text: `${alias} ${mapped.text}`,
+      alias,
+      value: mapped.text,
+      warn: mapped.color ? false : warn,
+      color: mapped.color,
+    };
+  }
   return { text: `${alias} ${st}`, alias, value: st, warn };
 }
 
@@ -452,8 +473,14 @@ function parseHeaderItems(store, spec) {
         const [dev, size] = ic[1].split(":").map((x) => x.trim());
         return { kind: "icon", dev, size };
       }
-      const [dev, reading, unit, label] = t.split(":").map((x) => (x || "").trim());
-      return { kind: "val", dev, reading, unit, label };
+      // geraet:reading[:einheit[:label[:farbe]]] - farbe wie bei vizReadings
+      // und statusBar: fester Name (ok/warn/bad/accent/blau) oder
+      // Schwellwerte ("bad@<=20|warn@<=40|ok@>=80"). Ein Farbfeld enthaelt
+      // keinen Doppelpunkt, das Aufteilen bleibt also eindeutig.
+      const [dev, reading, unit, label, color] = t
+        .split(":")
+        .map((x) => (x || "").trim());
+      return { kind: "val", dev, reading, unit, label, color };
     })
     .filter((it) => store.get(it.dev));
 }
@@ -498,6 +525,9 @@ function setupHeaderInfo(store, spec) {
         if (v === "" ) continue;
         const span = document.createElement("span");
         span.className = "hi-val";
+        // Farbe/Schwellwerte aus dem 5. Feld (gleiche Logik wie vizReadings).
+        const col = vizColorFor(it.color, parseFloat(String(v).replace(",", ".")));
+        if (col) span.style.color = col;
         span.innerHTML =
           (it.label ? `<span class="hi-lbl">${escapeHtml(it.label)}</span>` : "") +
           escapeHtml(v) +
