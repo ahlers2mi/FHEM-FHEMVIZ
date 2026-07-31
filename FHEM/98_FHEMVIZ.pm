@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.18
+# Version:  v0.34.19
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.18";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.19";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -313,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.18"),
+            FHEMVIZ_jsonStr("v0.34.19"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -574,13 +574,20 @@ sub FHEMVIZ_Attr {
     <li><a id="FHEMVIZ-attr-headerInfo"></a><b>headerInfo</b><br>
         Typ: textField-long. Kompakte Live-Info rechts neben dem Datum (der
         „Glance-Header") &ndash; belebt die sonst leere Kopfzeile auf jeder
-        Seite. Kommaseparierte Items: <code>gerät:reading[:einheit[:label]]</code>
+        Seite. Kommaseparierte Items:
+        <code>gerät:reading[:einheit[:label[:farbe]]]</code>
         zeigt einen großen Wert, <code>icon=gerät[:größe]</code> ein Icon aus
         einem <code>weblink image …</code> (Größe optional, z. B.
         <code>icon=dev:16rem</code>). Das Icon ist rechts verankert und darf
         aus der Kopfzeile in die Seite ragen, ohne rechts aus dem Bild zu
-        laufen. Live über den inform-Kanal. Beispiel:<br>
-        <code>attr myViz headerInfo MQTT2_B0CBD8D5566F:temp_C:°C,icon=www_weather_icon_today:14rem</code></li>
+        laufen. Live über den inform-Kanal.<br>
+        <b>farbe</b> (5. Feld) färbt den Wert &ndash; fester Name
+        (<code>ok</code>/<code>warn</code>/<code>bad</code>/<code>accent</code>/…)
+        oder <b>Schwellwerte</b> wie bei <code>vizReadings</code>
+        (<code>bad@&lt;=20|warn@&lt;=40|ok@&gt;=80</code>). Die Wert-Items
+        erscheinen außerdem als große Kennzahlen auf der Uhr-Seite
+        (<code>tvScenes #uhr</code>), dort wirkt die Farbe genauso. Beispiel:<br>
+        <code>attr myViz headerInfo MQTT2_B0CBD8D5566F:temp_C:°C:Außen,rem_MQTT2_SMART_SHUNT1:data_state_of_charge_shunt_state:%:Batterie:bad@&lt;=20|warn@&lt;=40|ok@&gt;=80,icon=www_weather_icon_today:14rem</code></li>
 
     <li><a id="FHEMVIZ-attr-background"></a><b>background</b><br>
         URL oder Pfad eines Hintergrundbildes fuer das Dashboard (z. B. ein
