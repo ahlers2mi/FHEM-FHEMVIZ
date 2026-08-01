@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Kontakt-Widget fuer Fenster/Tueren (v0.7.8).
+ * FHEMVIZ - Kontakt-Widget fuer Fenster/Tueren (v0.34.23).
  * Zustand auf einen Blick: OFFEN = Bernstein (faellt sofort auf),
  * GEKIPPT = eigener Zustand, ZU = ruhig/neutral. Symbol je nach Geraet
  * (Tuer, wenn Alias/Name "Tuer"/"door" enthaelt, sonst Fenster).
@@ -188,9 +188,12 @@ export class FhemvizContact extends FhemvizWidget {
           )
           .join("")}</div>`;
 
+    // "cgroup" kennzeichnet die Gruppen-Variante fuer die Skins: sie ist
+    // eine Gruppen-Kachel (Kopf + Mitgliederliste), keine Wertzeile - der
+    // Skin "zeilen" darf sie also nicht in eine Zeile pressen.
     return `
       <style>${CONTACT_CSS}</style>
-      <div class="card${attention ? " on open" : " closed"}">
+      <div class="card cgroup${attention ? " on open" : " closed"}">
         <span class="label">${this.escape(this.displayName())}</span>
         <span class="cstate">${this.escape(head)}</span>
         ${body}

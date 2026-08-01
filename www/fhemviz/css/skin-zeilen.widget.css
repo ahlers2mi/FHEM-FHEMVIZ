@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Skin "zeilen" (Kachel-Innenleben), v0.34.22.
+ * FHEMVIZ - Skin "zeilen" (Kachel-Innenleben), v0.34.23.
  * Wird von app.js als TEXT geladen und in JEDEN Shadow DOM gehaengt (hinter
  * CARD_CSS) - externe Stylesheets erreichen den Shadow DOM nicht.
  *
@@ -124,6 +124,24 @@
   display: none;
 }
 
+/* Einzelner Fenster-/Tuerkontakt: Symbol + Zustand rechts wie ein Wert,
+ * nicht als grosser Block links vom Namen (.cwrap hat "flex: 1" und KEIN
+ * order, stand also vor dem Geraetenamen). Das 42px-Symbol ist fuer eine
+ * Listenzeile zu gross. */
+:host(fhemviz-contact) .card > .cwrap {
+  order: 3;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+:host(fhemviz-contact) .card > .cwrap .cicon {
+  width: 22px;
+  height: 22px;
+}
+:host(fhemviz-contact) .card > .cwrap .cstate {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
 /* Regler und Knopfreihen brauchen die ganze Breite. */
 :host(fhemviz-dimmer) .card > input[type="range"],
 :host(fhemviz-actions) .card .ctlrow,
@@ -148,6 +166,68 @@
 :host(fhemviz-ventgroup) .card > .label {
   font-size: 0.6rem;
   letter-spacing: 0.16em;
+}
+
+/* --- Kontakt-GRUPPE (structure aus Fenster-/Tuerkontakten) ------------- */
+/* Die Gruppen-Variante des Kontakt-Widgets (.card.cgroup) ist keine
+ * Wertzeile, sondern eine Gruppen-Kachel: Kopf (Name + "2 offen") und
+ * darunter das Mitglieder-Raster ueber die volle Breite. Ohne diese Regeln
+ * greift die Zeilen-Regel oben: .cstate und .mgrid haben kein order und
+ * standen damit VOR dem Namen, und das Raster bekam als Flex-Item in der
+ * Zeile nur seine Mindestbreite - aus dem Raster wurde eine EINSPALTIGE,
+ * sehr lange Saeule (zehn Fenster = 569 px Kachelhoehe). */
+:host(fhemviz-contact) .card.cgroup {
+  padding-bottom: 6px;
+}
+/* Kopfzeile: Name links, Zusammenfassung rechts - wie jede andere Zeile. */
+:host(fhemviz-contact) .card.cgroup > .cstate {
+  order: 2;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+/* Mitglieder darunter ueber die volle Breite. */
+:host(fhemviz-contact) .card.cgroup > .mgrid,
+:host(fhemviz-contact) .card.cgroup > .members {
+  order: 3;
+  flex: 1 1 100%;
+  min-width: 0;
+}
+/* Kopfzeile wie bei den anderen Gruppen-Kacheln. */
+:host(fhemviz-contact) .card.cgroup > .label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--viz-muted, #77808c);
+}
+:host(fhemviz-contact) .card.cgroup > .cstate {
+  font-size: 1.05rem;
+}
+/* width: 100% ist hier PFLICHT, nicht Kosmetik: in einer Spalten-Flexbox
+ * steht die Hoehe eines Items VOR seiner Breite fest. Ohne definite Breite
+ * rechnet das Raster (auto-fill minmax(62px, 1fr)) seine Hoehe mit der
+ * Mindestbreite - also EINE Spalte und zehn Zeilen (540 px), obwohl es
+ * anschliessend fuenfspaltig gezeichnet wird. Ergebnis war eine Kachel mit
+ * riesigen Luecken zwischen den Symbolreihen. */
+:host(fhemviz-contact) .card.cgroup > .mgrid,
+:host(fhemviz-contact) .card.cgroup > .members {
+  width: 100%;
+  align-content: start;
+}
+/* Die Kachel hat hier die volle Listenbreite - lieber etwas breitere
+ * Spalten und zweizeilige Namen als "Schlafzim…" fuer zwei verschiedene
+ * Zimmer. */
+:host(fhemviz-contact) .card.cgroup > .mgrid {
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+}
+/* Umbruch nur an LEERZEICHEN (kein overflow-wrap: anywhere, das machte aus
+ * "Arbeitszimmer" ein "Arbeitszimm/er"). */
+:host(fhemviz-contact) .card.cgroup .mg .mname {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  font-size: 0.6rem;
+  line-height: 1.2;
 }
 
 /* --- Grafische Kacheln behalten ihren Kasten -------------------------- */
