@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Skin "zeilen" (Kachel-Innenleben), v0.31.0.
+ * FHEMVIZ - Skin "zeilen" (Kachel-Innenleben), v0.34.22.
  * Wird von app.js als TEXT geladen und in JEDEN Shadow DOM gehaengt (hinter
  * CARD_CSS) - externe Stylesheets erreichen den Shadow DOM nicht.
  *
@@ -19,6 +19,14 @@
   height: auto;
   gap: 5px;
 }
+/* CARD_CSS vergroessert bei vizSize 2x2 das Innenmass (18px 20px 18px 24px)
+ * und ist spezifischer als die Regel oben. Im Zeilen-Layout muessen aber ALLE
+ * Kacheln auf derselben Kante beginnen, sonst springt der Geraetename je nach
+ * Kachelgroesse nach rechts. Gleiche Spezifitaet, spaeter im Stylesheet. */
+:host([data-size]) .card {
+  padding: 11px 14px;
+}
+
 /* Statusleiste nur noch bei echtem Zustand (on/ok/bad behalten ihre Farbe -
  * hoehere Spezifitaet in CARD_CSS gewinnt). */
 .card::before {
@@ -76,7 +84,8 @@
 :host(fhemviz-switch) .card > .value,
 :host(fhemviz-sensor) .card > .value,
 :host(fhemviz-contact) .card > .value,
-:host(fhemviz-vent) .card > .value {
+:host(fhemviz-vent) .card > .value,
+:host(fhemviz-actions) .card > .value {
   order: 3;
   flex: 0 0 auto;
   font-size: 1.05rem !important;
@@ -102,6 +111,19 @@
   flex: 1 1 100%;
   padding-left: 2px;
 }
+/* Der Fuell-Platzhalter (.grow ohne .row) schiebt im Kasten-Layout den Inhalt
+ * nach unten. In der Zeile ist er ein Flex-Item OHNE order, landet damit ganz
+ * VORNE und schob den Geraetenamen um die Spaltenluecke nach rechts - die
+ * Zeilen fluchteten dadurch nicht (Sensor 26 px, Schalter 14 px). */
+:host(fhemviz-switch) .card > .grow:not(.row),
+:host(fhemviz-sensor) .card > .grow:not(.row),
+:host(fhemviz-dimmer) .card > .grow:not(.row),
+:host(fhemviz-contact) .card > .grow:not(.row),
+:host(fhemviz-vent) .card > .grow:not(.row),
+:host(fhemviz-actions) .card > .grow:not(.row) {
+  display: none;
+}
+
 /* Regler und Knopfreihen brauchen die ganze Breite. */
 :host(fhemviz-dimmer) .card > input[type="range"],
 :host(fhemviz-actions) .card .ctlrow,
@@ -140,6 +162,21 @@
   background: var(--viz-surface, #151920);
   border: 1px solid var(--viz-border, #262c35);
   border-radius: var(--viz-radius, 14px);
-  margin: 8px 12px;
-  padding: 13px 15px 13px 19px;
+  /* KEIN seitlicher Aussenabstand: sonst steht der Kasten 12 px weiter innen
+   * als die flachen Zeilen und die Kacheln fluchten nicht. Das Innenmass ist
+   * um die 1px-Rahmenlinie kleiner als bei den Zeilen (14 px), damit der
+   * Text in beiden Kachelarten auf derselben Kante beginnt. */
+  margin: 8px 0;
+  padding: 13px 13px;
+}
+/* … und dasselbe Innenmass auch bei gesetztem vizSize (siehe oben). */
+:host(fhemviz-flow[data-size]) .card,
+:host(fhemviz-solvis[data-size]) .card,
+:host(fhemviz-forecast[data-size]) .card,
+:host(fhemviz-weather[data-size]) .card,
+:host(fhemviz-chart[data-size]) .card,
+:host(fhemviz-watering[data-size]) .card,
+:host(fhemviz-image[data-size]) .card,
+:host(fhemviz-text[data-size]) .card {
+  padding: 13px 13px;
 }
