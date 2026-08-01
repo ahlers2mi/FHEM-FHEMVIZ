@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Switch-Widget (v0.7.0).
+ * FHEMVIZ - Switch-Widget (v0.34.24).
  * Echter Kipp-Toggle statt Zustands-Button: der Regler zeigt die Lage,
  * die Bernstein-Farbe den Zustand. Statusleiste der Kachel = an/aus.
  * readonly (TV-Modus): nur Zustandstext, kein Bedienelement.
@@ -50,29 +50,45 @@ const ICON_CSS = `
 
 export class FhemvizSwitch extends FhemvizWidget {
   /**
-   * Schaltzustand "on" | "off" | null. Reihenfolge:
-   * 1. state selbst (praefix-tolerant, "on 23 W" zaehlt als an),
-   * 2. Readings POWER / POWER1 / state - ein stateFormat macht aus state
-   *    oft reinen Anzeigetext ohne on/off (Tasmota & Co. fuehren das
-   *    echte Ein/Aus im Reading POWER).
+   * Schaltzustand "on" | "off" | null.
+   *
+   * Erst die EINDEUTIGEN Schaltworte (on/off/an/aus/1/0) ueber state und die
+   * ueblichen Schalt-Readings, danach - und nur dann - die mehrdeutigen
+   * Kontaktworte (offen/zu). Grund: der YeeLight legt in state seinen
+   * VERBINDUNGSzustand ab ("opened" = Socket offen), das Ein/Aus steht im
+   * Reading "power". "opened" wurde vorher als "an" gelesen, die Lampe
+   * leuchtete bernstein obwohl sie aus war - und ein Tippen schickte "off"
+   * an eine schon ausgeschaltete Lampe, es passierte also nichts.
+   *
+   * Reading-Namen ohne Ruecksicht auf Gross-/Kleinschreibung: Tasmota fuehrt
+   * POWER, der YeeLight power.
    */
   _switchState() {
-    const check = (v) => {
+    const strict = (v) => {
       const s = this.plain(v).toLowerCase();
-      if (/^(on|true|an|open(ed)?|ge(ö|oe)ffnet)\b/.test(s) || s === "1") return "on";
-      if (/^(off|false|aus|closed|geschlossen|zu)\b/.test(s) || s === "0") return "off";
+      if (/^(on|true|an|ein)\b/.test(s) || s === "1") return "on";
+      if (/^(off|false|aus)\b/.test(s) || s === "0") return "off";
       return null;
     };
-    const own = check(this.device.state);
-    if (own) return own;
+    const loose = (v) => {
+      const s = this.plain(v).toLowerCase();
+      if (/^(open(ed)?|ge(ö|oe)ffnet|auf)\b/.test(s)) return "on";
+      if (/^(closed|geschlossen|zu)\b/.test(s)) return "off";
+      return null;
+    };
     const rd = this.device.readings || {};
-    for (const r of ["POWER", "POWER1", "state"]) {
-      if (rd[r] !== undefined) {
-        const m = check(rd[r]);
-        if (m) return m;
-      }
+    const reading = (name) => {
+      const key = Object.keys(rd).find((k) => k.toLowerCase() === name);
+      return key === undefined ? undefined : rd[key];
+    };
+    // stateRaw() beruecksichtigt attr vizState und die eventMap.
+    const raw = this.stateRaw();
+    for (const v of [raw, reading("power"), reading("power1"), rd.state]) {
+      if (v === undefined) continue;
+      const m = strict(v);
+      if (m) return m;
     }
-    return null;
+    return loose(raw) || loose(rd.state) || null;
   }
 
   _isOn() {
