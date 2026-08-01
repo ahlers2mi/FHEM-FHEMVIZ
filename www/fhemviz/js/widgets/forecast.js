@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - PV-Prognose-Widget (vizWidget forecast, v0.9.0).
+ * FHEMVIZ - PV-Prognose-Widget (vizWidget forecast, v0.34.21).
  * Zugeschnitten auf 76_SolarForecast (TYPE=SolarForecast wird automatisch
  * erkannt): Stunden-Balkenchart des Tages - vergangene Stunden zeigen den
  * IST-Ertrag (Today_HourXX_PVreal, kraeftig) VOR der Prognose
@@ -13,11 +13,19 @@ import { FhemvizWidget } from "./base-widget.js";
 const FORECAST_CSS = `
   .chart {
     flex: 1 1 auto; min-height: 54px;
-    display: flex; align-items: flex-end; gap: 2px;
+    /* stretch statt flex-end: die Saeulen sind absolut am Boden verankert
+     * (.fc/.real), die Spalte selbst soll die volle Hoehe fuellen. Mit
+     * "align-items: flex-end" brauchte die Spalte height:100% - und
+     * Prozenthoehen brauchen eine DEFINITE Elternhoehe. Im Skin "zeilen"
+     * steht aber .card auf height:auto, damit war die Elternhoehe nicht
+     * definit und alle Saeulen wurden 0 px hoch: das Diagramm blieb leer.
+     * Gestreckte Flex-Items haben eine definite Hoehe, damit rechnen die
+     * Prozente in jedem Skin. */
+    display: flex; align-items: stretch; gap: 2px;
     margin-top: 2px;
   }
   :host([data-size="2x2"]) .chart { min-height: 96px; }
-  .bar { flex: 1; position: relative; height: 100%; min-width: 0; }
+  .bar { flex: 1; position: relative; min-width: 0; }
   .bar .fc, .bar .real {
     position: absolute; left: 0; right: 0; bottom: 0;
     border-radius: 2px 2px 0 0;
