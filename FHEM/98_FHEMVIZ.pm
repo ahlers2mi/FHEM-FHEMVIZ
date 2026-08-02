@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.32
+# Version:  v0.34.33
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.32";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.33";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -314,7 +314,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.32"),
+            FHEMVIZ_jsonStr("v0.34.33"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -550,10 +550,11 @@ sub FHEMVIZ_Attr {
         und in der Statuszeile gemeldet.<br>
         <b>Sonderziel <code>#uhr</code></b> (auch <code>#uebersicht</code>):
         keine Raumseite, sondern eine <b>Uhr-Seite</b> als Teil der Rotation
-        &ndash; große Uhrzeit und Datum, darunter die Kennzahlen aus
-        <code>headerInfo</code> und je <code>statusBar</code>-Eintrag eine
-        Zeile. Braucht keine eigene Konfiguration: gezeigt wird, was für
-        Kopfzeile und Statusleiste schon eingerichtet ist. Beispiel:<br>
+        &ndash; große Uhrzeit und Datum, mittig auf der ganzen Fläche.
+        Bewusst nur das: die Kopfleiste zeigt <code>headerInfo</code> und
+        <code>statusBar</code> in dieser Betriebsart ohnehin dauerhaft an,
+        die Uhr-Seite hätte beides ein zweites Mal auf dem Schirm.
+        Braucht keine eigene Konfiguration. Beispiel:<br>
         <code>attr myViz tvScenes #uhr:20,Solar:30,Wohnzimmer:20</code></li>
     <li><a id="FHEMVIZ-attr-tvTouch"></a><b>tvTouch</b><br>
         Typ: textField (Sekunden). Touch-Übernahme im TV-Modus: ein Tipp auf
@@ -587,9 +588,9 @@ sub FHEMVIZ_Attr {
         <b>farbe</b> (5. Feld) färbt den Wert &ndash; fester Name
         (<code>ok</code>/<code>warn</code>/<code>bad</code>/<code>accent</code>/…)
         oder <b>Schwellwerte</b> wie bei <code>vizReadings</code>
-        (<code>bad@&lt;=20|warn@&lt;=40|ok@&gt;=80</code>). Die Wert-Items
-        erscheinen außerdem als große Kennzahlen auf der Uhr-Seite
-        (<code>tvScenes #uhr</code>), dort wirkt die Farbe genauso. Beispiel:<br>
+        (<code>bad@&lt;=20|warn@&lt;=40|ok@&gt;=80</code>). Die Kopfleiste
+        bleibt auch auf der Uhr-Seite stehen (<code>tvScenes #uhr</code>), die
+        Kennzahlen sind dort also weiter zu sehen. Beispiel:<br>
         <code>attr myViz headerInfo MQTT2_B0CBD8D5566F:temp_C:°C:Außen,rem_MQTT2_SMART_SHUNT1:data_state_of_charge_shunt_state:%:Batterie:bad@&lt;=20|warn@&lt;=40|ok@&gt;=80,icon=www_weather_icon_today:14rem</code></li>
 
     <li><a id="FHEMVIZ-attr-background"></a><b>background</b><br>
