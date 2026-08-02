@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.25
+# Version:  v0.34.26
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.25";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.26";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -87,6 +87,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizFlow:textField-long",
     "vizChart:textField-long",
     "vizWatering:textField-long",
+    "vizCar:textField-long",
     "vizWateringButtons:textField-long",
     "vizText:textField-long",
     "vizImage",
@@ -313,7 +314,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.25"),
+            FHEMVIZ_jsonStr("v0.34.26"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -942,6 +943,33 @@ sub FHEMVIZ_Attr {
         aktives Ventil, den Fass-Füllstand als Balken, Bodenfeuchte
         (schwellwert-gefärbt), Restzeit, Zyklus und einen Regen-Hinweis.
         Meist genügt der Default (kein Attribut nötig).</li>
+    <li><a id="FHEMVIZ-attr-vizCar"></a><b>vizCar</b><br>
+        Typ: textField-long. Feinzuordnung der Fahrzeug-Kachel als
+        <code>rolle=wert</code>-Liste (kommasepariert). Rollen
+        <code>soc</code>, <code>range</code>, <code>limit</code>,
+        <code>auto</code>, <code>carlimit</code>, <code>power</code>
+        &uuml;berschreiben die gesuchten <b>Reading-Namen</b> (siehe
+        <code>vizWidget car</code>); <code>wallbox=&lt;ger&auml;t&gt;</code>
+        h&auml;ngt die <b>Wallbox</b> an die Kachel.<br>
+        Hintergrund: das Wunschlimit l&auml;dt nicht selbst &ndash; es ist die
+        Schwelle, unter der geladen werden soll. Geladen wird &uuml;ber die
+        Wallbox, und genau die zeigt und bedient die Kachel dann mit: Zustand
+        (<code>charger_state</code>, sonst <code>state</code>; ein
+        <code>vizStates</code> an der Wallbox wird angewendet), Leistung
+        (<code>charge_power</code>/<code>energy_all_w</code>/<code>power</code>,
+        sonst go-e-Rohwert <code>nrg_12</code> &times; 10),
+        Freigabe-Schalter (<code>Activation 0|1</code>, sonst
+        <code>on</code>/<code>off</code>) und Strom-Regler
+        (<code>Ampere</code>/<code>amp</code>/<code>current</code>) mit der
+        Spanne aus <code>PossibleSets</code> (<code>slider,…</code> oder
+        <code>selectnumbers,…</code>). Beide Regler senden nur beim
+        <b>Ziehen</b>, nicht beim Antippen der Schiene.<br>
+        Die Wallbox muss im <code>devspec</code> liegen &ndash; wie bei den
+        Gruppen-Kacheln reicht ein versteckter Raum
+        (<code>FHEMVIZ-&gt;Stuff</code> in <code>hideRooms</code>); sonst steht
+        ein Hinweis in der Kachel. Beispiel:<br>
+        <code>attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE</code><br>
+        <code>attr MQTT2_GOE room Garage,Solar,System-&gt;MQTT,FHEMVIZ-&gt;Stuff</code></li>
     <li><a id="FHEMVIZ-attr-vizWateringButtons"></a><b>vizWateringButtons</b><br>
         Typ: textField-long. Bedien-Buttons des Bewässerungs-Widgets als
         <code>Label=befehl</code>-Liste, mit <code>|</code> getrennt. Der
