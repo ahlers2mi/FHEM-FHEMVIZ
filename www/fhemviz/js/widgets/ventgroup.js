@@ -1,9 +1,10 @@
 /*
- * FHEMVIZ - Lueften-Gruppe (v0.24.0).
+ * FHEMVIZ - Lueften-Gruppe (v0.34.29).
  * Fuer ein FHEM-structure-Geraet aus Lueftungs-Empfehlungs-Dummies: EINE
  * Kachel, in der jeder Raum eine Zeile bekommt (Name + Wellen-Symbol +
  * Empfehlungstext, gruen = lueften sinnvoll, blau = kuehlt, rot = besser
- * nicht). Rein anzeigend (die vent-Empfehlung ist nicht schaltbar).
+ * nicht, grau = neutral). Die Staerke folgt my_lueften(): Stufe 1 blass,
+ * 2 mittel, ab 3 voll. Rein anzeigend (die Empfehlung ist nicht schaltbar).
  *
  * Auswahl: erzwungen per attr <structure> vizWidget ventgroup. Die
  * Mitglieder muessen im devspec liegen (duerfen per vizHide aus dem Raster
@@ -19,7 +20,6 @@ const VENTG_CSS = `
   .vgicon path { stroke: var(--viz-border, #262c35); }
   .vgrow.go .vgicon path.a { stroke: var(--viz-ok, #34c77b); }
   .vgrow.cool .vgicon path.a { stroke: var(--viz-action, #4c8dff); }
-  .vgrow.lo .vgicon path.a { stroke: var(--viz-muted, #77808c); }
   .vgrow.neg .vgicon path.a { stroke: var(--viz-error, #ff5d5d); }
   .vgname {
     flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
@@ -32,7 +32,11 @@ const VENTG_CSS = `
   .vgrow.go .vgstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
   .vgrow.cool .vgstate { color: var(--viz-action, #4c8dff); font-weight: 600; }
   .vgrow.neg .vgstate { color: var(--viz-error, #ff5d5d); font-weight: 600; }
-  .vgrow.hi .vgstate { font-weight: 700; }
+  /* Stufe 1/2 blasser statt grau - in my_lueften ist auch Stufe 1 GRUEN
+   * (40 % Saettigung); grau ist Stufe 0. */
+  .vgrow.s1 .vgicon path.a, .vgrow.s1 .vgstate { opacity: 0.6; }
+  .vgrow.s2 .vgicon path.a, .vgrow.s2 .vgstate { opacity: 0.8; }
+  .vgrow.s3 .vgstate { font-weight: 700; }
   :host([data-size="2x2"]) .vgname, :host([data-tv]) .vgname { font-size: 1.2rem; }
   :host([data-size="2x2"]) .vgstate, :host([data-tv]) .vgstate { font-size: 1.1rem; }
   :host([data-tv]) .vgicon { width: 34px; height: 34px; }
@@ -89,10 +93,12 @@ export class FhemvizVentGroup extends FhemvizWidget {
     const n = parseInt(this.plain(dev.state), 10);
     const level = isNaN(n) ? 0 : Math.max(-3, Math.min(4, n));
     const cool = /^on$/i.test(String((dev.readings || {}).cooling || ""));
+    // Stufe = Betrag (max. 3) -> blass/mittel/voll wie die Saettigung in
+    // my_lueften. Positiv gruen bzw. blau (kuehlt), negativ rot, 0 neutral.
+    const stufe = Math.min(3, Math.abs(level));
     let cls = "";
-    if (level === 1) cls = "lo";
-    else if (level >= 2) cls = (cool ? "cool go" : "go") + (level >= 3 ? " hi" : "");
-    else if (level < 0) cls = "neg" + (level <= -3 ? " hi" : "");
+    if (level > 0) cls = `${cool ? "cool" : "go"} s${stufe}`;
+    else if (level < 0) cls = `neg s${stufe}`;
     const label = LABELS[String(level)] + (cool && level > 0 ? " · kühlt" : "");
     return { level, cls, label };
   }
