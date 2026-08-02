@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.32
+# Version:  v0.34.34
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.32";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.34";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -314,7 +314,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.32"),
+            FHEMVIZ_jsonStr("v0.34.34"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -553,7 +553,10 @@ sub FHEMVIZ_Attr {
         &ndash; große Uhrzeit und Datum, darunter die Kennzahlen aus
         <code>headerInfo</code> und je <code>statusBar</code>-Eintrag eine
         Zeile. Braucht keine eigene Konfiguration: gezeigt wird, was für
-        Kopfzeile und Statusleiste schon eingerichtet ist. Beispiel:<br>
+        Kopfzeile und Statusleiste schon eingerichtet ist. Auf dieser Seite
+        entfällt dafür die <b>Kopfleiste</b> (Kennzahlen, Plaketten und die
+        kleine Kopf-Uhr) &ndash; sonst stünde alles doppelt auf dem Schirm;
+        Titel und Statuszeile bleiben. Beispiel:<br>
         <code>attr myViz tvScenes #uhr:20,Solar:30,Wohnzimmer:20</code></li>
     <li><a id="FHEMVIZ-attr-tvTouch"></a><b>tvTouch</b><br>
         Typ: textField (Sekunden). Touch-Übernahme im TV-Modus: ein Tipp auf

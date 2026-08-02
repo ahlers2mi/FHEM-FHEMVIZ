@@ -472,3 +472,13 @@ html[data-vizmode="tv"] #viz-toast .viz-toast-msg { font-size: 2rem; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cp-s { font-weight: 600; white-space: nowrap; }
 .cp-s.warn { color: var(--viz-accent); }
+
+/* Auf der Uhr-Seite traegt die Seite selbst die Kennzahlen und Statuszeilen -
+ * in der Kopfleiste stand beides ein zweites Mal. Dort bleiben nur Titel und
+ * Statuszeile stehen; die kleine Kopf-Uhr entfaellt, die grosse steht ja
+ * darunter. Die TV-Flaeche wird nach dem Umschalten neu vermessen (_fit). */
+body.viz-clockonly #viz-headinfo,
+body.viz-clockonly #viz-statusbar,
+body.viz-clockonly #viz-clock {
+  display: none !important;
+}

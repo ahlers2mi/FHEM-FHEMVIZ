@@ -21,7 +21,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.32";
+const SPA_VERSION = "v0.34.34";
 
 const el = (id) => document.getElementById(id);
 
@@ -200,6 +200,10 @@ const MONTHS = [
  * attr headerInfo und je statusBar-Eintrag eine Zeile. Bewusst OHNE eigene
  * Attribute - es wird gezeigt, was fuer Kopfzeile und Statusleiste schon
  * konfiguriert ist.
+ *
+ * Damit nichts doppelt auf dem Schirm steht, blendet der TvController auf
+ * dieser Seite die Kopfleiste aus (Klasse viz-clockonly, siehe _show) -
+ * bis auf Titel und Statuszeile.
  */
 function renderClockPage(root, store, cfg) {
   const d = new Date();
@@ -690,6 +694,13 @@ class TvController {
     // Uhr-Seite ist kein Raum: eigener Renderer, im Sekundentakt aktualisiert
     // (kein Auto-Paging - die Seite passt immer auf einen Schirm).
     clearInterval(this._cpTimer);
+    // Kopfleiste nur auf der Uhr-Seite ausblenden: dort zeigt die Seite
+    // headerInfo und statusBar selbst, in der Kopfleiste stand beides ein
+    // zweites Mal (ein Geraet in BEIDEN Attributen sogar vierfach). Titel und
+    // Statuszeile bleiben stehen. Danach neu vermessen - die TV-Flaeche haengt
+    // an der Kopfhoehe.
+    document.body.classList.toggle("viz-clockonly", isClockPage(scene.room));
+    this._fit();
     if (isClockPage(scene.room)) {
       const draw = () => renderClockPage(this.root, this.store, this.cfg || {});
       draw();
