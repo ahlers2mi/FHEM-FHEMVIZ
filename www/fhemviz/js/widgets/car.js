@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Fahrzeug-Widget (vizWidget car, v0.34.24).
+ * FHEMVIZ - Fahrzeug-Widget (vizWidget car, v0.34.25).
  * Ladestand gross, darunter ein Akkubalken: gefuellt = aktueller Stand,
  * blass daneben = die Strecke bis zum WUNSCHLIMIT, der weisse Strich ist
  * das Limit selbst. Der Regler darunter setzt das Wunschlimit, damit der
@@ -15,7 +15,10 @@
  *   Reichweite  battery_range_km, range_km, est_battery_range_km, range
  *   Wunschlimit wish_charge_limit, chargeLimit, charge_limit_soc,
  *               set_charge_limit  (Befehl aus PossibleSets, gleiche Namen)
- *   gesendetes Limit  virtual_charge_limit  (nur Anzeige, wenn abweichend)
+ *   Automatik   virtual_charge_limit - Arbeitswert einer Lade-Automatik IN
+ *               FHEM (nicht das Limit im Fahrzeug), nur wenn abweichend
+ *   Fahrzeug    charge_limit_soc, set_charge_limit - bis dahin laedt das
+ *               Auto selbst, nur wenn abweichend
  *   Ladeleistung      charge_power, charger_power, charging_power
  * Spanne des Reglers aus dem setList-Widget (z. B.
  * "wish_charge_limit:slider,50,5,100"), sonst 10..100 in 5er-Schritten.
@@ -119,9 +122,12 @@ export class FhemvizCar extends FhemvizWidget {
     const range = this._range();
     const limit = this._limit();
     const spec = this._limitSpec();
-    // Tatsaechlich ans Fahrzeug gesendetes Limit - kann vom Wunsch abweichen,
-    // wenn eine Automatik dazwischen sitzt (virtual_charge_limit).
-    const sent = this._num(["virtual_charge_limit"]);
+    // Arbeitswert einer Lade-Automatik in FHEM (virtual_charge_limit) - NICHT
+    // das Limit im Fahrzeug: dort landet er nicht, er steuert nur die Regelung
+    // (z. B. die Wallbox) und kommt vom Wunschlimit abweichend zurueck.
+    const auto = this._num(["virtual_charge_limit"]);
+    // Das Limit, bis zu dem das FAHRZEUG selbst laedt.
+    const carLimit = this._num(["charge_limit_soc", "set_charge_limit"]);
     const power = this._num(["charge_power", "charger_power", "charging_power"]);
 
     // Statusleiste: rot wenn fast leer, gruen wenn das Wunschlimit erreicht
@@ -162,12 +168,21 @@ export class FhemvizCar extends FhemvizWidget {
              min="${Math.min(spec.min, limit)}" max="${spec.max}" value="${limit}"
              aria-label="Wunschlimit ${this.escape(this.displayName())}">`
         : "";
-    // Nur anzeigen, wenn die Automatik gerade etwas ANDERES gesetzt hat.
-    const sentRow =
-      sent !== null && limit !== null && Math.round(sent) !== Math.round(limit)
-        ? `<div class="row"><span class="sub">gesendet</span>
-             <span class="sub">${this.fmtNum(sent, 0)} %</span></div>`
-        : "";
+    // Zusatzzeilen nur, wenn sie etwas ANDERES sagen als das Wunschlimit -
+    // sonst steht dieselbe Zahl mehrfach da.
+    const same = (v) =>
+      v === null || limit === null || Math.round(v) === Math.round(limit);
+    const extra = [
+      same(auto) ? "" : ["Automatik", auto],
+      same(carLimit) ? "" : ["Limit im Fahrzeug", carLimit],
+    ]
+      .filter(Boolean)
+      .map(
+        ([lbl, v]) =>
+          `<div class="row"><span class="sub">${lbl}</span>
+             <span class="sub">${this.fmtNum(v, 0)} %</span></div>`
+      )
+      .join("");
 
     return `<style>${CAR_CSS}</style>
       <div class="card${cls}">
@@ -181,7 +196,7 @@ export class FhemvizCar extends FhemvizWidget {
         ${bar}
         ${wishRow}
         ${slider}
-        ${sentRow}
+        ${extra}
         ${this._extraRows()}
       </div>`;
   }
