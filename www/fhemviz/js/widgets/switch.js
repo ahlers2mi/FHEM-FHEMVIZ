@@ -43,6 +43,10 @@ const ICON_CSS = `
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .card.on .iname { color: var(--viz-text, #e8eaed); }
+  /* Zustand als Text: im Symbol-Modus traegt die FARBE den Zustand, der Text
+   * ist hier ueberfluessig. Ein Skin, das die Kachel zur Listenzeile macht
+   * (siehe skin-zeilen), blendet ihn per hoeherer Spezifitaet wieder ein. */
+  .istate { display: none; }
   .icard:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 2px; border-radius: 8px; }
   :host([data-tv]) .icard svg { width: 60px; height: 60px; }
   :host([data-tv]) .iname { font-size: 0.9rem; }
@@ -133,6 +137,7 @@ export class FhemvizSwitch extends FhemvizWidget {
               stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
               aria-hidden="true">${ICONS[iconKey]}</svg>
             <span class="iname">${this.escape(this.displayName())}</span>
+            <span class="istate">${this.escape(this._stateText())}</span>
           </button>
         </div>`;
     }

@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.31
+# Version:  v0.34.32
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.31";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.32";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -314,7 +314,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.31"),
+            FHEMVIZ_jsonStr("v0.34.32"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -845,7 +845,11 @@ sub FHEMVIZ_Attr {
         lampe|steckdose|lautsprecher|luefter|pumpe|tv|heizung|power<br>
         Symbol-Modus für Schalter-Kacheln: großes Symbol mittig, Name
         darunter, Bernstein = an — aus der Ferne lesbar wie ein klassisches
-        Schalter-Panel. Tippen auf die Kachel schaltet. Beispiel:<br>
+        Schalter-Panel. Tippen auf die Kachel schaltet. Im Skin
+        <code>zeilen</code> wird daraus eine <b>Listenzeile</b>: Name links,
+        kleines Symbol und An/Aus rechts (die ganze Zeile bleibt der
+        Schalter) — eine mittige 200-px-Kachel passt dort nicht zwischen die
+        übrigen Zeilen. Beispiel:<br>
         <code>attr d_deckenlampe vizIcon lampe</code></li>
     <li><a id="FHEMVIZ-attr-vizGroup"></a><b>vizGroup</b><br>
         Typ: textField. Übersteuert das <code>group</code>-Attribut NUR im

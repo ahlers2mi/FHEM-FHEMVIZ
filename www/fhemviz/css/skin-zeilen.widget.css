@@ -146,6 +146,45 @@
   white-space: nowrap;
 }
 
+/* Symbol-Modus (attr vizIcon): im Kasten-Layout ein grosses, mittiges Symbol
+ * mit Namen darunter - in der Liste wirkt das wie ein Fremdkoerper (rund
+ * 200 px hoch, Name mittig, kein erkennbarer Zustand). Hier wird daraus eine
+ * normale Zeile: kleines Symbol und Name links, Zustand rechts. Die ganze
+ * Zeile bleibt der Schalter (.icard ist der Button). */
+:host(fhemviz-switch) .card > .icard {
+  order: 1;
+  flex: 1 1 auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  text-align: left;
+}
+:host(fhemviz-switch) .card > .icard svg {
+  width: 22px;
+  height: 22px;
+}
+:host(fhemviz-switch) .card > .icard .iname {
+  order: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  font-size: 0.88rem;
+}
+/* Symbol und Zustand rechts - so beginnen ALLE Namen der Liste auf derselben
+ * Kante (14 px), egal ob die Zeile ein Symbol hat. Reihenfolge wie bei den
+ * Kontakt-/Lueften-Zeilen: Symbol, dann Zustand. */
+:host(fhemviz-switch) .card > .icard svg {
+  order: 2;
+}
+:host(fhemviz-switch) .card > .icard .istate {
+  order: 3;
+  display: block;
+  flex: 0 0 auto;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
 /* Regler und Knopfreihen brauchen die ganze Breite. */
 :host(fhemviz-dimmer) .card > input[type="range"],
 :host(fhemviz-actions) .card .ctlrow,
