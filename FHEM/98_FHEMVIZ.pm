@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.26
+# Version:  v0.34.27
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.26";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.27";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -314,7 +314,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.26"),
+            FHEMVIZ_jsonStr("v0.34.27"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -776,11 +776,13 @@ sub FHEMVIZ_Attr {
         (gleiche Namen als <code>set</code>-Befehl &ndash; ohne passenden
         Befehl in <code>PossibleSets</code> gibt es nur die Anzeige),
         Ladeleistung <code>charge_power|charger_power|charging_power</code>.
-        Weichen <code>virtual_charge_limit</code> (Arbeitswert einer
-        Lade-Automatik <b>in FHEM</b> &ndash; nicht das Limit im Fahrzeug) oder
-        <code>charge_limit_soc</code>/<code>set_charge_limit</code> (bis dahin
-        l&auml;dt das Auto selbst) vom Wunsch ab, zeigt die Kachel sie als
-        Zeilen "Automatik" bzw. "Limit im Fahrzeug". Die Spanne des
+        Als weitere Zeilen zeigt die Kachel <code>virtual_charge_limit</code>
+        als "Automatik" (Arbeitswert einer Lade-Automatik <b>in FHEM</b> &ndash;
+        nicht das Limit im Fahrzeug) und
+        <code>charge_limit_soc</code>/<code>set_charge_limit</code> als "Limit
+        im Fahrzeug" (bis dahin l&auml;dt das Auto selbst). Sie entfallen nur,
+        wenn sie aus <b>demselben Reading</b> kommen wie das Wunschlimit &ndash;
+        dann w&auml;re es dieselbe Angabe zweimal. Die Spanne des
         Reglers kommt aus dem setList-Widget, sonst 10&ndash;100 in
         5er-Schritten &ndash; also z. B.<br>
         <code>attr MQTT2_Tesla_Model3 setList wish_charge_limit:slider,20,5,100 …</code><br>

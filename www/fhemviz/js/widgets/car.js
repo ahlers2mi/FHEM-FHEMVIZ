@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Fahrzeug-Widget (vizWidget car, v0.34.26).
+ * FHEMVIZ - Fahrzeug-Widget (vizWidget car, v0.34.27).
  * Ladestand gross, darunter ein Akkubalken: gefuellt = aktueller Stand,
  * blass daneben = die Strecke bis zum WUNSCHLIMIT, der weisse Strich ist
  * das Limit selbst. Der Regler darunter setzt das Wunschlimit, damit der
@@ -16,9 +16,11 @@
  *   Wunschlimit wish_charge_limit, chargeLimit, charge_limit_soc,
  *               set_charge_limit  (Befehl aus PossibleSets, gleiche Namen)
  *   Automatik   virtual_charge_limit - Arbeitswert einer Lade-Automatik IN
- *               FHEM (nicht das Limit im Fahrzeug), nur wenn abweichend
+ *               FHEM (nicht das Limit im Fahrzeug)
  *   Fahrzeug    charge_limit_soc, set_charge_limit - bis dahin laedt das
- *               Auto selbst, nur wenn abweichend
+ *               Auto selbst
+ * Die beiden letzten Zeilen entfallen nur, wenn sie aus DEMSELBEN Reading
+ * kommen wie das Wunschlimit - dann waeren sie dieselbe Angabe zweimal.
  *   Ladeleistung      charge_power, charger_power, charging_power
  * Spanne des Reglers aus dem setList-Widget (z. B.
  * "wish_charge_limit:slider,50,5,100"), sonst 10..100 in 5er-Schritten.
@@ -123,10 +125,29 @@ export class FhemvizCar extends FhemvizWidget {
     return m ? parseFloat(m[0]) : null;
   }
 
+  /**
+   * Wert MIT dem Reading-Namen, aus dem er kommt. Der Name entscheidet, ob
+   * eine Zusatzzeile ueberhaupt etwas Neues sagt (siehe render): Vergleichen
+   * ueber die ZAHL war falsch - stehen Wunschlimit und Automatikwert gerade
+   * auf demselben Prozentwert, verschwand die Zeile "Automatik" komplett.
+   */
+  _hit(names, dev = this.device) {
+    const hit = this._read(names, dev);
+    if (!hit) return null;
+    const m = this.plain(hit.value).match(/-?[\d.]+/);
+    return { name: hit.name, num: m ? parseFloat(m[0]) : null };
+  }
+
   /** Rolle aus attr vizCar bevorzugen, sonst die Namensliste. */
-  _role(role, names) {
+  _roleHit(role, names) {
     const own = this._cfg()[role];
-    return this._num(own ? [own, ...names] : names);
+    return this._hit(own ? [own, ...names] : names);
+  }
+
+  /** Rolle als Zahl. */
+  _role(role, names) {
+    const h = this._roleHit(role, names);
+    return h ? h.num : null;
   }
 
   _soc() {
@@ -280,15 +301,28 @@ export class FhemvizCar extends FhemvizWidget {
   render() {
     const soc = this._soc();
     const range = this._range();
-    const limit = this._limit();
+    const limitHit = this._roleHit("limit", [
+      "wish_charge_limit",
+      "chargeLimit",
+      "charge_limit_soc",
+      "set_charge_limit",
+    ]);
+    const limit = limitHit ? limitHit.num : null;
     const spec = this._limitSpec();
     // Arbeitswert einer Lade-Automatik in FHEM (virtual_charge_limit) - NICHT
     // das Limit im Fahrzeug: dort landet er nicht, er steuert nur die Regelung
-    // (z. B. die Wallbox) und kommt vom Wunschlimit abweichend zurueck.
-    const auto = this._num(["virtual_charge_limit"]);
+    // (z. B. die Wallbox).
+    const autoHit = this._roleHit("auto", ["virtual_charge_limit"]);
     // Das Limit, bis zu dem das FAHRZEUG selbst laedt.
-    const carLimit = this._num(["charge_limit_soc", "set_charge_limit"]);
-    const power = this._num(["charge_power", "charger_power", "charging_power"]);
+    const carHit = this._roleHit("carlimit", [
+      "charge_limit_soc",
+      "set_charge_limit",
+    ]);
+    const power = this._role("power", [
+      "charge_power",
+      "charger_power",
+      "charging_power",
+    ]);
 
     // Statusleiste: rot wenn fast leer, gruen wenn das Wunschlimit erreicht
     // ist, sonst bernstein (es fehlt noch etwas).
@@ -328,13 +362,17 @@ export class FhemvizCar extends FhemvizWidget {
              min="${Math.min(spec.min, limit)}" max="${spec.max}" value="${limit}"
              aria-label="Wunschlimit ${this.escape(this.displayName())}">`
         : "";
-    // Zusatzzeilen nur, wenn sie etwas ANDERES sagen als das Wunschlimit -
-    // sonst steht dieselbe Zahl mehrfach da.
-    const same = (v) =>
-      v === null || limit === null || Math.round(v) === Math.round(limit);
+    // Zusatzzeilen zeigen, solange sie aus einem ANDEREN Reading kommen als
+    // das Wunschlimit. Nur wenn es dasselbe Reading ist (etwa weil ohne
+    // wish_charge_limit auf charge_limit_soc zurueckgefallen wurde), waere es
+    // dieselbe Angabe zweimal.
+    const eigen = (h) =>
+      h &&
+      h.num !== null &&
+      (!limitHit || h.name.toLowerCase() !== limitHit.name.toLowerCase());
     const extra = [
-      same(auto) ? "" : ["Automatik", auto],
-      same(carLimit) ? "" : ["Limit im Fahrzeug", carLimit],
+      eigen(autoHit) ? ["Automatik", autoHit.num] : "",
+      eigen(carHit) ? ["Limit im Fahrzeug", carHit.num] : "",
     ]
       .filter(Boolean)
       .map(
