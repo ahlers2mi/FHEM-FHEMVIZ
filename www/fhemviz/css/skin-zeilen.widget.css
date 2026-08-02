@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Skin "zeilen" (Kachel-Innenleben), v0.34.23.
+ * FHEMVIZ - Skin "zeilen" (Kachel-Innenleben), v0.34.29.
  * Wird von app.js als TEXT geladen und in JEDEN Shadow DOM gehaengt (hinter
  * CARD_CSS) - externe Stylesheets erreichen den Shadow DOM nicht.
  *
@@ -128,18 +128,22 @@
  * nicht als grosser Block links vom Namen (.cwrap hat "flex: 1" und KEIN
  * order, stand also vor dem Geraetenamen). Das 42px-Symbol ist fuer eine
  * Listenzeile zu gross. */
-:host(fhemviz-contact) .card > .cwrap {
+:host(fhemviz-contact) .card > .cwrap,
+:host(fhemviz-vent) .card > .vwrap {
   order: 3;
   flex: 0 0 auto;
   gap: 8px;
 }
-:host(fhemviz-contact) .card > .cwrap .cicon {
+:host(fhemviz-contact) .card > .cwrap .cicon,
+:host(fhemviz-vent) .card > .vwrap .vicon {
   width: 22px;
   height: 22px;
 }
-:host(fhemviz-contact) .card > .cwrap .cstate {
+:host(fhemviz-contact) .card > .cwrap .cstate,
+:host(fhemviz-vent) .card > .vwrap .vstate {
   font-size: 1.05rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 /* Regler und Knopfreihen brauchen die ganze Breite. */
