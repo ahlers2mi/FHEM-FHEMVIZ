@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.23
+# Version:  v0.34.24
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.23";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.24";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -75,7 +75,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup",
+    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup,car",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:1,0",
     "vizHide:1,0",
@@ -313,7 +313,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.23"),
+            FHEMVIZ_jsonStr("v0.34.24"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -662,7 +662,7 @@ sub FHEMVIZ_Attr {
   registriert, erscheinen im Attribut-Dropdown jedes Geräts)
   <ul>
     <li><a id="FHEMVIZ-attr-vizWidget"></a><b>vizWidget</b>
-        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering<br>
+        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering|car<br>
         Widget-Typ erzwingen; übersteuert genericDeviceType/webCmd/Heuristik
         und die Rausch-Filter (Gerät wird immer angezeigt). Automatisch
         erkannt werden u. a. <code>genericDeviceType</code>
@@ -761,6 +761,27 @@ sub FHEMVIZ_Attr {
         <code>watering</code> = Gartenbewässerung mit Status, Fass-Füllstand,
         Bodenfeuchte und Bedien-Buttons (siehe <code>vizWatering</code> /
         <code>vizWateringButtons</code>),
+        <code>car</code> = Fahrzeug/E-Auto: gro&szlig;er Ladestand, Reichweite
+        und ein Akkubalken, in dem der wei&szlig;e Strich das
+        <b>Wunschlimit</b> markiert und die blasse Fl&auml;che davor zeigt, was
+        noch geladen werden soll; der Regler darunter setzt das Wunschlimit
+        (Antippen der Schiene sendet nichts, nur Ziehen &ndash; ein Fehlgriff
+        soll das Ladeziel nicht verstellen). Automatisch gew&auml;hlt, wenn es
+        Readings f&uuml;r Ladestand UND Reichweite gibt. Readings/Befehle
+        werden nach Namen gesucht, das Widget h&auml;ngt also nicht an einem
+        Modul: Ladestand <code>battery_level|soc|stateOfCharge|chargeLevel</code>,
+        Reichweite <code>battery_range_km|range_km|est_battery_range_km|range</code>,
+        Wunschlimit <code>wish_charge_limit|chargeLimit|charge_limit_soc|set_charge_limit</code>
+        (gleiche Namen als <code>set</code>-Befehl &ndash; ohne passenden
+        Befehl in <code>PossibleSets</code> gibt es nur die Anzeige),
+        Ladeleistung <code>charge_power|charger_power|charging_power</code>.
+        Weicht ein <code>virtual_charge_limit</code> vom Wunsch ab (Automatik
+        dazwischen), zeigt die Kachel es als Zeile "gesendet". Die Spanne des
+        Reglers kommt aus dem setList-Widget, sonst 10&ndash;100 in
+        5er-Schritten &ndash; also z. B.<br>
+        <code>attr MQTT2_Tesla_Model3 setList wish_charge_limit:slider,20,5,100 …</code><br>
+        Statusleiste: gr&uuml;n = Wunschlimit erreicht, bernstein = es fehlt
+        noch etwas, rot unter 10 %,
         <code>image</code> = Bild/Icon-Kachel (z. B. Wettervorhersage-Icon
         aus einem <code>weblink image …</code>; Quelle sonst über
         <code>vizImage</code>). Das <code>actions</code>-Widget (aus

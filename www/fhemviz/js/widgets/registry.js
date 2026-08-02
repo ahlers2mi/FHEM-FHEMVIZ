@@ -28,6 +28,7 @@ import { FhemvizWeather } from "./weather.js";
 import { FhemvizChart } from "./chart.js";
 import { FhemvizWatering } from "./watering.js";
 import { FhemvizImage } from "./image.js";
+import { FhemvizCar } from "./car.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -51,6 +52,7 @@ export const WIDGET_REGISTRY = {
   chart: "fhemviz-chart",
   watering: "fhemviz-watering",
   image: "fhemviz-image",
+  car: "fhemviz-car",
   // TODO: thermostat, media.
 };
 
@@ -91,6 +93,7 @@ export function registerCoreWidgets() {
     ["fhemviz-chart", FhemvizChart],
     ["fhemviz-watering", FhemvizWatering],
     ["fhemviz-image", FhemvizImage],
+    ["fhemviz-car", FhemvizCar],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -163,6 +166,17 @@ export function selectWidget(device) {
   // 2b3. SolvisClient -> Heizungs-/Solar-Anlagenschema (auch ohne vizWidget).
   if ((device.internals || {}).TYPE === "SolvisClient") {
     return WIDGET_REGISTRY.solvis;
+  }
+  // 2b4. E-Auto: Ladestand UND Reichweite als Readings -> Fahrzeug-Kachel
+  //      (Akkubalken + Regler fuer das Wunschlimit). Beide Bedingungen
+  //      zusammen, damit ein Batteriespeicher mit "soc" nicht mitgeht.
+  const rdCar = device.readings || {};
+  const hasR = (n) => Object.keys(rdCar).some((k) => k.toLowerCase() === n);
+  if (
+    (hasR("battery_level") || hasR("soc") || hasR("stateofcharge")) &&
+    (hasR("battery_range_km") || hasR("range_km") || hasR("est_battery_range_km"))
+  ) {
+    return WIDGET_REGISTRY.car;
   }
   // 2c. structure-Geraete -> Gruppen-Kachel. Der Zustand wird dort aus den
   //     Mitgliedern berechnet - der eigene state ist bei gemischten
