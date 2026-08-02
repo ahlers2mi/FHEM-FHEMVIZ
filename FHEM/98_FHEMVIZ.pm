@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.30
+# Version:  v0.34.31
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.30";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.31";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -314,7 +314,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.30"),
+            FHEMVIZ_jsonStr("v0.34.31"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -717,7 +717,18 @@ sub FHEMVIZ_Attr {
         clientstate <code>sensor</code>/<code>temp</code>/<code>thermo</code>/
         <code>klima</code>. Beispiel:<br>
         <code>define st_temp structure temp LaCrosse_04 LaCrosse_18 …</code>,
-        <code>vent</code> = Lüftungsempfehlung (Skala &minus;3..+4),
+        <code>vent</code> = Lüftungsempfehlung: sieben Stufen
+        (&minus;3, &minus;2, &minus;1, 0, +1, +2, +3 und höher), jeweils
+        zusätzlich kombinierbar mit dem Reading <code>cooling on</code>
+        („kühlt", dann blau statt grün). Unterschieden wird über Farbe,
+        Wortlaut, Zahl der Wellen im Symbol (1&ndash;3) und Schriftstärke.
+        Die Palette folgt dem <code>devStateIcon</code> der üblichen
+        Lüften-Dummys (Sättigung 40/70/100&nbsp;%), Blau liegt aber auf einem
+        helleren Grundton &ndash; ein reines <code>#0000ff</code> käme auf
+        dunklem Grund nur auf Kontrast 2,3 und der dringendste Zustand wäre
+        der unsichtbarste. Überschreibbar per CSS-Variablen
+        <code>--vg-go-1..3</code>, <code>--vg-cool-1..3</code>,
+        <code>--vg-neg-1..3</code>,
         <code>solvis</code> = Solvis-Heizung/Solarthermie als Anlagenschema
         (Solar links, Schichtspeicher als Zylinder mittig, Warmwasser/
         Heizkreise rechts, Außen/Brenner in der Fußzeile) &ndash; automatisch

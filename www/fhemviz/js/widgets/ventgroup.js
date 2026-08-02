@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Lueften-Gruppe (v0.34.30).
+ * FHEMVIZ - Lueften-Gruppe (v0.34.31).
  * Fuer ein FHEM-structure-Geraet aus Lueftungs-Empfehlungs-Dummies: EINE
  * Kachel, in der jeder Raum eine Zeile bekommt (Name + Wellen-Symbol +
  * Empfehlungstext, gruen = lueften sinnvoll, blau = kuehlt, rot = besser
@@ -18,9 +18,29 @@ const VENTG_CSS = `
   .vgrow { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .vgicon { flex-shrink: 0; width: 26px; height: 26px; }
   .vgicon path { stroke: var(--viz-border, #262c35); }
-  .vgrow.go .vgicon path.a { stroke: var(--viz-ok, #34c77b); }
-  .vgrow.cool .vgicon path.a { stroke: var(--viz-action, #4c8dff); }
-  .vgrow.neg .vgicon path.a { stroke: var(--viz-error, #ff5d5d); }
+  /* Aktive Wellen und Text tragen die Stufenfarbe (--vg, je Zeile gesetzt);
+   * ohne Stufe (0) bleibt es beim neutralen Grau. */
+  .vgicon path.a { stroke: var(--vg, var(--viz-muted, #77808c)); }
+  /* Stufenfarben nach dem devStateIcon der Lueften-Dummys (my_lueften:
+   * Saettigung 40/70/100 %). Blau liegt bewusst auf einem HELLEREN Grundton
+   * (Farbton 215 statt 240): das reine #0000ff kommt auf dunklem Grund nur auf
+   * Kontrast 2,3 - der dringendste Zustand (Stufe 3 + kuehlt) waere damit der
+   * unsichtbarste. So sind es 4,2 bis 10,9. Ueber die Variablen kann ein Skin
+   * die Palette austauschen. */
+  :host {
+    --vg-go-1: #99ff99;   --vg-go-2: #4dff4d;   --vg-go-3: #00ff00;
+    --vg-cool-1: #99c4ff; --vg-cool-2: #4d97ff; --vg-cool-3: #006aff;
+    --vg-neg-1: #ff9999;  --vg-neg-2: #ff4c4c;  --vg-neg-3: #ff0000;
+  }
+  .vgrow.go.s1   { --vg: var(--vg-go-1); }
+  .vgrow.go.s2   { --vg: var(--vg-go-2); }
+  .vgrow.go.s3   { --vg: var(--vg-go-3); }
+  .vgrow.cool.s1 { --vg: var(--vg-cool-1); }
+  .vgrow.cool.s2 { --vg: var(--vg-cool-2); }
+  .vgrow.cool.s3 { --vg: var(--vg-cool-3); }
+  .vgrow.neg.s1  { --vg: var(--vg-neg-1); }
+  .vgrow.neg.s2  { --vg: var(--vg-neg-2); }
+  .vgrow.neg.s3  { --vg: var(--vg-neg-3); }
   .vgname {
     flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
     white-space: nowrap; font-size: 0.95rem; color: var(--viz-text, #e8eaed);
@@ -29,16 +49,12 @@ const VENTG_CSS = `
     flex-shrink: 0; text-align: right; font-size: 0.9rem;
     color: var(--viz-muted, #77808c);
   }
-  .vgrow.go .vgstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
-  .vgrow.cool .vgstate { color: var(--viz-action, #4c8dff); font-weight: 600; }
-  .vgrow.neg .vgstate { color: var(--viz-error, #ff5d5d); font-weight: 600; }
-  /* Sieben Stufen muessen unterscheidbar sein (-3..+3), zusaetzlich "kuehlt".
-   * Die Abstufung steckt im SYMBOL (Wellenzahl + Helligkeit); der Text bleibt
-   * in voller Farbe, weil sein Wortlaut die Stufe schon eindeutig nennt und
-   * ein abgedunkelter Text auf dunklem Grund schlecht lesbar ist (Kontrast
-   * 2,9 bei Deckkraft 0,6). Die Schriftstaerke traegt die Dringlichkeit. */
-  .vgrow.s1 .vgicon path.a { opacity: 0.55; }
-  .vgrow.s2 .vgicon path.a { opacity: 0.8; }
+  .vgrow.go .vgstate, .vgrow.cool .vgstate, .vgrow.neg .vgstate {
+    color: var(--vg, var(--viz-muted, #77808c));
+    font-weight: 600;
+  }
+  /* Dringlichkeit zusaetzlich in der Schriftstaerke - die Farbe allein soll
+   * die sieben Stufen nicht tragen muessen. */
   .vgrow.s1 .vgstate { font-weight: 500; }
   .vgrow.s3 .vgstate { font-weight: 700; }
   :host([data-size="2x2"]) .vgname, :host([data-tv]) .vgname { font-size: 1.2rem; }

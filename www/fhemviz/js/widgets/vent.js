@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Lueftungs-Widget (v0.34.30).
+ * FHEMVIZ - Lueftungs-Widget (v0.34.31).
  * Fuer Lueftungs-Empfehlungs-Dummies (state 0..9 = wie sinnvoll ist
  * Lueften; Reading cooling on = Lueften kuehlt zusaetzlich):
  * Wind-Wellen-Symbol mit 1-3 aktiven Wellen, gruen = lueften sinnvoll,
@@ -15,23 +15,35 @@ const VENT_CSS = `
   .vwrap { display: flex; align-items: center; gap: 14px; flex: 1; }
   .vicon { flex-shrink: 0; width: 44px; height: 44px; }
   .vicon path { stroke: var(--viz-border, #262c35); }
-  .vicon path.a { stroke: var(--viz-ok, #34c77b); }
-  .card.cool .vicon path.a { stroke: var(--viz-action, #4c8dff); }
+  .vicon path.a { stroke: var(--vg, var(--viz-muted, #77808c)); }
   .card.cool::before { background: var(--viz-action, #4c8dff); }
-  /* Stufe 1/2 blasser statt grau: in my_lueften ist auch Stufe 1 GRUEN (nur
-   * mit 40 % Saettigung). Grau war Stufe 0 vorbehalten - "bei Bedarf lueften"
-   * sah dadurch aus wie "nicht lueften". Abgestuft wird nur das SYMBOL; der
-   * Text bleibt in voller Farbe (lesbar) und nennt die Stufe im Wortlaut. */
-  .card.s1 .vicon path.a { opacity: 0.55; }
-  .card.s2 .vicon path.a { opacity: 0.8; }
+  /* Stufenfarben nach dem devStateIcon der Lueften-Dummys (my_lueften:
+   * Saettigung 40/70/100 %). Blau liegt bewusst auf einem HELLEREN Grundton
+   * (Farbton 215 statt 240): das reine #0000ff kommt auf dunklem Grund nur auf
+   * Kontrast 2,3 - der dringendste Zustand (Stufe 3 + kuehlt) waere damit der
+   * unsichtbarste. So sind es 4,2 bis 10,9. Ueber die Variablen kann ein Skin
+   * die Palette austauschen. */
+  :host {
+    --vg-go-1: #99ff99;   --vg-go-2: #4dff4d;   --vg-go-3: #00ff00;
+    --vg-cool-1: #99c4ff; --vg-cool-2: #4d97ff; --vg-cool-3: #006aff;
+    --vg-neg-1: #ff9999;  --vg-neg-2: #ff4c4c;  --vg-neg-3: #ff0000;
+  }
+  .card.go.s1   { --vg: var(--vg-go-1); }
+  .card.go.s2   { --vg: var(--vg-go-2); }
+  .card.go.s3   { --vg: var(--vg-go-3); }
+  .card.cool.s1 { --vg: var(--vg-cool-1); }
+  .card.cool.s2 { --vg: var(--vg-cool-2); }
+  .card.cool.s3 { --vg: var(--vg-cool-3); }
+  .card.neg.s1  { --vg: var(--vg-neg-1); }
+  .card.neg.s2  { --vg: var(--vg-neg-2); }
+  .card.neg.s3  { --vg: var(--vg-neg-3); }
   .card.s1 .vstate { font-weight: 500; }
   .card.s3 .vstate { font-weight: 700; }
-  /* Negative Stufen: Lueften waere kontraproduktiv -> rot */
-  .card.neg .vicon path.a { stroke: var(--viz-error, #ff5d5d); }
-  .card.neg .vstate { color: var(--viz-error, #ff5d5d); }
   .vstate { font-size: 1.15rem; font-weight: 450; }
-  .card.go .vstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
-  .card.cool .vstate { color: var(--viz-action, #4c8dff); }
+  .card.go .vstate, .card.cool .vstate, .card.neg .vstate {
+    color: var(--vg, var(--viz-muted, #77808c));
+    font-weight: 600;
+  }
   :host([data-tv]) .vicon { width: 56px; height: 56px; }
   :host([data-tv]) .vstate { font-size: 1.5rem; }
 `;
