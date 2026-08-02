@@ -378,7 +378,50 @@ export class FhemvizWidget extends HTMLElement {
     if (this._unsub) this._unsub();
   }
 
-  _paint() {
+  /**
+   * Bedienelement gerade in Benutzung? Dann darf der Shadow DOM nicht
+   * ersetzt werden. Ein aufgeklapptes <select> hat den Fokus - wird es beim
+   * naechsten Live-Event neu erzeugt, klappt die Liste mitten im Scrollen
+   * wieder zu (bei 27 Radiosendern faellt genau das auf, weil die Liste dann
+   * nicht auf einen Bildschirm passt). Dasselbe gilt fuer einen Regler am
+   * Finger.
+   */
+  _busyElm() {
+    const a = this.shadowRoot && this.shadowRoot.activeElement;
+    if (!a) return null;
+    if (a.tagName === "SELECT") return a;
+    if (a.tagName === "INPUT" && a.type === "range") return a;
+    return null;
+  }
+
+  _paint(force = false) {
+    const busy = force ? null : this._busyElm();
+    if (busy) {
+      // Neuaufbau aufschieben und nachholen, sobald das Element fertig ist:
+      // blur (Liste zu), change (Auswahl getroffen) - und als Notbremse nach
+      // 20 s, damit eine liegengelassene Auswahl die Kachel nicht dauerhaft
+      // einfriert.
+      this._paintPending = true;
+      if (!busy._vizWait) {
+        busy._vizWait = true;
+        const flush = () => {
+          clearTimeout(busy._vizTimer);
+          busy.removeEventListener("blur", flush);
+          busy.removeEventListener("change", flush);
+          busy._vizWait = false;
+          if (!this._paintPending) return;
+          this._paintPending = false;
+          // force: nach einem change hat das (noch fokussierte) Element sonst
+          // gerade wieder das Aufschieben ausgeloest - Endlosschleife.
+          this._paint(true);
+        };
+        busy.addEventListener("blur", flush);
+        busy.addEventListener("change", flush);
+        busy._vizTimer = setTimeout(flush, 20000);
+      }
+      return;
+    }
+    this._paintPending = false;
     const html = this.render();
     // Aufleuchten nur bei tatsaechlicher Aenderung des Kachelinhalts (nicht
     // beim ersten Rendern) - so pulsiert eine Kachel bei jedem neuen Wert
