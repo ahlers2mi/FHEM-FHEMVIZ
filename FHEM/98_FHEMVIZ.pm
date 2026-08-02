@@ -793,7 +793,12 @@ sub FHEMVIZ_Attr {
         <code>vizImage</code>). Das <code>actions</code>-Widget (aus
         <code>webCmd</code>) rendert Buttons/Slider/Dropdown und beschriftet
         sie mit dem FHEM-Attribut <code>webCmdLabel</code> (":"-getrennt, je
-        webCmd-Eintrag), falls gesetzt. Transport-Befehle (play, pause, stop,
+        webCmd-Eintrag), falls gesetzt. Ein aufgeklapptes <b>Dropdown</b>
+        bleibt offen, auch wenn in dem Moment neue Werte hereinkommen: solange
+        ein Bedienelement den Fokus hat (Liste offen, Regler am Finger), wird
+        der Neuaufbau der Kachel aufgeschoben und danach nachgeholt &ndash;
+        sonst klappte eine lange Senderliste mitten im Scrollen zu.
+        Transport-Befehle (play, pause, stop,
         prev/previous, next, mute &ndash; auch <code>resume</code>,
         <code>skipToNext</code>, <code>skipToPrevious</code>) bekommen
         einfarbige Symbole; ein Wort-Label aus <code>webCmdLabel</code> bleibt
