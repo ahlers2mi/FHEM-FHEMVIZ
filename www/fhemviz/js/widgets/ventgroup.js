@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Lueften-Gruppe (v0.34.29).
+ * FHEMVIZ - Lueften-Gruppe (v0.34.30).
  * Fuer ein FHEM-structure-Geraet aus Lueftungs-Empfehlungs-Dummies: EINE
  * Kachel, in der jeder Raum eine Zeile bekommt (Name + Wellen-Symbol +
  * Empfehlungstext, gruen = lueften sinnvoll, blau = kuehlt, rot = besser
@@ -32,10 +32,14 @@ const VENTG_CSS = `
   .vgrow.go .vgstate { color: var(--viz-ok, #34c77b); font-weight: 600; }
   .vgrow.cool .vgstate { color: var(--viz-action, #4c8dff); font-weight: 600; }
   .vgrow.neg .vgstate { color: var(--viz-error, #ff5d5d); font-weight: 600; }
-  /* Stufe 1/2 blasser statt grau - in my_lueften ist auch Stufe 1 GRUEN
-   * (40 % Saettigung); grau ist Stufe 0. */
-  .vgrow.s1 .vgicon path.a, .vgrow.s1 .vgstate { opacity: 0.6; }
-  .vgrow.s2 .vgicon path.a, .vgrow.s2 .vgstate { opacity: 0.8; }
+  /* Sieben Stufen muessen unterscheidbar sein (-3..+3), zusaetzlich "kuehlt".
+   * Die Abstufung steckt im SYMBOL (Wellenzahl + Helligkeit); der Text bleibt
+   * in voller Farbe, weil sein Wortlaut die Stufe schon eindeutig nennt und
+   * ein abgedunkelter Text auf dunklem Grund schlecht lesbar ist (Kontrast
+   * 2,9 bei Deckkraft 0,6). Die Schriftstaerke traegt die Dringlichkeit. */
+  .vgrow.s1 .vgicon path.a { opacity: 0.55; }
+  .vgrow.s2 .vgicon path.a { opacity: 0.8; }
+  .vgrow.s1 .vgstate { font-weight: 500; }
   .vgrow.s3 .vgstate { font-weight: 700; }
   :host([data-size="2x2"]) .vgname, :host([data-tv]) .vgname { font-size: 1.2rem; }
   :host([data-size="2x2"]) .vgstate, :host([data-tv]) .vgstate { font-size: 1.1rem; }

@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Lueftungs-Widget (v0.34.29).
+ * FHEMVIZ - Lueftungs-Widget (v0.34.30).
  * Fuer Lueftungs-Empfehlungs-Dummies (state 0..9 = wie sinnvoll ist
  * Lueften; Reading cooling on = Lueften kuehlt zusaetzlich):
  * Wind-Wellen-Symbol mit 1-3 aktiven Wellen, gruen = lueften sinnvoll,
@@ -20,9 +20,11 @@ const VENT_CSS = `
   .card.cool::before { background: var(--viz-action, #4c8dff); }
   /* Stufe 1/2 blasser statt grau: in my_lueften ist auch Stufe 1 GRUEN (nur
    * mit 40 % Saettigung). Grau war Stufe 0 vorbehalten - "bei Bedarf lueften"
-   * sah dadurch aus wie "nicht lueften". */
-  .card.s1 .vicon path.a, .card.s1 .vstate { opacity: 0.6; }
-  .card.s2 .vicon path.a, .card.s2 .vstate { opacity: 0.8; }
+   * sah dadurch aus wie "nicht lueften". Abgestuft wird nur das SYMBOL; der
+   * Text bleibt in voller Farbe (lesbar) und nennt die Stufe im Wortlaut. */
+  .card.s1 .vicon path.a { opacity: 0.55; }
+  .card.s2 .vicon path.a { opacity: 0.8; }
+  .card.s1 .vstate { font-weight: 500; }
   .card.s3 .vstate { font-weight: 700; }
   /* Negative Stufen: Lueften waere kontraproduktiv -> rot */
   .card.neg .vicon path.a { stroke: var(--viz-error, #ff5d5d); }
