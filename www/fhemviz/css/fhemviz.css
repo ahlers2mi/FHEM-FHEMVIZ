@@ -399,25 +399,25 @@ html[data-vizmode="tv"] #viz-toast .viz-toast-msg { font-size: 2rem; }
 }
 
 /* Uhr-Seite (Rotationsziel #uhr in attr tvScenes) ------------------------
- * NUR Uhrzeit und Datum, mittig auf der ganzen Flaeche - aus vier Metern
- * lesbar. Kennzahlen und Statuszeilen stehen bereits in der Kopfleiste
- * (headerInfo/statusBar); die Uhr-Seite hat sie vorher ein zweites Mal
- * gezeigt. */
+ * Grosse Uhrzeit, darunter die Kennzahlen aus headerInfo und je
+ * statusBar-Eintrag eine Zeile. Randlos und ohne Bedienelemente: sie ist
+ * eine SEITE der Rotation, kein Dauerbild - aus vier Metern lesbar. */
 .viz-clockpage {
   display: flex;
   flex-direction: column;
-  /* Der TV-Container ist eine Flex-Spalte mit fester Hoehe. */
+  gap: clamp(10px, 2vh, 26px);
+  /* Der TV-Container ist eine Flex-Spalte mit fester Hoehe - die Seite fuellt
+   * sie und verteilt selbst: Uhr oben, Kennzahlen mittig, Zeilen unten. */
   flex: 1;
   min-height: 0;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+  justify-content: space-between;
   padding: clamp(8px, 2vh, 28px) clamp(4px, 1.5vw, 24px);
 }
-.cp-head { display: flex; flex-direction: column; gap: 0.18em; }
+/* Uhrzeit und Datum bleiben ein Block - die Verteilung der Seite darf sie
+ * nicht auseinanderziehen. */
+.cp-head { display: flex; flex-direction: column; gap: 0.25em; }
 .cp-time {
-  /* Ohne die Kennzahlen darunter ist Platz - die Uhr darf die Flaeche nutzen. */
-  font-size: clamp(4rem, 26vh, 16rem);
+  font-size: clamp(4rem, 17vh, 12rem);
   font-weight: 200;
   line-height: 0.86;
   letter-spacing: -0.03em;
@@ -426,8 +426,59 @@ html[data-vizmode="tv"] #viz-toast .viz-toast-msg { font-size: 2rem; }
  * (2.4vh = ~19px) landete weit unter der Uhr und war aus der Entfernung
  * nicht mehr zu entziffern; ausserdem war das Grau zu kontraststarm. */
 .cp-date {
-  font-size: clamp(1.6rem, 7vh, 4rem);
+  font-size: clamp(1.6rem, 5.5vh, 3.4rem);
   font-weight: 300;
   line-height: 1.1;
   color: color-mix(in srgb, var(--viz-text) 78%, transparent);
+}
+.cp-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5em), 1fr));
+  gap: clamp(8px, 2vw, 28px);
+  padding: clamp(8px, 2vh, 22px) 0;
+  border-top: 1px solid var(--viz-border);
+  border-bottom: 1px solid var(--viz-border);
+}
+.cp-k { min-width: 0; }
+.cp-v {
+  font-size: clamp(1.6rem, 6.5vh, 4rem);
+  font-weight: 250;
+  line-height: 1;
+  white-space: nowrap;
+}
+.cp-v small { font-size: 0.42em; color: var(--viz-muted); margin-left: 0.15em; }
+.cp-l {
+  font-size: clamp(1rem, 2.6vh, 1.5rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--viz-muted);
+  margin-top: 0.4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-rows { display: flex; flex-direction: column; }
+.cp-r {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: clamp(4px, 1.1vh, 12px) 0;
+  border-bottom: 1px solid var(--viz-border);
+  font-size: clamp(1.1rem, 3.2vh, 2rem);
+}
+.cp-r:last-child { border-bottom: 0; }
+.cp-n { flex: 1; min-width: 0; color: var(--viz-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-s { font-weight: 600; white-space: nowrap; }
+.cp-s.warn { color: var(--viz-accent); }
+
+/* Auf der Uhr-Seite traegt die Seite selbst die Kennzahlen und Statuszeilen -
+ * in der Kopfleiste stand beides ein zweites Mal. Dort bleiben nur Titel und
+ * Statuszeile stehen; die kleine Kopf-Uhr entfaellt, die grosse steht ja
+ * darunter. Die TV-Flaeche wird nach dem Umschalten neu vermessen (_fit). */
+body.viz-clockonly #viz-headinfo,
+body.viz-clockonly #viz-statusbar,
+body.viz-clockonly #viz-clock {
+  display: none !important;
 }

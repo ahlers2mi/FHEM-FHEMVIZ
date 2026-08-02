@@ -21,7 +21,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.33";
+const SPA_VERSION = "v0.34.34";
 
 const el = (id) => document.getElementById(id);
 
@@ -196,17 +196,54 @@ const MONTHS = [
 ];
 
 /**
- * Rendert die Uhr-Seite: NUR grosse Uhrzeit + Datum.
+ * Rendert die Uhr-Seite: grosse Uhrzeit + Datum, darunter die Kennzahlen aus
+ * attr headerInfo und je statusBar-Eintrag eine Zeile. Bewusst OHNE eigene
+ * Attribute - es wird gezeigt, was fuer Kopfzeile und Statusleiste schon
+ * konfiguriert ist.
  *
- * Bewusst ohne Kennzahlen und Statuszeilen: die Kopfleiste zeigt in dieser
- * Betriebsart headerInfo UND statusBar ohnehin dauerhaft an, die Uhr-Seite
- * hat beides zusaetzlich gerendert. Jeder statusBar-Eintrag stand damit
- * zweimal auf dem Schirm, und ein Geraet, das in beiden Attributen steht
- * (z. B. der Batteriestand), sogar viermal.
+ * Damit nichts doppelt auf dem Schirm steht, blendet der TvController auf
+ * dieser Seite die Kopfleiste aus (Klasse viz-clockonly, siehe _show) -
+ * bis auf Titel und Statuszeile.
  */
-function renderClockPage(root) {
+function renderClockPage(root, store, cfg) {
   const d = new Date();
   const p = (n) => String(n).padStart(2, "0");
+  const kpis = parseHeaderItems(store, cfg.headerInfo).filter((it) => it.kind === "val");
+  const rows = parseStatusEntries(store, cfg.statusBar);
+
+  const kpiHtml = kpis
+    .map((it) => {
+      const dev = store.get(it.dev);
+      const v = vizPlain((dev.readings || {})[it.reading] ?? "–");
+      // Beschriftung: ausdrueckliches Label, sonst der Geraete-Alias. Der
+      // rohe Reading-Name ("temp_C") ist nur die letzte Rueckfallebene - als
+      // Versalien gesetzt sah er wie ein Fehler aus.
+      const label =
+        it.label || (dev.attr && dev.attr.alias) || dev.name || it.reading;
+      // Farbe/Schwellwerte aus dem 5. headerInfo-Feld - auf der Uhr-Seite
+      // sind die Zahlen gross, ein roter Batteriestand faellt dort auf.
+      const col = vizColorFor(it.color, parseFloat(String(v).replace(",", ".")));
+      return `<div class="cp-k">
+        <div class="cp-v"${col ? ` style="color:${col}"` : ""}>${escapeHtml(v)}${
+          it.unit ? `<small>${escapeHtml(it.unit)}</small>` : ""
+        }</div>
+        <div class="cp-l">${escapeHtml(label)}</div>
+      </div>`;
+    })
+    .join("");
+
+  const rowHtml = rows
+    .map((c) => {
+      const st = vizStatusData(store, c);
+      const cls = st.warn ? " warn" : "";
+      const style = st.color ? ` style="color:${st.color}"` : "";
+      return `<div class="cp-r">
+        <span class="cp-n">${escapeHtml(st.alias)}</span>
+        <span class="cp-s${cls}"${style}>${escapeHtml(st.value)}</span>
+      </div>`;
+    })
+    .join("");
+
   root.innerHTML = `
     <div class="viz-clockpage">
       <div class="cp-head">
@@ -215,6 +252,8 @@ function renderClockPage(root) {
           MONTHS[d.getMonth()]
         }</div>
       </div>
+      ${kpiHtml ? `<div class="cp-kpis">${kpiHtml}</div>` : ""}
+      ${rowHtml ? `<div class="cp-rows">${rowHtml}</div>` : ""}
     </div>`;
 }
 
@@ -655,8 +694,15 @@ class TvController {
     // Uhr-Seite ist kein Raum: eigener Renderer, im Sekundentakt aktualisiert
     // (kein Auto-Paging - die Seite passt immer auf einen Schirm).
     clearInterval(this._cpTimer);
+    // Kopfleiste nur auf der Uhr-Seite ausblenden: dort zeigt die Seite
+    // headerInfo und statusBar selbst, in der Kopfleiste stand beides ein
+    // zweites Mal (ein Geraet in BEIDEN Attributen sogar vierfach). Titel und
+    // Statuszeile bleiben stehen. Danach neu vermessen - die TV-Flaeche haengt
+    // an der Kopfhoehe.
+    document.body.classList.toggle("viz-clockonly", isClockPage(scene.room));
+    this._fit();
     if (isClockPage(scene.room)) {
-      const draw = () => renderClockPage(this.root);
+      const draw = () => renderClockPage(this.root, this.store, this.cfg || {});
       draw();
       this._cpTimer = setInterval(draw, 1000);
       el("viz-scene").textContent = "Übersicht";
