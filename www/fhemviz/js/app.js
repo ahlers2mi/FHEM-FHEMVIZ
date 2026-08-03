@@ -21,7 +21,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.36";
+const SPA_VERSION = "v0.34.38";
 
 const el = (id) => document.getElementById(id);
 
@@ -1225,6 +1225,11 @@ async function main() {
     } catch {
       /* keine Custom-Widgets vorhanden */
     }
+    // Editiermodus: ?edit=1 in der URL. Absichtlich KEIN Attribut am
+    // FHEMVIZ-Geraet - so ist er immer nur fuer den einen Browser an, der ihn
+    // aufruft, und das Wandtablet bleibt unberuehrt. Im TV-/readonly-Betrieb
+    // ist er gesperrt (siehe renderLayout).
+    const editParam = /^(1|true|on|ja)$/i.test(String(params.get("edit") || ""));
     const baseOpts = {
       showRooms: cfg.showRooms,
       hideRooms: cfg.hideRooms,
@@ -1232,6 +1237,21 @@ async function main() {
       hideStates: cfg.hideStates,
       readonly: tv || cfg.readonly === true,
       tv,
+      edit: editParam,
+      skin: cfg.skin || "",
+      // "Fertig" verlaesst den Modus ohne Neuladen: URL aufraeumen und neu
+      // zeichnen (der Longpoll bleibt dabei stehen).
+      onExitEdit: () => {
+        baseOpts.edit = false;
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.delete("edit");
+          window.history.replaceState({}, "", u);
+        } catch {
+          /* URL nicht aenderbar - der Modus ist trotzdem aus */
+        }
+        renderLayout(root, store, client, baseOpts);
+      },
     };
 
     // Status-Chips (VOR dem TV-Start, damit die Flaechenmessung stimmt).

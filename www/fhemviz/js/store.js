@@ -130,6 +130,20 @@ export class Store {
     this._notify(dev.name);
   }
 
+  /**
+   * Attribut lokal nachziehen (null = geloescht). Attributaenderungen kommen
+   * NICHT ueber den inform-Kanal - nach einem "attr"/"deleteattr" aus dem
+   * Editiermodus waere die Sicht sonst bis zum naechsten Resync (3 min) alt.
+   */
+  patchAttr(name, attr, value) {
+    const dev = this.devices.get(name);
+    if (!dev) return;
+    dev.attr = dev.attr || {};
+    if (value === null || value === undefined) delete dev.attr[attr];
+    else dev.attr[attr] = String(value);
+    this._notify(name);
+  }
+
   /** Widget fuer Aenderungen eines Geraets abonnieren. Gibt Unsubscribe zurueck. */
   subscribe(name, callback) {
     if (!this._subscribers.has(name)) this._subscribers.set(name, new Set());

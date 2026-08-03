@@ -482,3 +482,82 @@ body.viz-clockonly #viz-statusbar,
 body.viz-clockonly #viz-clock {
   display: none !important;
 }
+
+/* Editiermodus (?edit=1) ---------------------------------------------------
+ * Rahmen um jede Kachel mit Werkzeugleiste; geschrieben werden nur die
+ * Attribute, aus denen das Layout ohnehin gebaut wird (sortby, vizSize,
+ * vizHero, vizHide). Im TV-/readonly-Betrieb ist der Modus gesperrt. */
+.viz-edit-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px dashed var(--viz-action, #4c8dff);
+  border-radius: calc(var(--viz-radius, 14px) + 2px);
+  padding: 2px;
+}
+/* Die Kachel selbst fuellt den Rahmen - der Rahmen ist das Rasterelement. */
+.viz-edit-item > *:not(.viz-edit-tools) { flex: 1 1 auto; min-height: 0; }
+/* Ausgeblendete Kacheln bleiben im Editiermodus sichtbar, aber gedimmt -
+ * sonst koennte man sie nicht wieder einblenden. */
+.viz-edit-item.ve-hidden { opacity: 0.45; border-style: dotted; }
+.viz-edit-item.ve-dragging { opacity: 0.7; outline: 2px solid var(--viz-action, #4c8dff); }
+.viz-edit-tools {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  padding: 2px 2px 4px;
+}
+.ve-btn {
+  font: inherit; font-size: 0.7rem; font-weight: 600;
+  padding: 3px 8px; min-height: 26px;
+  border-radius: 999px; border: 1px solid var(--viz-border, #262c35);
+  background: var(--viz-raised, #1c212a); color: var(--viz-text, #e8eaed);
+  cursor: pointer;
+}
+.ve-btn:disabled { opacity: 0.4; cursor: default; }
+.ve-btn.on { background: var(--viz-accent, #ffb020); color: var(--viz-bg, #0a0c0f); }
+.ve-btn:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 1px; }
+/* Der Ziehgriff darf das Scrollen nicht uebernehmen (Pointer-Events). */
+.ve-drag { cursor: grab; touch-action: none; letter-spacing: 0.1em; }
+.viz-editbar {
+  /* Die Raum-Leiste klebt fest an der Unterkante (fixed, ca. 66px hoch) - die
+   * Editier-Leiste muss darueber liegen, sonst verschwinden Speichern/Fertig
+   * dahinter. Im Zoom-Modus sind beide sticky und stapeln sich genauso. */
+  position: sticky; bottom: 68px; z-index: 5;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 10px 0 0; padding: 8px 12px;
+  border-top: 1px solid var(--viz-action, #4c8dff);
+  background: var(--viz-surface, #151920);
+}
+.viz-editbar .ve-info { flex: 1 1 auto; min-width: 0; font-size: 0.8rem; color: var(--viz-muted, #77808c); }
+/* Umzugs-Hinweis: die Kachel ist jetzt woanders - das darf man nicht uebersehen. */
+.viz-editbar .ve-info.ve-moved { color: var(--viz-text, #e8eaed); }
+.viz-editbar .ve-save { border-color: var(--viz-action, #4c8dff); color: var(--viz-action, #4c8dff); }
+.viz-editbar .ve-undo { border-color: var(--viz-accent, #ffb020); color: var(--viz-accent, #ffb020); }
+
+/* Auswahlmenue fuer Raum/Abschnitt. Liegt ueber den Nachbarkacheln - dazu wird
+ * der eigene Rahmen im Stapel angehoben (.ve-open, per Klasse statt :has()). */
+.viz-edit-item.ve-open { z-index: 6; }
+.ve-menu {
+  position: absolute; z-index: 7; top: 30px; left: 4px; right: 4px;
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 240px; overflow-y: auto; overscroll-behavior: contain;
+  padding: 4px; border-radius: var(--viz-radius, 14px);
+  border: 1px solid var(--viz-action, #4c8dff);
+  background: var(--viz-surface, #151920);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 55%);
+}
+.ve-mi {
+  font: inherit; font-size: 0.78rem; text-align: left;
+  padding: 7px 9px; min-height: 32px;
+  border: 0; border-radius: 8px; background: transparent;
+  color: var(--viz-text, #e8eaed); cursor: pointer;
+}
+.ve-mi:hover { background: var(--viz-raised, #1c212a); }
+.ve-mi.on { color: var(--viz-accent, #ffb020); font-weight: 700; }
+.ve-mnew { display: flex; gap: 4px; padding: 4px 2px 2px; border-top: 1px solid var(--viz-border, #262c35); }
+.ve-mnew input {
+  flex: 1 1 auto; min-width: 0;
+  font: inherit; font-size: 0.78rem; padding: 5px 8px;
+  border-radius: 8px; border: 1px solid var(--viz-border, #262c35);
+  background: var(--viz-bg, #0a0c0f); color: var(--viz-text, #e8eaed);
+}
