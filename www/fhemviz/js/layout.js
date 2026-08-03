@@ -128,8 +128,19 @@ function buildRooms(store, opts) {
     if (!attr.vizWidget && !attr.vizReadings) {
       const type = (dev.internals && dev.internals.TYPE) || "";
       if (hideTypes.has(type)) continue;
-      const st = plainState(dev.state);
-      if (st === "" || hideStates.some((re) => re.test(st))) continue;
+      // Ein structure ist NIE Rauschen: es existiert nur, weil jemand es
+      // angelegt hat, und die Gruppen-Kachel holt ihren Inhalt aus den
+      // Mitgliedern. Frisch angelegt (oder bei gemischten Zustaenden) ist der
+      // eigene state aber leer - damit fiel die Kachel still unter den Tisch
+      // und man suchte den Fehler bei Raum und devspec. hideTypes/hideStates
+      // gelten weiter, wenn sie ausdruecklich gesetzt sind.
+      if (type !== "structure") {
+        const st = plainState(dev.state);
+        if (st === "" || hideStates.some((re) => re.test(st))) continue;
+      } else if (hideStates.length) {
+        const st = plainState(dev.state);
+        if (st !== "" && hideStates.some((re) => re.test(st))) continue;
+      }
     }
 
     // Ein Geraet kann in mehreren Raeumen UND Gruppen liegen -> es erscheint
