@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.35
+# Version:  v0.34.36
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.35";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.36";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -51,7 +51,10 @@ my $FHEMVIZ_DEFAULT_HIDEROOMS = 'System->.*,Homebridge,Alexa,FileLog,hidden';
 
 # Rausch-Filter: Geraete dieser TYPEs (Plots, Logs, Automatisierung) bzw.
 # mit diesen bedeutungslosen states werden nicht als Kacheln gezeigt.
-# Ein Geraet mit gesetztem vizWidget-Attribut wird IMMER gezeigt.
+# Ein Geraet mit gesetztem vizWidget-Attribut wird IMMER gezeigt; ein
+# structure ebenfalls - es existiert nur, weil jemand es angelegt hat, und
+# frisch angelegt ist sein eigener state leer (die Gruppen-Kachel holt ihren
+# Inhalt aus den Mitgliedern).
 my $FHEMVIZ_DEFAULT_HIDETYPES  =
     'SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup';
 my $FHEMVIZ_DEFAULT_HIDESTATES =
@@ -315,7 +318,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.35"),
+            FHEMVIZ_jsonStr("v0.34.36"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -659,7 +662,7 @@ sub FHEMVIZ_Attr {
         komplett darauf matcht, werden ausgeblendet (Default
         <code>\?\?\?,unknown,initialized,defined,disabled,inactive</code>).
         Ein Gerät mit gesetztem <code>vizWidget</code> oder
-        <code>vizReadings</code> wird immer angezeigt.</li>
+        <code>vizReadings</code> wird immer angezeigt. Ein <code>structure</code> ist davon ausgenommen, solange kein Muster ausdruecklich passt: sein eigener state ist frisch angelegt leer, die Gruppen-Kachel lebt aber von den Mitgliedern.</li>
   </ul><br>
 
   <a id="FHEMVIZ-devattr"></a>
