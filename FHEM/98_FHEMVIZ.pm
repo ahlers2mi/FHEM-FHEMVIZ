@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.36
+# Version:  v0.34.37
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.36";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.37";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -318,7 +318,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.36"),
+            FHEMVIZ_jsonStr("v0.34.37"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1129,7 +1129,48 @@ sub FHEMVIZ_Attr {
     <li><code>?room=Solar</code> &ndash; Startseite: TV beginnt die Rotation
         mit diesem Raum, Tablet öffnet den Tab; geht vor dem Reading
         <code>page</code></li>
+    <li><code>?edit=1</code> &ndash; Editiermodus (siehe unten): Reihenfolge,
+        Größe, Blickfang und Ausblenden direkt in der Oberfläche</li>
   </ul><br>
+
+  <a id="FHEMVIZ-edit"></a>
+  <b>Editiermodus (<code>?edit=1</code>)</b>
+  <ul>
+    Mit <code>?edit=1</code> in der URL bekommt jede Kachel einen Rahmen mit
+    kleiner Werkzeugleiste, oben erscheint eine Leiste mit
+    <i>Speichern</i>/<i>Fertig</i>. Der Modus hat <b>keinen eigenen
+    Speicher</b>: er schreibt genau die Attribute, aus denen das Layout
+    ohnehin gebaut wird &ndash; das Ergebnis ist also identisch zu
+    <code>attr</code> auf der Kommandozeile und lässt sich dort auch
+    nachlesen oder korrigieren.
+    <li><b>⠿ ziehen</b> &ndash; Reihenfolge innerhalb der Gruppe. Beim
+        Loslassen wird <code>sortby</code> als <code>10, 20, 30 …</code>
+        neu geschrieben (Lücken, damit sich später einzelne Geräte per
+        <code>attr</code> dazwischen setzen lassen).</li>
+    <li><b>1x1 / 2x1 / 1x2 / 2x2</b> &ndash; schaltet <code>vizSize</code>
+        weiter (<code>1x1</code> löscht das Attribut). Im Streifen-Layout
+        (<code>skin zeilen</code>) ist der Knopf gesperrt, weil es dort nur
+        eine Spalte gibt.</li>
+    <li><b>Hero</b> &ndash; <code>vizHero</code> an/aus. Auch die Kacheln im
+        Blickfang-Band oben haben ihre Werkzeugleiste, lassen sich also von
+        dort wieder zurücknehmen.</li>
+    <li><b>Ausblenden / Einblenden</b> &ndash; <code>vizHide</code> an/aus.
+        Ausgeblendete Geräte bleiben im Editiermodus sichtbar (blass
+        dargestellt), damit man sie wieder findet.</li>
+    <li><b>↺</b> &ndash; löscht <code>vizSize</code>, <code>vizHero</code>,
+        <code>vizHide</code> und <code>sortby</code> dieses Geräts.</li>
+    <li><b>Speichern</b> &ndash; ruft <code>save</code>. FHEM hält Attribute
+        zunächst nur im Speicher; ohne <code>save</code> sind die Änderungen
+        nach einem Neustart weg. Die Leiste zeigt an, ob noch ungespeicherte
+        Änderungen offen sind.</li>
+    <li><b>Fertig</b> &ndash; verlässt den Modus und entfernt
+        <code>edit=1</code> aus der URL (ohne Neuladen).</li>
+  </ul>
+  Zwei Einschränkungen: der Modus ist im TV-Betrieb und bei
+  <code>readonly 1</code> abgeschaltet (dort soll nichts verrutschen), und
+  solange er läuft, ist das automatische Vergrößern von Kacheln ausgesetzt
+  &ndash; man sieht die Spannweite, die <code>vizSize</code> wirklich
+  vorgibt.<br><br>
 
   Ausführliche Beispiele (Installation per <code>update add</code>,
   TV-Einrichtung, Plugin-API für eigene Widgets) stehen im README des

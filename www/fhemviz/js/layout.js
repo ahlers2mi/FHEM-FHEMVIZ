@@ -121,7 +121,9 @@ function buildRooms(store, opts) {
 
   for (const dev of store.all()) {
     const attr = dev.attr || {};
-    if (/^(1|true|yes)$/i.test(String(attr.vizHide || ""))) continue;
+    // Im Editiermodus bleiben ausgeblendete Kacheln sichtbar (gedimmt) - sonst
+    // koennte man sie nicht wieder einblenden.
+    if (!opts.edit && /^(1|true|yes)$/i.test(String(attr.vizHide || ""))) continue;
 
     // Rausch-Filter - ausser der Nutzer erzwingt die Kachel via
     // vizWidget oder hat den Inhalt via vizReadings konfiguriert.
@@ -190,6 +192,192 @@ export function collectRooms(store, opts = {}) {
   );
 }
 
+
+/* ------------------------------ Editiermodus ------------------------------ */
+/*
+ * Der Editiermodus (?edit=1) schreibt genau die Attribute, aus denen das
+ * Layout ohnehin gebaut wird - es gibt keinen zweiten Speicher:
+ *   Reihenfolge  sortby (10, 20, 30 … mit Luecken fuer spaetere Einschuebe)
+ *   Groesse      vizSize
+ *   Blickfang    vizHero
+ *   Ausblenden   vizHide
+ * FHEM haelt Attribute nur im Speicher - darum der Speichern-Knopf (save).
+ */
+const SIZES = ["", "2x1", "1x2", "2x2"]; // "" = 1x1 (Attribut geloescht)
+let editDirty = false; // ungespeicherte Attributaenderungen
+
+/** attr/deleteattr schicken und die Sicht sofort nachziehen. */
+async function editSet(ctx, devName, attr, value) {
+  const { client, store } = ctx;
+  if (!client) return;
+  const cmd =
+    value === null ? `deleteattr ${devName} ${attr}` : `attr ${devName} ${attr} ${value}`;
+  try {
+    await client.command(cmd);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("FHEMVIZ Editiermodus:", cmd, e && e.message);
+    return;
+  }
+  store.patchAttr(devName, attr, value);
+  editDirty = true;
+  ctx.rerender();
+}
+
+/** Reihenfolge der Kacheln eines Rasters als sortby festschreiben. */
+function editWriteOrder(ctx, grid) {
+  const items = [...grid.querySelectorAll(":scope > .viz-edit-item")];
+  items.forEach((it, i) => {
+    const soll = String((i + 1) * 10);
+    if (String(it.dataset.sortby || "") !== soll) {
+      editSet(ctx, it.dataset.dev, "sortby", soll);
+    }
+  });
+}
+
+/**
+ * Ziehen mit Pointer-Events (kein HTML5-Drag&Drop): das laeuft auf dem
+ * Wandtablet genauso wie mit der Maus. Umsortiert wird live per insertBefore,
+ * geschrieben erst beim Loslassen.
+ */
+function editBindDrag(ctx, griff, item, grid) {
+  griff.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    griff.setPointerCapture(e.pointerId);
+    item.classList.add("ve-dragging");
+    const move = (ev) => {
+      const unter = document
+        .elementFromPoint(ev.clientX, ev.clientY)
+        ?.closest(".viz-edit-item");
+      if (!unter || unter === item || unter.parentElement !== grid) return;
+      const r = unter.getBoundingClientRect();
+      // Mitte des Ziels entscheidet, ob davor oder dahinter eingefuegt wird.
+      const davor = ev.clientY < r.top + r.height / 2;
+      grid.insertBefore(item, davor ? unter : unter.nextSibling);
+    };
+    const up = () => {
+      griff.removeEventListener("pointermove", move);
+      griff.removeEventListener("pointerup", up);
+      griff.removeEventListener("pointercancel", up);
+      item.classList.remove("ve-dragging");
+      editWriteOrder(ctx, grid);
+    };
+    griff.addEventListener("pointermove", move);
+    griff.addEventListener("pointerup", up);
+    griff.addEventListener("pointercancel", up);
+  });
+}
+
+/** Kachel in einen Rahmen mit Werkzeugleiste packen. */
+function editWrap(widget, dev, grid, ctx) {
+  const attr = dev.attr || {};
+  const item = document.createElement("div");
+  item.className = "viz-edit-item";
+  item.dataset.dev = dev.name;
+  item.dataset.sortby = attr.sortby || "";
+  // vizSize-Spannweite gilt fuer den RAHMEN - er ist jetzt das Rasterelement.
+  const size = String(attr.vizSize || "");
+  if (/^2/.test(size)) item.style.gridColumn = "span 2";
+  if (/2$/.test(size)) item.style.gridRow = "span 2";
+  widget.style.gridColumn = "";
+  widget.style.gridRow = "";
+
+  const versteckt = /^(1|true|yes)$/i.test(String(attr.vizHide || ""));
+  if (versteckt) item.classList.add("ve-hidden");
+
+  const tools = document.createElement("div");
+  tools.className = "viz-edit-tools";
+  const knopf = (cls, text, titel) => {
+    const b = document.createElement("button");
+    b.className = "ve-btn " + cls;
+    b.textContent = text;
+    b.title = titel;
+    tools.appendChild(b);
+    return b;
+  };
+
+  const griff = knopf("ve-drag", "⠿", "Ziehen: Reihenfolge (schreibt sortby)");
+  const bSize = knopf("ve-size", size || "1x1", "Größe (vizSize)");
+  // Im Zeilen-Layout gibt es nur eine Spalte - vizSize bleibt dort wirkungslos.
+  if (ctx.skin === "zeilen") {
+    bSize.disabled = true;
+    bSize.title = "Größe wirkt im Streifen-Layout nicht (eine Spalte)";
+  }
+  const bHero = knopf(
+    "ve-hero" + (/^(1|true|yes|on)$/i.test(String(attr.vizHero || "")) ? " on" : ""),
+    "Hero",
+    "Blickfang oben im Raum (vizHero)"
+  );
+  const bHide = knopf(
+    "ve-hide",
+    versteckt ? "Einblenden" : "Ausblenden",
+    "Kachel ausblenden (vizHide)"
+  );
+  const bReset = knopf("ve-reset", "↺", "Zurücksetzen: vizSize, vizHero, vizHide, sortby");
+
+  editBindDrag(ctx, griff, item, grid);
+  bSize.addEventListener("click", () => {
+    const i = SIZES.indexOf(size);
+    const next = SIZES[(i < 0 ? 0 : i + 1) % SIZES.length];
+    editSet(ctx, dev.name, "vizSize", next || null);
+  });
+  bHero.addEventListener("click", () =>
+    editSet(
+      ctx,
+      dev.name,
+      "vizHero",
+      /^(1|true|yes|on)$/i.test(String(attr.vizHero || "")) ? null : "1"
+    )
+  );
+  bHide.addEventListener("click", () =>
+    editSet(ctx, dev.name, "vizHide", versteckt ? null : "1")
+  );
+  bReset.addEventListener("click", async () => {
+    for (const a of ["vizSize", "vizHero", "vizHide", "sortby"]) {
+      if (attr[a] !== undefined) await editSet(ctx, dev.name, a, null);
+    }
+  });
+
+  item.appendChild(tools);
+  item.appendChild(widget);
+  return item;
+}
+
+/** Leiste oben: Hinweis, Speichern, Fertig. */
+function editBar(ctx) {
+  const bar = document.createElement("div");
+  bar.className = "viz-editbar";
+  const info = document.createElement("span");
+  info.className = "ve-info";
+  info.textContent = editDirty
+    ? "geändert – noch nicht gespeichert"
+    : "Änderungen wirken sofort";
+  const save = document.createElement("button");
+  save.className = "ve-btn ve-save";
+  save.textContent = "Speichern";
+  save.title = "save: Attribute dauerhaft in die FHEM-Konfiguration schreiben";
+  save.addEventListener("click", async () => {
+    try {
+      await ctx.client.command("save");
+      editDirty = false;
+      info.textContent = "gespeichert";
+    } catch (e) {
+      info.textContent = "Speichern fehlgeschlagen";
+    }
+  });
+  const exit = document.createElement("button");
+  exit.className = "ve-btn ve-exit";
+  exit.textContent = "Fertig";
+  exit.addEventListener("click", () => ctx.exit());
+  bar.append(
+    Object.assign(document.createElement("strong"), { textContent: "Bearbeiten" }),
+    info,
+    save,
+    exit
+  );
+  return bar;
+}
+
 /**
  * Rendert (optional Tab-Leiste +) Geraete des aktiven Raums in den Container.
  * @param {HTMLElement} root
@@ -201,6 +389,18 @@ export function collectRooms(store, opts = {}) {
 export function renderLayout(root, store, client, opts = {}) {
   const showTabs = opts.showTabs !== false;
   const rooms = buildRooms(store, opts);
+  // Editiermodus: im TV-/readonly-Betrieb gesperrt - ein Wischen am
+  // Wandtablet soll nicht das Layout verschieben.
+  const edit = !!opts.edit && !opts.readonly && !opts.tv;
+  const editCtx = edit
+    ? {
+        client,
+        store,
+        skin: opts.skin || "",
+        rerender: () => renderLayout(root, store, client, opts),
+        exit: () => (opts.onExitEdit ? opts.onExitEdit() : null),
+      }
+    : null;
 
   // Scrollposition der Tab-Leiste ueber den Neuaufbau retten: die Leiste wird
   // bei jedem renderLayout komplett neu erzeugt und startet sonst wieder bei 0.
@@ -306,7 +506,10 @@ export function renderLayout(root, store, client, opts = {}) {
           // 2x1 (breit, aber nicht die riesige 2x2-Typo) - sonst wird der
           // Inhalt bei schmaleren Layouts (z. B. width 1000) abgeschnitten.
           if (!w.getAttribute("data-size")) w.setAttribute("data-size", "2x1");
-          band.appendChild(w);
+          // Auch im Hero-Band die Werkzeuge anbieten: sonst waere "Hero" eine
+          // Einbahnstrasse - die Kachel verlaesst das Raster und man kaeme
+          // nicht mehr an den Schalter, um sie zurueckzuholen.
+          band.appendChild(edit ? editWrap(w, dev, band, editCtx) : w);
         });
       roomEl.appendChild(band);
     }
@@ -353,9 +556,10 @@ export function renderLayout(root, store, client, opts = {}) {
       grid.className = "viz-grid";
       devices
         .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
-        .forEach((dev) =>
-          grid.appendChild(createWidget(dev, store, client, widgetOpts))
-        );
+        .forEach((dev) => {
+          const w = createWidget(dev, store, client, widgetOpts);
+          grid.appendChild(edit ? editWrap(w, dev, grid, editCtx) : w);
+        });
 
       groupEl.appendChild(grid);
       groupsWrap.appendChild(groupEl);
@@ -370,7 +574,10 @@ export function renderLayout(root, store, client, opts = {}) {
   // kurz auf) und inhaltsreiche Kacheln spannen mehrere Rasterzeilen -
   // kompakte bleiben klein, grid-auto-flow:dense packt sie in die Luecken.
   const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 104;
-  for (const grid of root.querySelectorAll(".viz-grid")) {
+  // Im Editiermodus NICHT automatisch nachspannen: dort sitzt der Rahmen
+  // (.viz-edit-item) im Raster, und man soll sehen, was vizSize tatsaechlich
+  // bewirkt - nicht die automatische Korrektur.
+  for (const grid of edit ? [] : root.querySelectorAll(".viz-grid")) {
     const tiles = [...grid.children];
     // vizSize-Spans (1x2/2x2) gelten als MINIMUM - waechst der Inhalt
     // darueber hinaus, wird der Span erhoeht, statt dass die Rasterzeile
@@ -419,6 +626,9 @@ export function renderLayout(root, store, client, opts = {}) {
   // Tab-Leiste ganz am Ende einhaengen (siehe oben): fixed (ohne Zoom)
   // ignoriert die Position ohnehin, sticky (mit Zoom) klebt so korrekt
   // unten statt oben.
+  // Editier-Leiste vor der Tab-Leiste einhaengen (beide sitzen am Ende des
+  // Flusses, damit sticky im Zoom-Modus greift - siehe Kommentar oben).
+  if (edit) root.appendChild(editBar(editCtx));
   if (nav) {
     root.appendChild(nav);
     restoreNavScroll(nav, navScroll);
