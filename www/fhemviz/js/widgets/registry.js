@@ -29,6 +29,7 @@ import { FhemvizChart } from "./chart.js";
 import { FhemvizWatering } from "./watering.js";
 import { FhemvizImage } from "./image.js";
 import { FhemvizCar } from "./car.js";
+import { FhemvizCameraGroup } from "./cameragroup.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -53,6 +54,7 @@ export const WIDGET_REGISTRY = {
   watering: "fhemviz-watering",
   image: "fhemviz-image",
   car: "fhemviz-car",
+  cameragroup: "fhemviz-cameragroup",
   // TODO: thermostat, media.
 };
 
@@ -94,6 +96,7 @@ export function registerCoreWidgets() {
     ["fhemviz-watering", FhemvizWatering],
     ["fhemviz-image", FhemvizImage],
     ["fhemviz-car", FhemvizCar],
+    ["fhemviz-cameragroup", FhemvizCameraGroup],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
@@ -140,6 +143,11 @@ export function selectWidget(device) {
     // "switch"/"light", z. B. define st_garage structure switch dev1 dev2 ...).
     if (/^(switch|light|licht|schalter)$/i.test(clientType)) {
       return WIDGET_REGISTRY.switchgroup;
+    }
+    // structure aus Kameras -> cameragroup (clientstate "camera"/"kamera",
+    // z. B. define st_kamera structure camera MQTT2_CAM1 MQTT2_CAM2 ...).
+    if (/^(camera|cam|kamera)$/i.test(clientType)) {
+      return WIDGET_REGISTRY.cameragroup;
     }
     // structure aus Temperatur-/Klima-Sensoren -> sensorgroup (clientstate
     // "sensor"/"temp"/"thermo"/"klima", z. B. define st_temp structure temp ...).

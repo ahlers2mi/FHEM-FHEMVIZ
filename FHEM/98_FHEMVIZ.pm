@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.34
+# Version:  v0.34.35
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.34";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.35";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -75,7 +75,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup,car",
+    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup,car,cameragroup",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:1,0",
     "vizHide:1,0",
@@ -88,6 +88,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizChart:textField-long",
     "vizWatering:textField-long",
     "vizCar:textField-long",
+    "vizCameras:textField-long",
     "vizWateringButtons:textField-long",
     "vizText:textField-long",
     "vizImage",
@@ -314,7 +315,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.34"),
+            FHEMVIZ_jsonStr("v0.34.35"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -666,7 +667,7 @@ sub FHEMVIZ_Attr {
   registriert, erscheinen im Attribut-Dropdown jedes Geräts)
   <ul>
     <li><a id="FHEMVIZ-attr-vizWidget"></a><b>vizWidget</b>
-        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering|car<br>
+        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering|car|cameragroup<br>
         Widget-Typ erzwingen; übersteuert genericDeviceType/webCmd/Heuristik
         und die Rausch-Filter (Gerät wird immer angezeigt). Automatisch
         erkannt werden u. a. <code>genericDeviceType</code>
@@ -763,6 +764,24 @@ sub FHEMVIZ_Attr {
         mit Empfehlung/Farbe (rein anzeigend, per
         <code>vizWidget ventgroup</code>; Mitglieder im devspec, Empfehlung
         <code>vizSize 2x1</code>),
+        <code>cameragroup</code> = Kamera-Gruppe: EINE Kachel für ein
+        <code>structure</code>-Gerät aus Kameras, je Kamera eine Zeile mit
+        Name, letztem Ereignis (Person/Bewegung samt Uhrzeit), Akkustand und
+        einem Schalter für die Bewegungserkennung. Der Kopf nennt, was gerade
+        los ist, und <b>warnt</b>, wenn bei einer Kamera die Erkennung aus ist
+        („2 ohne Erkennung") &ndash; eine Kamera, die nicht mehr hinsieht,
+        fällt sonst nicht auf. Automatisch bei einem <code>structure</code> mit
+        clientstate <code>camera</code>/<code>kamera</code>:<br>
+        <code>define st_kamera structure camera MQTT2_CAM1 MQTT2_CAM2 …</code><br>
+        Readings werden nach Namen gesucht (getestet mit eufy über
+        ioBroker/MQTT): <code>name</code>, <code>motion_detected</code>,
+        <code>person_detected</code>/<code>identity_person_detected</code>/
+        <code>stranger_person_detected</code> mit
+        <code>person_name</code>/<code>last_person</code>,
+        <code>motion_detection</code> (Schalter, wenn in
+        <code>PossibleSets</code>), <code>battery</code>. Vorschaubilder siehe
+        <code>vizCameras</code>. Mitglieder im devspec, Empfehlung
+        <code>vizSize 2x1/2x2</code>,
         <code>flow</code> = Energiefluss mit Laufpunkt-Animation,
         <code>forecast</code> = PV-Prognose mit Stunden-Balkenchart
         (IST vor Prognose), Sonnenzeiten, Peak und Morgen-Wert,
@@ -995,6 +1014,20 @@ sub FHEMVIZ_Attr {
         ein Hinweis in der Kachel. Beispiel:<br>
         <code>attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE</code><br>
         <code>attr MQTT2_GOE room Garage,Solar,System-&gt;MQTT,FHEMVIZ-&gt;Stuff</code></li>
+    <li><a id="FHEMVIZ-attr-vizCameras"></a><b>vizCameras</b><br>
+        Typ: textField-long. Feinzuordnung der Kamera-Gruppe
+        (<code>vizWidget cameragroup</code>) als
+        <code>rolle=wert</code>-Liste. <code>base=&lt;url&gt;</code> schaltet
+        die <b>Vorschaubilder</b> ein: die Kameras liefern im Reading nur einen
+        PFAD (z. B. <code>/files/eusec.0/…/last_event/T816….jpg</code>), der
+        Browser braucht den Host davor. <code>reading=&lt;name&gt;</code>
+        überschreibt das Bild-Reading (Default
+        <code>picture_url</code>, <code>snapshot_url</code>,
+        <code>last_event_url</code>). Ohne <code>base=</code> bleibt es beim
+        Kamera-Symbol &ndash; ein halb geladenes Bild wäre schlimmer als
+        keines. Die Reading-Zeit hängt als Cache-Buster an der URL, weil das
+        Bild bei jedem Ereignis unter demselben Pfad liegt. Beispiel:<br>
+        <code>attr st_kamera vizCameras base=http://192.168.69.20:8082</code></li>
     <li><a id="FHEMVIZ-attr-vizWateringButtons"></a><b>vizWateringButtons</b><br>
         Typ: textField-long. Bedien-Buttons des Bewässerungs-Widgets als
         <code>Label=befehl</code>-Liste, mit <code>|</code> getrennt. Der
