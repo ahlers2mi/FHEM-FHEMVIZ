@@ -201,15 +201,26 @@ export function collectRooms(store, opts = {}) {
  *   Groesse      vizSize
  *   Blickfang    vizHero
  *   Ausblenden   vizHide
+ *   Tab          room  (NUR der FHEMVIZ->-Eintrag, siehe editRoomList)
+ *   Abschnitt    vizGroup
  * FHEM haelt Attribute nur im Speicher - darum der Speichern-Knopf (save).
  */
 const SIZES = ["", "2x1", "1x2", "2x2"]; // "" = 1x1 (Attribut geloescht)
+// Raumnamen, die buildRooms selbst erfindet - keine echten Attributwerte und
+// darum auch keine Umzugsziele.
+const SYNTH_ROOMS = new Set(["Weitere", "Unsortiert"]);
+const DEFAULT_GROUP = "Allgemein";
 let editDirty = false; // ungespeicherte Attributaenderungen
+let editNote = null; // { text, undo } - Hinweis in der Leiste, z. B. nach Umzug
 
-/** attr/deleteattr schicken und die Sicht sofort nachziehen. */
-async function editSet(ctx, devName, attr, value) {
+/**
+ * attr/deleteattr schicken und die Sicht sofort nachziehen.
+ * @param {object} [note] - Hinweis fuer die Leiste ({text, undo}); jeder
+ *        Aufruf ohne Hinweis loescht einen alten (er waere sonst veraltet).
+ */
+async function editSet(ctx, devName, attr, value, note) {
   const { client, store } = ctx;
-  if (!client) return;
+  if (!client) return false;
   const cmd =
     value === null ? `deleteattr ${devName} ${attr}` : `attr ${devName} ${attr} ${value}`;
   try {
@@ -217,11 +228,113 @@ async function editSet(ctx, devName, attr, value) {
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error("FHEMVIZ Editiermodus:", cmd, e && e.message);
-    return;
+    return false;
   }
   store.patchAttr(devName, attr, value);
   editDirty = true;
+  editNote = note || null;
   ctx.rerender();
+  return true;
+}
+
+/**
+ * Einen Eintrag in einer FHEM-Kommaliste ersetzen (Rest bleibt unangetastet).
+ * Genau darum geht es beim Raumwechsel: an den Geraeten haengen neben dem
+ * FHEMVIZ->-Raum meist noch Homebridge, System->… und die FHEMWEB-Raeume -
+ * ein blankes Ueberschreiben von "room" wuerde die alle wegwerfen.
+ * Steht der alte Wert nicht in der Liste (synthetischer Raum wie "Weitere"),
+ * wird der neue angehaengt.
+ */
+function editReplaceInList(value, alt, neu) {
+  const liste = splitAttr(value);
+  const i = alt ? liste.indexOf(alt) : -1;
+  if (i >= 0) liste[i] = neu;
+  else liste.push(neu);
+  return [...new Set(liste.filter(Boolean))].join(",");
+}
+
+/** Alle vorhandenen FHEMVIZ->-Raeume als Umzugsziele (inkl. ausgeblendeter). */
+function editRoomList(store) {
+  const s = new Set();
+  for (const dev of store.all()) {
+    for (const r of splitAttr((dev.attr || {}).room)) {
+      if (r.startsWith(VIZ_ROOM_PREFIX)) s.add(r);
+    }
+  }
+  return [...s].sort((a, b) => displayRoom(a).localeCompare(displayRoom(b)));
+}
+
+/**
+ * Kleines Auswahlmenue an der Kachel (Raum/Gruppe). Bewusst kein <select>:
+ * das laesst sich weder mit einem eigenen Eingabefeld fuer neue Namen
+ * kombinieren noch am Tablet zuverlaessig scrollen (siehe v0.34.30).
+ */
+function editMenu(item, knopf, eintraege, neu) {
+  const alt = item.querySelector(".ve-menu");
+  if (alt) {
+    alt.remove();
+    item.classList.remove("ve-open");
+    if (alt.dataset.fuer === knopf.className) return; // gleicher Knopf: zu
+  }
+  const menu = document.createElement("div");
+  menu.className = "ve-menu";
+  menu.dataset.fuer = knopf.className;
+  // Das offene Menue ueberlappt die Nachbarkacheln - die Klasse hebt NUR diesen
+  // Rahmen im Stapel an (kein :has(), das muss auch im Tablet-Browser laufen).
+  const zu = () => {
+    menu.remove();
+    item.classList.remove("ve-open");
+  };
+  for (const e of eintraege) {
+    const b = document.createElement("button");
+    b.className = "ve-mi" + (e.aktiv ? " on" : "");
+    b.textContent = e.label;
+    if (e.hinweis) b.title = e.hinweis;
+    b.addEventListener("click", () => {
+      zu();
+      e.run();
+    });
+    menu.appendChild(b);
+  }
+  if (neu) {
+    const zeile = document.createElement("div");
+    zeile.className = "ve-mnew";
+    const feld = document.createElement("input");
+    feld.type = "text";
+    feld.placeholder = neu.placeholder || "Neuer Name";
+    const ok = document.createElement("button");
+    ok.className = "ve-btn";
+    ok.textContent = "OK";
+    const los = () => {
+      const v = feld.value.trim();
+      if (!v) return;
+      zu();
+      neu.run(v);
+    };
+    ok.addEventListener("click", los);
+    feld.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") los();
+    });
+    zeile.append(feld, ok);
+    menu.appendChild(zeile);
+  }
+  // Klick daneben schliesst - erst im naechsten Tick anmelden, sonst faengt
+  // der Listener noch den Klick ab, der das Menue gerade geoeffnet hat.
+  setTimeout(() => {
+    const daneben = (ev) => {
+      // Schon weg (anderer Knopf, Neuaufbau)? Dann nur abmelden.
+      if (!menu.isConnected) {
+        document.removeEventListener("pointerdown", daneben, true);
+        return;
+      }
+      if (menu.contains(ev.target) || knopf.contains(ev.target)) return;
+      zu();
+      document.removeEventListener("pointerdown", daneben, true);
+    };
+    document.addEventListener("pointerdown", daneben, true);
+  }, 0);
+  item.appendChild(menu);
+  item.classList.add("ve-open");
 }
 
 /** Reihenfolge der Kacheln eines Rasters als sortby festschreiben. */
@@ -268,8 +381,13 @@ function editBindDrag(ctx, griff, item, grid) {
   });
 }
 
-/** Kachel in einen Rahmen mit Werkzeugleiste packen. */
-function editWrap(widget, dev, grid, ctx) {
+/**
+ * Kachel in einen Rahmen mit Werkzeugleiste packen.
+ * @param {object} platz - {room, group}: WO diese Kachel gerade steht. Ein
+ *        Geraet kann in mehreren Raeumen/Gruppen liegen - umgezogen wird
+ *        gezielt dieses Vorkommen, die anderen bleiben stehen.
+ */
+function editWrap(widget, dev, grid, ctx, platz = {}) {
   const attr = dev.attr || {};
   const item = document.createElement("div");
   item.className = "viz-edit-item";
@@ -313,7 +431,92 @@ function editWrap(widget, dev, grid, ctx) {
     versteckt ? "Einblenden" : "Ausblenden",
     "Kachel ausblenden (vizHide)"
   );
+  const bRoom = knopf("ve-room", "Raum", "In einen anderen Tab verschieben (room)");
+  const bGroup = knopf("ve-group", "Gruppe", "In einen anderen Abschnitt verschieben (vizGroup)");
   const bReset = knopf("ve-reset", "↺", "Zurücksetzen: vizSize, vizHero, vizHide, sortby");
+
+  // --- Raum: nur den FHEMVIZ->-Eintrag dieses Vorkommens austauschen.
+  // Bei einem erfundenen Raum ("Weitere": das Geraet liegt nur in einem per
+  // hideRooms versteckten Raum) gibt es keinen Eintrag zum Ersetzen - dann
+  // wird der neue Raum ANGEHAENGT. Das ist hier auch das Richtige: die
+  // Mitgliedschaft in FHEMVIZ->Stuff ist Absicht (Gruppen-Kacheln loesen ihre
+  // Mitglieder ueber das devspec auf) und darf nicht verschwinden.
+  const raumAlt = SYNTH_ROOMS.has(platz.room) ? null : platz.room || null;
+  bRoom.addEventListener("click", () => {
+    const ziele = ctx.raeume();
+    const umzug = (ziel) => {
+      if (ziel === platz.room) return; // schon da - kein sinnloses attr
+      const neu = editReplaceInList(attr.room, raumAlt, ziel);
+      const vorher = attr.room;
+      editSet(ctx, dev.name, "room", neu, {
+        text: `${attr.alias || dev.name} → ${displayRoom(ziel)}${
+          ctx.istVersteckt(ziel) ? " (ausgeblendeter Raum)" : ""
+        }`,
+        undo: () =>
+          editSet(ctx, dev.name, "room", vorher === undefined ? null : vorher),
+      });
+    };
+    editMenu(
+      item,
+      bRoom,
+      ziele.map((r) => ({
+        label: displayRoom(r) + (ctx.istVersteckt(r) ? " ·" : ""),
+        aktiv: r === platz.room,
+        hinweis: ctx.istVersteckt(r)
+          ? `${r} - per hideRooms ausgeblendet: die Kachel verschwindet aus dem Raster`
+          : r,
+        run: () => umzug(r),
+      })),
+      { placeholder: "Neuer Raum", run: (v) => umzug(VIZ_ROOM_PREFIX + v) }
+    );
+  });
+
+  // --- Gruppe: geschrieben wird vizGroup, nicht group. group nutzen bei FHEM
+  // auch andere (Homebridge, eigene Listen) - das Dashboard soll das nicht
+  // umstellen. Basisliste ist vizGroup, sonst group (damit ein zweiter
+  // Gruppeneintrag beim Umzug nicht verloren geht).
+  bGroup.addEventListener("click", () => {
+    const basis = String(attr.vizGroup || "").trim() ? attr.vizGroup : attr.group;
+    const vorher = attr.vizGroup;
+    const grpAlt = platz.group === DEFAULT_GROUP ? null : platz.group || null;
+    const setzen = (wert, text) =>
+      editSet(ctx, dev.name, "vizGroup", wert, {
+        text,
+        undo: () =>
+          editSet(ctx, dev.name, "vizGroup", vorher === undefined ? null : vorher),
+      });
+    const umzug = (ziel) => {
+      if (ziel === platz.group) return; // schon da - kein sinnloses attr
+      setzen(
+        editReplaceInList(basis, grpAlt, ziel),
+        `${attr.alias || dev.name} → Abschnitt „${ziel}“`
+      );
+    };
+    const eintraege = ctx.gruppen(platz.room).map((g) => ({
+      label: g,
+      aktiv: g === platz.group,
+      run: () => umzug(g),
+    }));
+    // "-" loest die Gruppierung auf (siehe buildRooms) -> Abschnitt Allgemein.
+    eintraege.push({
+      label: "ohne Abschnitt",
+      aktiv: /^(-|keine|none)$/i.test(String(attr.vizGroup || "")),
+      hinweis: 'vizGroup "-" - die Kachel landet unter Allgemein',
+      run: () => setzen("-", `${attr.alias || dev.name} → ohne Abschnitt`),
+    });
+    if (attr.vizGroup !== undefined) {
+      eintraege.push({
+        label: "Standard (group)",
+        hinweis: "vizGroup löschen - es gilt wieder das FHEM-Attribut group",
+        run: () =>
+          setzen(null, `${attr.alias || dev.name} → wieder nach group sortiert`),
+      });
+    }
+    editMenu(item, bGroup, eintraege, {
+      placeholder: "Neuer Abschnitt",
+      run: (v) => umzug(v),
+    });
+  });
 
   editBindDrag(ctx, griff, item, grid);
   bSize.addEventListener("click", () => {
@@ -349,9 +552,15 @@ function editBar(ctx) {
   bar.className = "viz-editbar";
   const info = document.createElement("span");
   info.className = "ve-info";
-  info.textContent = editDirty
-    ? "geändert – noch nicht gespeichert"
-    : "Änderungen wirken sofort";
+  // Nach einem Umzug ist die Kachel nicht mehr im Bild (sie steht jetzt in
+  // einem anderen Tab/Abschnitt) - ohne diesen Hinweis wirkt das wie ein
+  // Fehler. Darum: was ist wohin gewandert, und ein Weg zurueck.
+  info.textContent = editNote
+    ? editNote.text
+    : editDirty
+      ? "geändert – noch nicht gespeichert"
+      : "Änderungen wirken sofort";
+  if (editNote) info.classList.add("ve-moved");
   const save = document.createElement("button");
   save.className = "ve-btn ve-save";
   save.textContent = "Speichern";
@@ -369,9 +578,18 @@ function editBar(ctx) {
   exit.className = "ve-btn ve-exit";
   exit.textContent = "Fertig";
   exit.addEventListener("click", () => ctx.exit());
+  let zurueck = null;
+  if (editNote && editNote.undo) {
+    zurueck = document.createElement("button");
+    zurueck.className = "ve-btn ve-undo";
+    zurueck.textContent = "Rückgängig";
+    zurueck.title = "Den Umzug zurücknehmen (schreibt den alten Attributwert)";
+    zurueck.addEventListener("click", () => editNote.undo());
+  }
   bar.append(
     Object.assign(document.createElement("strong"), { textContent: "Bearbeiten" }),
     info,
+    ...(zurueck ? [zurueck] : []),
     save,
     exit
   );
@@ -392,6 +610,7 @@ export function renderLayout(root, store, client, opts = {}) {
   // Editiermodus: im TV-/readonly-Betrieb gesperrt - ein Wischen am
   // Wandtablet soll nicht das Layout verschieben.
   const edit = !!opts.edit && !opts.readonly && !opts.tv;
+  const editHidden = edit ? compileRegexList(opts.hideRooms, "hidden") : [];
   const editCtx = edit
     ? {
         client,
@@ -399,6 +618,11 @@ export function renderLayout(root, store, client, opts = {}) {
         skin: opts.skin || "",
         rerender: () => renderLayout(root, store, client, opts),
         exit: () => (opts.onExitEdit ? opts.onExitEdit() : null),
+        // Umzugsziele: alle vorhandenen FHEMVIZ->-Raeume, auch die per
+        // hideRooms ausgeblendeten (FHEMVIZ->Stuff ist ein uebliches Ziel).
+        raeume: () => editRoomList(store),
+        istVersteckt: (r) => editHidden.some((re) => re.test(r)),
+        gruppen: (room) => [...(rooms.get(room) || new Map()).keys()].sort(),
       }
     : null;
 
@@ -483,11 +707,15 @@ export function renderLayout(root, store, client, opts = {}) {
     // Gruppen des Raums eingesammelt und nach Name dedupliziert.
     const heroSeen = new Set();
     const heroDevs = [];
-    for (const devs of groups.values()) {
+    // Aus welcher Gruppe kam die Hero-Kachel? Nur fuer den Editiermodus, damit
+    // der Gruppen-Umzug auch dort das richtige Vorkommen erwischt.
+    const heroGroup = new Map();
+    for (const [group, devs] of groups) {
       for (const d of devs) {
         if (isHero(d) && !heroSeen.has(d.name)) {
           heroSeen.add(d.name);
           heroDevs.push(d);
+          heroGroup.set(d.name, group);
         }
       }
     }
@@ -509,7 +737,14 @@ export function renderLayout(root, store, client, opts = {}) {
           // Auch im Hero-Band die Werkzeuge anbieten: sonst waere "Hero" eine
           // Einbahnstrasse - die Kachel verlaesst das Raster und man kaeme
           // nicht mehr an den Schalter, um sie zurueckzuholen.
-          band.appendChild(edit ? editWrap(w, dev, band, editCtx) : w);
+          band.appendChild(
+            edit
+              ? editWrap(w, dev, band, editCtx, {
+                  room,
+                  group: heroGroup.get(dev.name),
+                })
+              : w
+          );
         });
       roomEl.appendChild(band);
     }
@@ -558,7 +793,9 @@ export function renderLayout(root, store, client, opts = {}) {
         .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
         .forEach((dev) => {
           const w = createWidget(dev, store, client, widgetOpts);
-          grid.appendChild(edit ? editWrap(w, dev, grid, editCtx) : w);
+          grid.appendChild(
+            edit ? editWrap(w, dev, grid, editCtx, { room, group }) : w
+          );
         });
 
       groupEl.appendChild(grid);

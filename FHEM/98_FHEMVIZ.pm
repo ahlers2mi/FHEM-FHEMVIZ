@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.37
+# Version:  v0.34.38
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.37";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.38";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -318,7 +318,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.37"),
+            FHEMVIZ_jsonStr("v0.34.38"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1157,6 +1157,29 @@ sub FHEMVIZ_Attr {
     <li><b>Ausblenden / Einblenden</b> &ndash; <code>vizHide</code> an/aus.
         Ausgeblendete Geräte bleiben im Editiermodus sichtbar (blass
         dargestellt), damit man sie wieder findet.</li>
+    <li><b>Raum</b> &ndash; Kachel in einen anderen Tab verschieben. Angeboten
+        werden alle vorhandenen <code>FHEMVIZ-&gt;</code>-Räume (per
+        <code>hideRooms</code> ausgeblendete mit <code>·</code> markiert) plus
+        ein Feld für einen neuen Raum. Geschrieben wird <code>room</code>, und
+        zwar <b>nur der eine <code>FHEMVIZ-&gt;</code>-Eintrag</b> dieses
+        Vorkommens: die übrigen Räume in der Kommaliste (FHEMWEB-Räume,
+        <code>Homebridge</code>, <code>System-&gt;…</code>) bleiben unberührt.
+        Liegt ein Gerät in mehreren <code>FHEMVIZ-&gt;</code>-Räumen, wandert
+        nur das Vorkommen, dessen Kachel man bedient. Ein Gerät verliert so
+        nie seinen letzten Dashboard-Raum &ndash; es wird immer getauscht, nie
+        entfernt (dafür ist <code>vizHide</code> da).</li>
+    <li><b>Gruppe</b> &ndash; Kachel in einen anderen Abschnitt des Raums
+        verschieben, ebenfalls mit Feld für einen neuen Namen.
+        <code>ohne Abschnitt</code> setzt <code>vizGroup -</code> (die Kachel
+        landet unter <i>Allgemein</i>), <code>Standard (group)</code> löscht
+        <code>vizGroup</code> wieder. Geschrieben wird immer
+        <code>vizGroup</code>, <b>nie <code>group</code></b>: das benutzen in
+        FHEM auch andere (Homebridge, eigene Listen), das Dashboard stellt es
+        nicht um.</li>
+    <li>Nach einem Umzug ist die Kachel nicht mehr im Bild &ndash; sie steht
+        jetzt in einem anderen Tab. Die Leiste sagt, was wohin gewandert ist,
+        und bietet <b>Rückgängig</b> an (schreibt den alten Attributwert
+        zurück).</li>
     <li><b>↺</b> &ndash; löscht <code>vizSize</code>, <code>vizHero</code>,
         <code>vizHide</code> und <code>sortby</code> dieses Geräts.</li>
     <li><b>Speichern</b> &ndash; ruft <code>save</code>. FHEM hält Attribute
