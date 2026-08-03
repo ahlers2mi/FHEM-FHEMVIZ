@@ -10,14 +10,31 @@ export class Store {
     this._subscribers = new Map(); // name -> Set<callback>
   }
 
+  /**
+   * Reading-Werte UND Zeitstempel aus einem jsonlist2-Eintrag ziehen.
+   * Die Zeit steht in jsonlist2 je Reading dabei ("Time"); Widgets brauchen
+   * sie z. B. fuer "letzte Bewegung 16:47". Die Werte bleiben flach in
+   * .readings - dort greifen alle Widgets direkt zu.
+   */
+  static _split(r) {
+    const readings = {};
+    const times = {};
+    for (const [k, v] of Object.entries((r && r.Readings) || {})) {
+      if (v && typeof v === "object") {
+        readings[k] = v.Value;
+        if (v.Time) times[k] = v.Time;
+      } else {
+        readings[k] = v;
+      }
+    }
+    return { readings, times };
+  }
+
   /** Store aus jsonlist2-Snapshot aufbauen. */
   loadSnapshot(jsonlist2) {
     const results = (jsonlist2 && jsonlist2.Results) || [];
     for (const r of results) {
-      const readings = {};
-      for (const [k, v] of Object.entries(r.Readings || {})) {
-        readings[k] = v && typeof v === "object" ? v.Value : v;
-      }
+      const { readings, times } = Store._split(r);
       const state =
         readings.state ??
         (r.Internals && r.Internals.STATE) ??
@@ -27,6 +44,7 @@ export class Store {
         attr: r.Attributes || {},
         internals: r.Internals || {},
         readings,
+        times,
         state,
         possibleSets: r.PossibleSets || "",
       });
@@ -44,16 +62,14 @@ export class Store {
     for (const r of results) {
       const dev = this.devices.get(r.Name);
       if (!dev) continue;
-      const readings = {};
-      for (const [k, v] of Object.entries(r.Readings || {})) {
-        readings[k] = v && typeof v === "object" ? v.Value : v;
-      }
+      const { readings, times } = Store._split(r);
       const state =
         readings.state ?? (r.Internals && r.Internals.STATE) ?? dev.state;
       const changed =
         state !== dev.state ||
         JSON.stringify(readings) !== JSON.stringify(dev.readings);
       dev.readings = readings;
+      dev.times = times;
       dev.state = state;
       if (r.PossibleSets) dev.possibleSets = r.PossibleSets;
       if (r.Attributes) dev.attr = r.Attributes;
@@ -100,6 +116,16 @@ export class Store {
       dev.readings.state = value;
     } else {
       dev.readings[reading] = value;
+    }
+    // Zeitstempel mitfuehren: die inform-Zeile bringt keine Zeit mit, das
+    // Ereignis ist aber genau JETZT eingetroffen (fuer "letzte Bewegung ...").
+    if (reading) {
+      const d = new Date();
+      const p2 = (n) => String(n).padStart(2, "0");
+      dev.times = dev.times || {};
+      dev.times[reading] =
+        `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ` +
+        `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
     }
     this._notify(dev.name);
   }
