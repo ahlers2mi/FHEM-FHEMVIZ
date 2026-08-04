@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.38
+# Version:  v0.34.39
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.38";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.39";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -318,7 +318,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.38"),
+            FHEMVIZ_jsonStr("v0.34.39"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1146,7 +1146,9 @@ sub FHEMVIZ_Attr {
     <li><b>⠿ ziehen</b> &ndash; Reihenfolge innerhalb der Gruppe. Beim
         Loslassen wird <code>sortby</code> als <code>10, 20, 30 …</code>
         neu geschrieben (Lücken, damit sich später einzelne Geräte per
-        <code>attr</code> dazwischen setzen lassen).</li>
+        <code>attr</code> dazwischen setzen lassen). Am oberen/unteren Bildrand
+        scrollt die Seite mit, damit sich eine Kachel auch über den sichtbaren
+        Ausschnitt hinaus einsortieren lässt.</li>
     <li><b>1x1 / 2x1 / 1x2 / 2x2</b> &ndash; schaltet <code>vizSize</code>
         weiter (<code>1x1</code> löscht das Attribut). Im Streifen-Layout
         (<code>skin zeilen</code>) ist der Knopf gesperrt, weil es dort nur
@@ -1193,7 +1195,12 @@ sub FHEMVIZ_Attr {
   <code>readonly 1</code> abgeschaltet (dort soll nichts verrutschen), und
   solange er läuft, ist das automatische Vergrößern von Kacheln ausgesetzt
   &ndash; man sieht die Spannweite, die <code>vizSize</code> wirklich
-  vorgibt.<br><br>
+  vorgibt.<br>
+  Die Werkzeugleiste sitzt im Rahmen und braucht je nach Kachelbreite eine
+  oder zwei Zeilen. Damit deswegen nicht die schmale Kachel neben der breiten
+  kleiner aussieht, wird je Abschnitt die höchste Leiste ermittelt, alle
+  Leisten darauf angeglichen und die Rasterzeile um diesen Betrag angehoben:
+  jede Karte ist im Editiermodus genauso hoch wie ohne ihn.<br><br>
 
   Ausführliche Beispiele (Installation per <code>update add</code>,
   TV-Einrichtung, Plugin-API für eigene Widgets) stehen im README des

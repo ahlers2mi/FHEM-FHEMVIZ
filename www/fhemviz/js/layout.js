@@ -358,17 +358,63 @@ function editBindDrag(ctx, griff, item, grid) {
     e.preventDefault();
     griff.setPointerCapture(e.pointerId);
     item.classList.add("ve-dragging");
-    const move = (ev) => {
-      const unter = document
-        .elementFromPoint(ev.clientX, ev.clientY)
-        ?.closest(".viz-edit-item");
-      if (!unter || unter === item || unter.parentElement !== grid) return;
+
+    // Einsortieren an der aktuellen Zeigerposition.
+    const sortiere = (x, y) => {
+      let unter = document.elementFromPoint(x, y)?.closest(".viz-edit-item");
+      if (!unter || unter.parentElement !== grid) {
+        // Zeiger liegt in einer Luecke oder ueber einer Leiste (am Handy sind
+        // die unteren ~70px die Raum-Leiste, genau die Zone zum Mitscrollen).
+        // Dann die naechstgelegene Kachel des Rasters nehmen, sonst waere ein
+        // Ablegen am Bildrand unmoeglich.
+        let dist = Infinity;
+        unter = null;
+        for (const f of grid.querySelectorAll(":scope > .viz-edit-item")) {
+          if (f === item) continue;
+          const r = f.getBoundingClientRect();
+          const d =
+            (r.left + r.width / 2 - x) ** 2 + (r.top + r.height / 2 - y) ** 2;
+          if (d < dist) {
+            dist = d;
+            unter = f;
+          }
+        }
+      }
+      if (!unter || unter === item) return;
       const r = unter.getBoundingClientRect();
       // Mitte des Ziels entscheidet, ob davor oder dahinter eingefuegt wird.
-      const davor = ev.clientY < r.top + r.height / 2;
+      const davor = y < r.top + r.height / 2;
       grid.insertBefore(item, davor ? unter : unter.nextSibling);
     };
+
+    // Am Rand mitscrollen: der Zeiger ist gefangen und touch-action steht auf
+    // none, die Seite scrollt also waehrend des Ziehens nicht von selbst. Ohne
+    // das liesse sich eine Kachel nur innerhalb des sichtbaren Ausschnitts
+    // umsortieren - am Handy sind das drei Kacheln.
+    const RAND = 90;
+    let richtung = 0;
+    let ticker = null;
+    let zeiger = { x: 0, y: 0 };
+    const rollen = () => {
+      if (!richtung) {
+        ticker = null;
+        return;
+      }
+      window.scrollBy(0, richtung * 16);
+      sortiere(zeiger.x, zeiger.y); // beim Rollen kommen keine Zeigerereignisse
+      ticker = requestAnimationFrame(rollen);
+    };
+
+    const move = (ev) => {
+      zeiger = { x: ev.clientX, y: ev.clientY };
+      sortiere(ev.clientX, ev.clientY);
+      const hoehe = window.innerHeight;
+      richtung = ev.clientY < RAND ? -1 : ev.clientY > hoehe - RAND ? 1 : 0;
+      if (richtung && !ticker) ticker = requestAnimationFrame(rollen);
+    };
     const up = () => {
+      richtung = 0;
+      if (ticker) cancelAnimationFrame(ticker);
       griff.removeEventListener("pointermove", move);
       griff.removeEventListener("pointerup", up);
       griff.removeEventListener("pointercancel", up);
@@ -811,6 +857,35 @@ export function renderLayout(root, store, client, opts = {}) {
   // kurz auf) und inhaltsreiche Kacheln spannen mehrere Rasterzeilen -
   // kompakte bleiben klein, grid-auto-flow:dense packt sie in die Luecken.
   const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 104;
+
+  // Editiermodus: die Werkzeugleiste sitzt IM Rasterelement und nimmt der
+  // Kachel Hoehe weg. Wie viel, haengt von der Kachelbreite ab - bei einer
+  // schmalen 1x1 bricht die Leiste auf zwei Zeilen um, bei der breiten
+  // Nachbarin nicht. In derselben Rasterzeile war die 1x1-Karte damit 30 px
+  // kleiner als die 2x1 daneben ("zeitweise als 1x2 kleiner"). Darum je
+  // Raster: hoechste Leiste ermitteln, alle Leisten darauf setzen (damit alle
+  // Karten an derselben Kante beginnen) und die Basiszeile um diese Hoehe
+  // anheben - so ist jede Karte so hoch wie ohne Editiermodus.
+  if (edit) {
+    for (const grid of root.querySelectorAll(".viz-grid, .viz-hero")) {
+      const tools = [
+        ...grid.querySelectorAll(":scope > .viz-edit-item > .viz-edit-tools"),
+      ];
+      if (!tools.length) continue;
+      for (const t of tools) t.style.minHeight = "";
+      const h = Math.max(...tools.map((t) => t.offsetHeight));
+      for (const t of tools) t.style.minHeight = h + "px";
+      // Das Hero-Band hat kein Rasterzeilen-Raster, nur die Leisten angleichen.
+      if (grid.classList.contains("viz-grid")) {
+        // Rahmen (Rand + Innenabstand) kommt oben drauf, sonst bliebe die
+        // Karte um diese paar Pixel unter ihrer normalen Hoehe.
+        const rahmen = tools[0].parentElement;
+        const chrom = rahmen.offsetHeight - rahmen.clientHeight + 4; // Rand + padding
+        grid.style.setProperty("--viz-tile-row", rowH + h + chrom + "px");
+      }
+    }
+  }
+
   // Im Editiermodus NICHT automatisch nachspannen: dort sitzt der Rahmen
   // (.viz-edit-item) im Raster, und man soll sehen, was vizSize tatsaechlich
   // bewirkt - nicht die automatische Korrektur.
