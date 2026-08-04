@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.39
+# Version:  v0.34.40
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.39";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.40";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -92,6 +92,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizWatering:textField-long",
     "vizCar:textField-long",
     "vizCameras:textField-long",
+    "vizAgenda",
     "vizWateringButtons:textField-long",
     "vizText:textField-long",
     "vizImage",
@@ -318,7 +319,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
               . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.39"),
+            FHEMVIZ_jsonStr("v0.34.40"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -683,7 +684,10 @@ sub FHEMVIZ_Attr {
         automatisch das passende Widget. Besondere Widgets:
         <code>text</code> = mehrzeiliger Klartext,
         <code>agenda</code> = Terminliste (<code>DD.MM.YYYY HH:MM Text</code>-Zeilen)
-        mit Wochentag und hervorgehobenem nächstem Termin,
+        mit Wochentag; <i>Heute</i> und <i>Morgen</i> werden ausgeschrieben und
+        bernsteinfarben hervorgehoben (heute kräftiger als morgen), abgelaufene
+        Termine verschwinden nach 8 Stunden &ndash; siehe
+        <code>vizAgenda</code>,
         <code>contact</code> = Fenster/Tür (offen = Bernstein; structure =
         Gruppen-Kachel "2 offen · 1 gekippt" mit Mini-Symbolen),
         <code>shuttergroup</code> = Rollladen-Gruppe: EINE Kachel für ein
@@ -1031,6 +1035,17 @@ sub FHEMVIZ_Attr {
         keines. Die Reading-Zeit hängt als Cache-Buster an der URL, weil das
         Bild bei jedem Ereignis unter demselben Pfad liegt. Beispiel:<br>
         <code>attr st_kamera vizCameras base=http://192.168.69.20:8082</code></li>
+    <li><a id="FHEMVIZ-attr-vizAgenda"></a><b>vizAgenda</b><br>
+        Einstellungen der Terminliste (Widget <code>agenda</code>).
+        <code>hide=&lt;Stunden&gt;</code>: so lange bleibt ein <b>abgelaufener</b>
+        Termin noch in der Liste, danach verschwindet er (Default
+        <code>8</code>, <code>0</code> = nie ausblenden). Der Müll wird
+        morgens um 06:00 geholt &ndash; mittags hilft die Zeile keinem mehr.
+        Gemessen wird ab der Terminzeit; bei <code>00:00</code>
+        (Ganztagstermin) erst ab Tagesende, damit ein Geburtstag nicht schon
+        um 08:00 verschwindet. Die Liste prüft das im Fünf-Minuten-Takt, also
+        auch ohne neues Kalender-Ereignis. Beispiel:<br>
+        <code>attr rem_d_cal_muell vizAgenda hide=12</code></li>
     <li><a id="FHEMVIZ-attr-vizWateringButtons"></a><b>vizWateringButtons</b><br>
         Typ: textField-long. Bedien-Buttons des Bewässerungs-Widgets als
         <code>Label=befehl</code>-Liste, mit <code>|</code> getrennt. Der
