@@ -9,7 +9,14 @@
 
 import { FhemClient } from "./fhem-client.js";
 import { Store } from "./store.js";
-import { renderLayout, collectRooms, resolveRoom, ALL_ROOMS, VIZ_ROOM_PREFIX } from "./layout.js";
+import {
+  renderLayout,
+  collectRooms,
+  resolveRoom,
+  setRoomPrefix,
+  ALL_ROOMS,
+  VIZ_ROOM_PREFIX,
+} from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
 import {
   vizColorFor,
@@ -21,7 +28,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.40";
+const SPA_VERSION = "v0.34.41";
 
 const el = (id) => document.getElementById(id);
 
@@ -1144,6 +1151,10 @@ async function main() {
 
     // Konfiguration vom Modul holen; URL uebersteuert den Modus.
     const cfg = await client.getConfig(vizDevice);
+    // Raum-Praefix dieser Sicht VOR dem ersten Rendern setzen: Tabs,
+    // Ueberschriften und die Szenen-Auflösung schneiden ihn ab. Eine zweite
+    // Sicht (Gaeste-Seite) nutzt so eigene Raeume ohne "Opa ›" in den Tabs.
+    if (cfg.roomPrefix !== undefined) setRoomPrefix(cfg.roomPrefix);
     applyTheme(cfg.theme);
     applyBackground(cfg);
     // Skin VOR dem ersten Rendern setzen (URL ?skin= geht vor attr skin).

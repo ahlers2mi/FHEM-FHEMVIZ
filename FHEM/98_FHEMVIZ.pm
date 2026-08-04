@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.40
+# Version:  v0.34.41
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.40";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.41";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -134,6 +134,7 @@ sub FHEMVIZ_Initialize {
           "skin " .
           "skinBlur:1,0 " .
           "flash:1,0,values " .
+          "roomPrefix " .
           "showRooms " .
           "hideRooms " .
           "hideTypes " .
@@ -305,6 +306,10 @@ sub FHEMVIZ_Get {
         my $skin          = AttrVal($name, "skin", "");
         my $skinBlur      = AttrVal($name, "skinBlur", "");
         my $flash         = AttrVal($name, "flash", "");
+        # Raum-Praefix dieser Sicht: wird in Tabs/Ueberschriften abgeschnitten.
+        # Eine zweite Sicht (z. B. eine Gaeste-Seite) nutzt eigene Raeume wie
+        # "Opa->Wohnzimmer" und zeigt sie trotzdem als "Wohnzimmer".
+        my $roomPrefix = AttrVal($name, "roomPrefix", "FHEMVIZ->");
         my $showRooms  = AttrVal($name, "showRooms", "");
         my $hideRooms  = AttrVal($name, "hideRooms", $FHEMVIZ_DEFAULT_HIDEROOMS);
         my $hideTypes  = AttrVal($name, "hideTypes", $FHEMVIZ_DEFAULT_HIDETYPES);
@@ -317,9 +322,9 @@ sub FHEMVIZ_Get {
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,'
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
-              . '"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
+              . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.40"),
+            FHEMVIZ_jsonStr("v0.34.41"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -336,6 +341,7 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($skinBlur),
             FHEMVIZ_jsonStr($flash),
             FHEMVIZ_jsonStr($page),
+            FHEMVIZ_jsonStr($roomPrefix),
             FHEMVIZ_jsonStr($showRooms),
             FHEMVIZ_jsonStr($hideRooms),
             FHEMVIZ_jsonStr($hideTypes),
@@ -646,6 +652,16 @@ sub FHEMVIZ_Attr {
         unveraendert. Nur wirksam mit gesetztem <code>background</code>.</li>
 
     <p><b>Raum-Filter</b></p>
+    <li><a id="FHEMVIZ-attr-roomPrefix"></a><b>roomPrefix</b><br>
+        Typ: textField. Raum-Präfix dieser Sicht; es wird in Tab-Leiste,
+        Abschnitts-Überschriften und TV-Szenennamen abgeschnitten (Default
+        <code>FHEMVIZ-&gt;</code>). Damit kann eine <b>zweite Sicht</b> eigene
+        Räume benutzen und trotzdem saubere Namen zeigen: eine Gäste-Seite mit
+        <code>roomPrefix Opa-&gt;</code> beschriftet den Raum
+        <code>Opa-&gt;Wohnzimmer</code> einfach als <i>Wohnzimmer</i> &ndash;
+        und die Räume tauchen im Haupt-Dashboard nicht auf, weil sie nicht
+        unter <code>FHEMVIZ-&gt;</code> liegen. Beispiel:<br>
+        <code>attr vizOpa roomPrefix Opa-&gt;</code></li>
     <li><a id="FHEMVIZ-attr-showRooms"></a><b>showRooms</b><br>
         Typ: textField. <b>Whitelist</b> (kommaseparierte Regex-Liste): ist
         sie gesetzt, erscheinen NUR passende Räume; Geräte ohne passenden
