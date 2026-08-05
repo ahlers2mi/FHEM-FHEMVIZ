@@ -101,8 +101,11 @@ export class FhemvizShutter extends FhemvizWidget {
     const s = this.shadowRoot.getElementById("slider");
     if (s) {
       const cmd = this._spec().cmd;
-      s.addEventListener("change", () =>
-        this.sendCommand(cmd === "state" ? String(s.value) : `${cmd} ${s.value}`)
+      // Nur ZIEHEN zaehlt: ein Antippen der Schiene wuerde sonst sofort auf den
+      // getippten Wert springen - am rechten Ende also auf 100 % bzw. volle
+      // Lautstaerke, obwohl man die Kachel nur beruehrt hat (siehe bindSlider).
+      this.bindSlider(s, (wert) =>
+        this.sendCommand(cmd === "state" ? String(wert) : `${cmd} ${wert}`)
       );
     }
   }
