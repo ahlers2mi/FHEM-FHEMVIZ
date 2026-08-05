@@ -218,6 +218,15 @@
   font-size: 0.6rem;
   letter-spacing: 0.16em;
 }
+/* Rolladen-Zeilen: den Namen lieber umbrechen als abschneiden. Auf dem Handy
+ * (schmal, dazu Zoom) bleiben neben Prozentwert und drei Tasten rund 160 px -
+ * "Schlafzimmer Garten" endete dort als "Schlafzimmer Gart…". Eine Zeile mehr
+ * ist besser als ein unlesbarer Name. */
+:host(fhemviz-shuttergroup) .sgname {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
 
 /* --- Kontakt-GRUPPE (structure aus Fenster-/Tuerkontakten) ------------- */
 /* Die Gruppen-Variante des Kontakt-Widgets (.card.cgroup) ist keine

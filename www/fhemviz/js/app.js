@@ -28,7 +28,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.42";
+const SPA_VERSION = "v0.34.43";
 
 const el = (id) => document.getElementById(id);
 
@@ -1242,6 +1242,9 @@ async function main() {
     // ist er gesperrt (siehe renderLayout).
     const editParam = /^(1|true|on|ja)$/i.test(String(params.get("edit") || ""));
     const baseOpts = {
+      // Name des FHEMVIZ-Geraets: der gemerkte Raum haengt an DIESER Sicht,
+      // sonst ueberschreiben sich Haupt-Dashboard und Gaeste-Seite gegenseitig.
+      viz: vizDevice,
       showRooms: cfg.showRooms,
       hideRooms: cfg.hideRooms,
       hideTypes: cfg.hideTypes,

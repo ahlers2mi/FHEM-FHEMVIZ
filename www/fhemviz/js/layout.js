@@ -96,17 +96,31 @@ function isHero(dev) {
   return /^(1|true|yes|on)$/i.test(String((dev.attr || {}).vizHero || ""));
 }
 
-function loadActiveRoom() {
+/*
+ * Schluessel JE SICHT: zwei FHEMVIZ-Geraete (Haupt-Dashboard und z. B. eine
+ * Gaeste-Seite) liefen im selben Browser sonst auf denselben Eintrag. Wer in
+ * der Gaeste-Seite "Wohnzimmer" antippte, fand im Haupt-Dashboard danach den
+ * Raum "Opa->Wohnzimmer" gespeichert - der dort nicht existiert, also fiel es
+ * auf "Alle" zurueck. Die Raumwahl der beiden Seiten hat sich damit
+ * gegenseitig ueberschrieben.
+ */
+function roomKey(opts) {
+  return opts && opts.viz ? `${LS_ACTIVE_ROOM}:${opts.viz}` : LS_ACTIVE_ROOM;
+}
+
+function loadActiveRoom(opts) {
   try {
-    return localStorage.getItem(LS_ACTIVE_ROOM) || ALL_ROOMS;
+    const k = roomKey(opts);
+    // Rueckfall auf den alten, gemeinsamen Schluessel (Bestandsinstallationen).
+    return localStorage.getItem(k) || localStorage.getItem(LS_ACTIVE_ROOM) || ALL_ROOMS;
   } catch {
     return ALL_ROOMS;
   }
 }
 
-function saveActiveRoom(room) {
+function saveActiveRoom(room, opts) {
   try {
-    localStorage.setItem(LS_ACTIVE_ROOM, room);
+    localStorage.setItem(roomKey(opts), room);
   } catch {
     /* localStorage nicht verfuegbar - Auswahl gilt nur fuer die Sitzung */
   }
@@ -707,7 +721,7 @@ export function renderLayout(root, store, client, opts = {}) {
   }
 
   // Aktiver Raum: explizit uebergeben > gemerkt > "Alle".
-  let active = opts.activeRoom ?? loadActiveRoom();
+  let active = opts.activeRoom ?? loadActiveRoom(opts);
   if (active !== ALL_ROOMS) active = resolveRoom(roomNames, active) ?? ALL_ROOMS;
 
   // Tab-Leiste bauen, aber ERST NACH dem Rauminhalt einhaengen: unter
@@ -723,7 +737,7 @@ export function renderLayout(root, store, client, opts = {}) {
       tab.className = "viz-tab" + (name === active ? " active" : "");
       tab.textContent = name === ALL_ROOMS ? "Alle" : displayRoom(name);
       tab.addEventListener("click", () => {
-        saveActiveRoom(name);
+        saveActiveRoom(name, opts);
         renderLayout(root, store, client, { ...opts, activeRoom: name });
       });
       nav.appendChild(tab);
