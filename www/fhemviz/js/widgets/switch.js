@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Switch-Widget (v0.34.24).
+ * FHEMVIZ - Switch-Widget (v0.34.42).
  * Echter Kipp-Toggle statt Zustands-Button: der Regler zeigt die Lage,
  * die Bernstein-Farbe den Zustand. Statusleiste der Kachel = an/aus.
  * readonly (TV-Modus): nur Zustandstext, kein Bedienelement.
@@ -47,6 +47,13 @@ const ICON_CSS = `
    * ist hier ueberfluessig. Ein Skin, das die Kachel zur Listenzeile macht
    * (siehe skin-zeilen), blendet ihn per hoeherer Spezifitaet wieder ein. */
   .istate { display: none; }
+  /* Schiebeschalter: in der grossen Symbol-Kachel wuerde er neben dem
+   * mittigen Icon nur stoeren - dort ist die ganze Kachel der Schalter und die
+   * Farbe zeigt den Zustand. In einem Zeilen-Skin (skin-zeilen) wird er per
+   * hoeherer Spezifitaet eingeblendet: eine Liste ohne sichtbaren Schalter
+   * sieht aus wie eine reine Anzeige. Es ist ein <span>, kein Button - sonst
+   * laege ein Button im Button und ein Tippen schaltete zweimal. */
+  .icard .toggle { display: none; }
   .icard:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 2px; border-radius: 8px; }
   :host([data-tv]) .icard svg { width: 60px; height: 60px; }
   :host([data-tv]) .iname { font-size: 0.9rem; }
@@ -138,6 +145,12 @@ export class FhemvizSwitch extends FhemvizWidget {
               aria-hidden="true">${ICONS[iconKey]}</svg>
             <span class="iname">${this.escape(this.displayName())}</span>
             <span class="istate">${this.escape(this._stateText())}</span>
+            ${
+              // Kein Schalter, wo nichts zu schalten ist (TV/readonly).
+              this.readonly
+                ? ""
+                : `<span class="toggle${on ? " on" : ""}" aria-hidden="true"></span>`
+            }
           </button>
         </div>`;
     }

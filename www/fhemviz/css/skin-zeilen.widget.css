@@ -184,6 +184,14 @@
   font-size: 1.05rem;
   font-weight: 600;
 }
+/* ... und ganz rechts der Schiebeschalter, wie in jeder anderen Zeile. Ohne
+ * ihn liest sich eine Symbol-Zeile wie eine reine Anzeige - man sieht nicht,
+ * dass sie schaltet. Es ist ein <span>: geschaltet wird durch Antippen der
+ * ganzen Zeile (.icard ist der Button), der Schalter zeigt nur den Zustand. */
+:host(fhemviz-switch) .card > .icard .toggle {
+  order: 4;
+  display: block;
+}
 
 /* Regler und Knopfreihen brauchen die ganze Breite. */
 :host(fhemviz-dimmer) .card > input[type="range"],

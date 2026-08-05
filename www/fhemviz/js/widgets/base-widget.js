@@ -71,21 +71,25 @@ const CARD_CSS = `
   button.pill:has(> svg.vicon) { padding: 8px 12px; }
   svg.vicon { width: 1.15em; height: 1.15em; display: block; margin: 0 auto; }
 
-  button.toggle {
+  /* Schiebeschalter. Als <button> das Bedienelement, als <span> die reine
+   * Anzeige - dort schaltet die ganze Zeile (siehe Symbol-Modus in switch.js),
+   * darum sind die Selektoren nicht auf button eingeschraenkt. */
+  .toggle {
     width: 52px; height: 30px; flex-shrink: 0;
     border-radius: 999px; border: 0; cursor: pointer;
     background: var(--viz-raised, #1c212a);
     position: relative; transition: background 0.15s ease;
   }
-  button.toggle::after {
+  span.toggle { cursor: inherit; }
+  .toggle::after {
     content: ""; position: absolute; top: 3px; left: 3px;
     width: 24px; height: 24px; border-radius: 50%;
     background: var(--viz-muted, #77808c);
     transition: transform 0.15s ease, background 0.15s ease;
   }
-  button.toggle.on { background: var(--viz-accent, #ffb020); }
-  button.toggle.on::after { transform: translateX(22px); background: var(--viz-bg, #0a0c0f); }
-  button.toggle:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 2px; }
+  .toggle.on { background: var(--viz-accent, #ffb020); }
+  .toggle.on::after { transform: translateX(22px); background: var(--viz-bg, #0a0c0f); }
+  .toggle:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 2px; }
 
   input[type=range] {
     width: 100%; margin: 4px 0 0;
@@ -197,7 +201,7 @@ const CARD_CSS = `
   }
 
   @media (prefers-reduced-motion: reduce) {
-    button.toggle, button.toggle::after { transition: none; }
+    .toggle, .toggle::after { transition: none; }
     .viz-flash, .card.viz-flash { animation: none; }
     .card.viz-tile-alert {
       animation: none; box-shadow: 0 0 0 2px var(--viz-error, #ff5d5d);

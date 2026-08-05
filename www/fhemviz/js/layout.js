@@ -47,7 +47,18 @@ function compileRegexList(spec, fallback) {
 // (z. B. FHEMVIZ->Termine). In FHEMWEB bleiben sie als Hierarchie
 // zusammengeklappt; hier wird der Praefix in der Anzeige entfernt und
 // Kurznamen (z. B. in tvScenes) werden automatisch aufgeloest.
-export const VIZ_ROOM_PREFIX = "FHEMVIZ->";
+export let VIZ_ROOM_PREFIX = "FHEMVIZ->";
+
+/**
+ * Praefix dieser Sicht setzen (attr <viz> roomPrefix). Eine zweite Sicht - z. B.
+ * eine Gaeste-Seite - arbeitet mit eigenen Raeumen ("Opa->Wohnzimmer") und soll
+ * sie trotzdem als "Wohnzimmer" anzeigen. Modulweite Variable, weil pro
+ * Seitenaufruf genau EIN FHEMVIZ-Geraet dargestellt wird; ES-Module-Importe
+ * sind lebende Bindungen, die Leser sehen den neuen Wert also sofort.
+ */
+export function setRoomPrefix(p) {
+  VIZ_ROOM_PREFIX = String(p ?? "FHEMVIZ->");
+}
 
 // Anzeige der FHEM-Raumhierarchie "System->MQTT" als "System › MQTT";
 // der FHEMVIZ->-Praefix wird ganz ausgeblendet.
