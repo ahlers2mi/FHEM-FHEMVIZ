@@ -127,7 +127,7 @@ export class FhemvizShutterGroup extends FhemvizWidget {
     this.client.command(`set ${name} ${cmd}`).catch(() => {});
   }
 
-  _rowHtml(name, label, pct, cmds, master) {
+  _rowHtml(name, label, pct, cmds, master, voll) {
     const btn = (sym, aria, cmd) =>
       cmd
         ? `<button class="sgb" data-dev="${this.escape(name)}" data-cmd="${this.escape(cmd)}"
@@ -139,7 +139,9 @@ export class FhemvizShutterGroup extends FhemvizWidget {
       : `<span class="sgbtns">${btn("▲", "öffnen", cmds.up)}${btn("■", "stop", cmds.stop)}${btn("▼", "schließen", cmds.down)}</span>`;
     return `
       <div class="sgrow${master ? " master" : ""}">
-        <span class="sgname">${this.escape(label)}</span>
+        <span class="sgname"${
+          voll && voll !== label ? ` title="${this.escape(voll)}"` : ""
+        }>${this.escape(label)}</span>
         <span class="sgpct">${pctTxt}</span>
         ${btns}
       </div>`;
@@ -158,14 +160,20 @@ export class FhemvizShutterGroup extends FhemvizWidget {
     const master = this.readonly
       ? ""
       : this._rowHtml(this.device.name, "Alle", null, this._cmds(this.device), true);
+    // Gemeinsamen Namensanfang der Zeilen weglassen ("Rollade Wohnzimmer
+    // Garten" -> "Garten"): er steht schon in der Kachel-Ueberschrift, und der
+    // Unterschied hinten wurde bei schmaler Zeile sonst abgeschnitten.
+    const voll = members.map((m) => (m.attr && m.attr.alias) || m.name);
+    const kurz = this.shortenLabels(voll);
     const rows = members
-      .map((m) =>
+      .map((m, i) =>
         this._rowHtml(
           m.name,
-          (m.attr && m.attr.alias) || m.name,
+          kurz[i],
           this._pctOf(m),
           this._cmds(m),
-          false
+          false,
+          voll[i]
         )
       )
       .join("");

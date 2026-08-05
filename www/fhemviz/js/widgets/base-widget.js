@@ -696,6 +696,30 @@ export class FhemvizWidget extends HTMLElement {
    * sortiert (layout.js sortKey). "10" wird numerisch nach "2" einsortiert,
    * fuehrende Nullen sind also nicht noetig.
    */
+  /**
+   * Gemeinsamen Wort-Anfang mehrerer Zeilennamen abschneiden:
+   * "Rollade Wohnzimmer Garten" + "Rollade Wohnzimmer Groß" -> "Garten" + "Groß".
+   *
+   * In einer Gruppen-Kachel steht der gemeinsame Teil schon in der
+   * Kachel-Ueberschrift, und der UNTERSCHIED steht hinten - genau er fiel dem
+   * Abschneiden am Zeilenende zum Opfer: bei groesserem Zoom stand in beiden
+   * Zeilen nur noch "Rollade…". Erst ab zwei Zeilen, und nur solange bei JEDER
+   * Zeile mindestens ein Wort uebrig bleibt.
+   */
+  shortenLabels(labels) {
+    const list = labels.map((l) => String(l ?? "").trim());
+    if (list.length < 2) return list;
+    const words = list.map((l) => l.split(/\s+/));
+    let gleich = 0;
+    while (
+      words.every((w) => w.length > gleich + 1) &&
+      words.every((w) => w[gleich].toLowerCase() === words[0][gleich].toLowerCase())
+    ) {
+      gleich++;
+    }
+    return gleich ? words.map((w) => w.slice(gleich).join(" ")) : list;
+  }
+
   sortMembers(list) {
     const sortby = (d) => String((d.attr || {}).sortby || "").trim();
     if (!list.some((d) => sortby(d) !== "")) return list;
