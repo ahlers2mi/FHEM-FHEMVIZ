@@ -149,8 +149,11 @@ export class FhemvizActions extends FhemvizWidget {
                 `<option value="${this.escape(o)}"${o === c.value ? " selected" : ""}>${this.escape(o)}</option>`
             )
             .join("");
+          // selrow: eigene Klasse statt :has(select) - das Wandtablet laeuft
+          // auf einem aelteren WebView. Damit bekommt die Auswahlzeile ein
+          // anderes Spaltenmass als eine Reglerzeile (siehe base-widget).
           parts.push(`
-            <div class="ctlrow">
+            <div class="ctlrow selrow">
               ${lblHtml(c)}
               <select class="pill" data-cmd="${this.escape(c.entry)}">${opts}</select>
             </div>`);
