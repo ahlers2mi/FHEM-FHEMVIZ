@@ -176,6 +176,31 @@ html:not([data-vizmode="tv"]) #viz-headinfo .hi-icon {
 button.viz-chip { cursor: pointer; }
 .viz-chip.warn { color: var(--viz-accent); border-color: var(--viz-accent); }
 
+/* Hinweis-Leiste (attr vizAlert): nur da, wenn etwas gestoert ist. Rot und
+ * eine Zeile fuer sich - die Status-Chips darueber sind Dauerinfo, das hier
+ * ist eine Ausnahme. */
+#viz-alerts {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  overflow-x: auto; padding-top: 8px; scrollbar-width: none;
+}
+/* Ohne diese Zeile bliebe die leere Leiste 8px hoch stehen: die ID-Regel mit
+ * display:flex schlaegt das [hidden] des Browsers. Gilt genauso fuer die
+ * Status-Chips, wenn attr statusBar nicht gesetzt ist. */
+#viz-alerts[hidden], #viz-statusbar[hidden] { display: none; }
+.viz-alert-sign {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 800; line-height: 1;
+  background: var(--viz-error); color: var(--viz-bg);
+}
+.viz-alert-chip {
+  font: inherit; font-size: 0.78rem; font-weight: 600;
+  padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid var(--viz-error); background: var(--viz-surface);
+  color: var(--viz-error); flex-shrink: 0; cursor: default;
+}
+button.viz-alert-chip { cursor: pointer; }
+
 #viz-progress {
   position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
   background: transparent; overflow: hidden;

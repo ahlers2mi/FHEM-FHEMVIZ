@@ -21,6 +21,7 @@ import { registerCoreWidgets } from "./widgets/registry.js";
 import {
   vizColorFor,
   vizStatesInfo,
+  vizAlertHit,
   setWidgetSkinCss,
   setFlashMode,
 } from "./widgets/base-widget.js";
@@ -28,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.45";
+const SPA_VERSION = "v0.34.46";
 
 const el = (id) => document.getElementById(id);
 
@@ -463,6 +464,73 @@ function setupStatusBar(store, spec, opts) {
     vizMembers(store, c.device).forEach((m) => watch.add(m.name));
   });
   watch.forEach((n) => store.subscribe(n, render));
+  render();
+}
+
+/**
+ * Hinweis-Leiste: alle Geraete mit aktivem vizAlert in einer Zeile unter dem
+ * Kopf. Ohne Stoerung bleibt sie unsichtbar - sie soll auffallen, wenn etwas
+ * ist, und sonst keinen Platz kosten.
+ *
+ * Quelle sind ausschliesslich die vizAlert-Attribute der geladenen Geraete;
+ * es gibt keine zweite Liste, die man pflegen muesste. Ein Geraet, das nur
+ * ueberwacht und nicht angezeigt werden soll, kommt in einen per hideRooms
+ * ausgeblendeten Raum (z. B. FHEMVIZ->Stuff) - geladen wird es trotzdem.
+ */
+function setupAlertBar(store, opts) {
+  const bar = el("viz-alerts");
+  if (!bar) return;
+  const kandidaten = store.all().filter((d) => (d.attr || {}).vizAlert);
+  if (!kandidaten.length) return;
+
+  // Text eines Hinweises: Geraetename + ausloesender Wert. Beim state gilt
+  // vizStates, damit "error" als "Störung" erscheint wie auf der Kachel.
+  const text = (dev, hit) => {
+    const name = (dev.attr || {}).alias || dev.name;
+    let wert = hit.value;
+    if (hit.reading === "state") {
+      const m = vizStatesInfo((dev.attr || {}).vizStates, wert);
+      if (m) wert = m.text;
+    }
+    return wert ? `${name}: ${wert}` : name;
+  };
+
+  function jumpRoom(dev) {
+    const rooms = String((dev.attr || {}).room || "")
+      .split(",")
+      .map((r) => r.trim());
+    return rooms.find((r) => r.startsWith(VIZ_ROOM_PREFIX)) || rooms[0] || null;
+  }
+
+  function render() {
+    const aktiv = [];
+    for (const name of kandidaten.map((d) => d.name)) {
+      const dev = store.get(name);
+      if (!dev) continue;
+      const hit = vizAlertHit(dev);
+      if (hit) aktiv.push({ dev, hit });
+    }
+    bar.textContent = "";
+    bar.hidden = aktiv.length === 0;
+    if (!aktiv.length) return;
+    const zeichen = document.createElement("span");
+    zeichen.className = "viz-alert-sign";
+    zeichen.textContent = "!";
+    zeichen.setAttribute("aria-hidden", "true");
+    bar.appendChild(zeichen);
+    for (const a of aktiv) {
+      const chip = document.createElement(opts.tv ? "span" : "button");
+      chip.className = "viz-alert-chip";
+      chip.textContent = text(a.dev, a.hit);
+      if (!opts.tv) {
+        const room = jumpRoom(a.dev);
+        if (room) chip.addEventListener("click", () => opts.jump(room));
+      }
+      bar.appendChild(chip);
+    }
+  }
+
+  kandidaten.forEach((d) => store.subscribe(d.name, render));
   render();
 }
 
@@ -1275,6 +1343,13 @@ async function main() {
         renderLayout(root, store, client, { ...baseOpts, activeRoom: room }),
     });
     setupHeaderInfo(store, cfg.headerInfo);
+    // Hinweis-Leiste (vizAlert) - unter den Status-Chips, aber nur wenn etwas
+    // gestoert ist.
+    setupAlertBar(store, {
+      tv,
+      jump: (room) =>
+        renderLayout(root, store, client, { ...baseOpts, activeRoom: room }),
+    });
 
     // ?room=Solar (alias ?scene=): Startseite. TV beginnt die Rotation mit
     // diesem Raum, Tablet oeffnet den Tab (statt des zuletzt gemerkten).

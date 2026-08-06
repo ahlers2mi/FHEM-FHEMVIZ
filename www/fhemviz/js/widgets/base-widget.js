@@ -360,6 +360,76 @@ export function vizStatesInfo(spec, text) {
   return null;
 }
 
+/** Klartext eines Werts: HTML-Markup raus, Whitespace kollabiert. */
+export function vizPlain(s) {
+  return String(s ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Bare-Wort-Form von vizAlert: "reading" ohne Vergleich gilt als Alarm, wenn
+// der Wert eines dieser Worte ist.
+const ALERT_WORDS =
+  /^(on|an|1|true|yes|ja|open|offen|alarm|alert|error|fault|fehler|stoerung|störung)$/;
+
+/** Eine einzelne vizAlert-Bedingung auswerten -> {reading, value} oder null. */
+function alertTeil(teil, rd) {
+  const m = teil.match(/^([\w.:\-]+)\s*(>=|<=|!=|!~|==|=|~|>|<)\s*(.*)$/);
+  if (!m) {
+    const wert = vizPlain(rd(teil));
+    return ALERT_WORDS.test(wert.toLowerCase()) ? { reading: teil, value: wert } : null;
+  }
+  const name = m[1];
+  const cur = vizPlain(rd(name));
+  const ziel = m[3].trim();
+  const treffer = { reading: name, value: cur };
+  if (m[2] === "~" || m[2] === "!~") {
+    let re = null;
+    try {
+      re = new RegExp(ziel, "i");
+    } catch {
+      return null; // ungueltige Regex: lieber kein Alarm als ein falscher
+    }
+    const t = re.test(cur);
+    return (m[2] === "~" ? t : !t) ? treffer : null;
+  }
+  const a = parseFloat(String(cur).replace(",", "."));
+  const b = parseFloat(String(ziel).replace(",", "."));
+  const num = !isNaN(a) && !isNaN(b);
+  let wahr;
+  switch (m[2]) {
+    case ">":  wahr = num && a > b; break;
+    case "<":  wahr = num && a < b; break;
+    case ">=": wahr = num && a >= b; break;
+    case "<=": wahr = num && a <= b; break;
+    case "!=": wahr = num ? a !== b : cur.toLowerCase() !== ziel.toLowerCase(); break;
+    default:   wahr = num ? a === b : cur.toLowerCase() === ziel.toLowerCase();
+  }
+  return wahr ? treffer : null;
+}
+
+/**
+ * vizAlert eines Geraets auswerten -> {reading, value} bei aktiver Stoerung,
+ * sonst null. Mehrere Bedingungen mit Komma sind ODER-verknuepft; der
+ * Rueckgabewert sagt, WELCHE Bedingung gegriffen hat - die Hinweis-Leiste
+ * zeigt damit den ausloesenden Wert an.
+ *
+ * Formen je Bedingung:
+ *   reading OP wert   OP: > < >= <= = == != ~ !~ (Regex), Wert darf leer sein
+ *   reading           wahr bei on/an/1/true/open/alarm/error ...
+ */
+export function vizAlertHit(dev) {
+  const spec = String(((dev || {}).attr || {}).vizAlert || "").trim();
+  if (!spec) return null;
+  const rd = (n) => (n === "state" ? (dev || {}).state : ((dev || {}).readings || {})[n]);
+  for (const teil of spec.split(",").map((x) => x.trim()).filter(Boolean)) {
+    const hit = alertTeil(teil, rd);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 /** Inline-SVG fuer einen Transport-Befehl, "" wenn keins passt. */
 export function mediaIconHtml(cmd) {
   const key = MEDIA_ALIAS[String(cmd || "").trim().toLowerCase()];
@@ -484,32 +554,11 @@ export class FhemvizWidget extends HTMLElement {
 
   /**
    * vizAlert-Bedingung auswerten -> true = Kachel-Alarm (roter Rahmen).
-   * Formen: "reading OP wert" (OP: > < >= <= = == !=) oder nur "reading"
-   * (wahr bei on/an/1/true/open/alarm/error ...). state ist erlaubt.
+   * Die Bedingung selbst steht als Modul-Funktion oben (vizAlertHit) - die
+   * Hinweis-Leiste im Kopf wertet dieselben Attribute aus.
    */
   alertActive() {
-    const spec = String((this.device.attr || {}).vizAlert || "").trim();
-    if (!spec) return false;
-    const rd = (n) =>
-      n === "state" ? this.device.state : (this.device.readings || {})[n];
-    const m = spec.match(/^(.+?)\s*(>=|<=|!=|==|=|>|<)\s*(.+)$/);
-    if (!m) {
-      const v = this.plain(rd(spec)).toLowerCase();
-      return /^(on|an|1|true|yes|ja|open|offen|alarm|alert|error|fault|fehler)$/.test(v);
-    }
-    const cur = this.plain(rd(m[1].trim()));
-    const target = m[3].trim();
-    const a = parseFloat(String(cur).replace(",", "."));
-    const b = parseFloat(String(target).replace(",", "."));
-    const num = !isNaN(a) && !isNaN(b);
-    switch (m[2]) {
-      case ">":  return num && a > b;
-      case "<":  return num && a < b;
-      case ">=": return num && a >= b;
-      case "<=": return num && a <= b;
-      case "!=": return num ? a !== b : cur.toLowerCase() !== target.toLowerCase();
-      default:   return num ? a === b : cur.toLowerCase() === target.toLowerCase();
-    }
+    return vizAlertHit(this.device) !== null;
   }
 
   /** Anzeigename: alias, sonst technischer Name. */
