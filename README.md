@@ -5,7 +5,11 @@ FHEM-Standard („FHEM-Standard-first"). Ein System, zwei Betriebsarten:
 **Tablet** (Touch, Raum-Tabs unten) und **TV/Kiosk** (bedienlos,
 Szenen-Rotation, steuerbar per FHEM-Event).
 
-Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) · Stand: **v0.7.0**
+Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) · Stand: **v0.34.47**
+
+> Vollständige Referenz aller Attribute mit Beispielen: die **FHEM-Hilfe** des
+> Moduls (`commandref` → FHEMVIZ bzw. das `?` am Gerät). Dieses README ist der
+> Überblick.
 
 ---
 
@@ -48,12 +52,30 @@ ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet
 | `hideRooms` | Regex-Liste | Räume ohne eigenen Tab/Abschnitt. Default: `System->.*,Homebridge,Alexa,FileLog,hidden` |
 | `hideTypes` | TYPE-Liste | Geräte-TYPEs ohne Kachel. Default: `SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup` |
 | `hideStates` | Regex-Liste | Geräte, deren state komplett matcht, werden ausgeblendet. Default: `\?\?\?,unknown,initialized,defined,disabled,inactive` |
+| `width` | 320–3840 | Feste Layout-Breite in CSS-Pixeln; die Seite wird in dieser Breite gerendert und bildschirmfüllend skaliert. Setzt `zoom` außer Kraft. Kleinere Breite = größere Darstellung |
+| `skin` | `bento` / `zeilen` / … | Optik: `bento` = Kacheln (Wandtablet/TV), `zeilen` = Listenzeilen (Handy). Per URL übersteuerbar (`?skin=zeilen`) |
+| `skinBlur` | `0` / `1` | Weichzeichnen hinter den Kacheln (nur mit Hintergrundbild sinnvoll) |
+| `background` / `backgroundDim` | URL / 0–100 | Hintergrundbild und wie stark es abgedunkelt wird |
+| `statusBar` | `gerät[:reading[:einheit[:label[:farben]]]]`, kommasepariert | Dauer-Chips unter der Kopfzeile (Fenster, Batterie, Pool …); Tippen springt in den Raum des Geräts |
+| `headerInfo` | wie `statusBar`, plus `icon=gerät:größe` | Werte groß in der Kopfzeile (Außentemperatur, Wetter-Icon) |
+| `roomPrefix` | Default `FHEMVIZ->` | Raum-Präfix **dieser** Sicht; wird in Tabs und Überschriften abgeschnitten. Damit kann eine **zweite Sicht** eigene Räume benutzen (`Opa->Wohnzimmer` → Tab „Wohnzimmer") und im Haupt-Dashboard nicht auftauchen |
+| `sound` | leer / `beep` / URL | **Ton**, wenn ein Bild (`set show`) oder eine Nachricht (`set msg`) hereinkommt. `beep` = eingebauter Zweiklang, keine Tondatei nötig. Achtung Autoplay-Sperre: nach einem Neuladen erst nach der ersten Berührung – in Fully die Medienwiedergabe erlauben |
+| `flash` | `1` / `0` / `values` | Kurzes Aufleuchten bei Wertänderung (`values` = nur der Wert, nicht die ganze Kachel) |
+| `disable` | `0` / `1` | Sicht abschalten |
 
-**Set-Befehl** (TV-Steuerung aus FHEM heraus):
+**Set-Befehle** (Steuerung aus FHEM heraus):
 
 ```
-set myViz scene <Raum> [Sekunden]     # Szene übernehmen, danach Rotation
+set myViz scene <Raum> [Sekunden]     # Szene vorübergehend übernehmen (TV)
+set myViz page  <Raum>|auto           # Seite dauerhaft umschalten
+set myViz show  <url>|off [Sek]       # Bild/Webseite als Vollbild-Overlay
+set myViz msg   <text>|off [Sek]      # Textbanner oben einblenden
 ```
+
+Mehrere Sichten sind erlaubt: ein zweites `FHEMVIZ`-Gerät mit eigenem
+`devspec`, eigenem `skin` und eigenem `roomPrefix` ergibt eine eigene Seite
+(z. B. eine reduzierte Gäste-/Betreuungs-Seite), aufgerufen mit
+`?device=<name>`. Der zuletzt gewählte Tab wird je Sicht gemerkt.
 
 ## Konfiguration: die visualisierten Geräte
 
@@ -73,12 +95,40 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 | Attribut | Werte | Wirkung |
 |---|---|---|
-| `vizWidget` | `switch` / `sensor` / `dimmer` / `shutter` / `actions` / `text` / `agenda` / `contact` / `vent` / `flow` / `forecast` / `weather` | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt). `text` = mehrzeiliger Klartext, `contact` = Fenster/Tür-Kontakt (Symbol + Offen/Gekippt/Zu, offen = Bernstein; wird bei state open/closed/tilted automatisch gewählt; `structure`-Geräte wie `st_fenster` werden zur Gruppen-Kachel: „2 offen · 1 gekippt" + ein Mini-Symbol je Mitglied, live), `agenda` = Terminliste (`DD.MM.YYYY HH:MM Text`-Zeilen) mit Wochentag und hervorgehobenem nächstem Termin |
+| `vizWidget` | siehe Liste unten | Widget-Typ erzwingen; übersteuert auch die Rausch-Filter (Gerät wird immer gezeigt) |
 | `vizSize` | `1x1` / `2x1` / `1x2` / `2x2` | Kachelgröße im Raster; `2x2` = Hero-Kachel mit großer Schrift |
 | `vizHide` | `1` / `0` | Gerät aus der Sicht ausblenden |
 | `vizIcon` | `lampe` / `steckdose` / `lautsprecher` / `luefter` / `pumpe` / `tv` / `heizung` / `power` | **Symbol-Modus** für Schalter: großes Icon mittig, Name darunter, bernstein = an — aus der Ferne lesbar; Tippen auf die Kachel schaltet |
 | `vizGroup` | Gruppenname(n), `-` = keine | Übersteuert `group` **nur im Dashboard** (FHEMWEB unberührt) — steuert, welche Kacheln zusammenstehen; `-` löst die Gruppe auf („Allgemein") |
 | `vizReadings` | `reading[:Label[:Einheit[:Farbe[:bar]]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Flag `bar` = zusätzlicher Fortschrittsbalken (Skala 0–100, z. B. Autarkie-/Akku-Prozent). Gesetzt = state wird ignoriert, Gerät immer angezeigt |
+| `vizHero` | `1` / `0` | Gerät als breiter **Blickfang** ganz oben im Raum (aus dem Raster gelöst) |
+| `vizState` / `vizStates` | Reading / `muster:Label[:Farbe]` | Welches Reading den Zustand trägt bzw. Klartext + Farbe dafür (`error:Störung:bad`) — nützlich bei Modulen, die in `state` den letzten Befehl ablegen |
+| `vizAlert` | `reading OP wert`, Komma = ODER | **Störung**: pulsierender roter Rahmen an der Kachel **und** Eintrag in der Hinweis-Leiste. OP: `> < >= <= = == != ~ !~` (`~` = Regex), Wert darf leer sein (`last_error!=` = „nicht leer") |
+| `vizAgenda` | `hide=<Stunden>` | Terminliste: wie lange ein **abgelaufener** Termin noch stehen bleibt (Default 8, `0` = nie) |
+| `vizText` / `vizImage` | Text mit `{reading}` / URL bzw. Reading | Freier Text bzw. Bild-Kachel |
+| `vizFlow` / `vizChart` / `vizWatering` / `vizCar` / `vizCameras` | siehe FHEM-Hilfe | Konfiguration der Spezial-Kacheln (Energiefluss, Diagramm, Bewässerung, Auto/Wallbox, Kameras) |
+| `vizVolumeMax` | Zahl | Deckelt den Lautstärkeregler der `mediagroup`-Kachel |
+| `vizFlash` | `1` / `0` | Aufleuchten bei Wertänderung je Gerät übersteuern (zappelige Leistungskachel beruhigen) |
+
+### Widgets
+
+`switch` · `sensor` · `dimmer` · `shutter` · `actions` · `text` · `agenda` ·
+`contact` · `vent` · `flow` · `forecast` · `weather` · `chart` · `watering` ·
+`image` · `solvis` · `car`
+
+**Gruppen-Kacheln** — EINE Kachel für ein `structure`-Gerät, mit einer Zeile
+je Mitglied (die Mitglieder müssen im `devspec` liegen, dürfen aber per
+`vizHide`/verstecktem Raum aus dem Raster raus):
+
+| Widget | Inhalt |
+|---|---|
+| `shuttergroup` | Rollläden: Master-Zeile „Alle" + je Rollade Position und ▲■▼. Endlagen über `pct 0/100` (bei CUL_HM sind `up`/`down` **relativ**). Gemeinsamer Namensanfang fällt weg: „Rollade Wohnzimmer Garten" → „Garten" |
+| `switchgroup` | Schalter mit Schiebeschalter je Zeile |
+| `sensorgroup` | Messwerte je Zeile |
+| `contact` (structure) | Fenster/Türen: „2 offen · 1 gekippt" + Mini-Symbol je Mitglied |
+| `ventgroup` | Lüften/Kühlen mit sieben Stufen (−3 … +3), Farbe je Stufe über CSS-Variablen |
+| `mediagroup` | Denon/HEOS/Spotify: An/Aus, Mute, Lautstärke, Quelle je Gerät |
+| `cameragroup` | Kameras: Vorschaubild, Person erkannt, Akku, Bewegungserkennung an/aus |
 
 **Beispiel Wechselrichter** (Readings statt stateFormat-Raten, mit Farben
 wie im alten Solardashboard):
@@ -192,6 +242,50 @@ set myViz page auto      # Pin aufheben, TV kehrt zur Szenen-Rotation zurück
   auf dieser Seite (die URL-Parameter `?room=` gehen vor)
 - Kurzname genügt, `FHEMVIZ->` wird automatisch probiert
 
+## Störungen anzeigen: die Hinweis-Leiste
+
+Jedes Gerät der Sicht mit zutreffendem `vizAlert` erscheint als roter Chip
+unter der Kopfzeile („Sileno: trapped"). Ist nichts gestört, ist die Leiste
+**gar nicht da**. Ein Tippen springt in den Raum des Geräts.
+
+```
+attr rem_SILENO vizAlert mower-error!~^(no_message|)$
+attr Yuka       vizAlert device_1_status!=online,last_error!=
+attr myViz      sound beep
+```
+
+Es gibt keine zweite Liste zu pflegen — gesammelt werden die `vizAlert`-
+Attribute der geladenen Geräte. Ein Gerät, das nur **überwacht** und nicht
+als Kachel gezeigt werden soll, kommt in einen per `hideRooms`
+ausgeblendeten Raum; geladen wird es trotzdem. Damit lässt sich eine
+`readingsGroup`-Statusseite (Bridges, Gateways, Bots) direkt nachbauen:
+
+```
+attr myViz hideRooms FHEMVIZ->Stuff,FHEMVIZ->Status
+attr AHL2  room     System->CUL_HM,FHEMVIZ->Status
+attr AHL2  vizAlert state!~^(connected|opened|initialized)$
+```
+
+## Layout in der Oberfläche ändern: `?edit=1`
+
+Mit `?edit=1` in der URL bekommt jede Kachel eine kleine Werkzeugleiste,
+unten erscheint eine Leiste mit *Speichern* / *Fertig*. Der Modus hat
+**keinen eigenen Speicher** — er schreibt genau die Attribute, aus denen das
+Layout ohnehin gebaut wird:
+
+| Werkzeug | schreibt |
+|---|---|
+| ⠿ ziehen | `sortby` als 10, 20, 30 … (am Bildrand scrollt die Seite mit) |
+| 1x1 … 2x2 | `vizSize` (im Streifen-Layout gesperrt: nur eine Spalte) |
+| Hero | `vizHero` |
+| Aus-/Einblenden | `vizHide` (ausgeblendete Kacheln bleiben im Modus blass sichtbar) |
+| Raum | `room` — nur der `FHEMVIZ->`-Eintrag **dieses** Vorkommens, die übrigen Räume der Kommaliste bleiben unberührt |
+| Gruppe | `vizGroup` (nie `group`) |
+| ↺ | löscht `vizSize`, `vizHero`, `vizHide`, `sortby` |
+| Speichern | `save` — FHEM hält Attribute nur im Speicher |
+
+Im TV-Betrieb und bei `readonly 1` ist der Modus abgeschaltet.
+
 ## URL-Parameter
 
 | Parameter | Wirkung |
@@ -200,6 +294,10 @@ set myViz page auto      # Pin aufheben, TV kehrt zur Szenen-Rotation zurück
 | `?mode=tv` / `?mode=tablet` | Betriebsart übersteuern (für Kiosk-Start-URLs) |
 | `?zoom=1.3` | Oberfläche skalieren (0.5–3, auch `130` als Prozent) — pro Gerät in der Start-URL, z. B. größer für den TV, kleiner fürs kleine Tablet. Auf Android/Fully Kiosk wird automatisch die native Viewport-Skalierung genutzt (CSS-zoom wird dort teils ignoriert) |
 | `?room=Solar` | Startseite: TV beginnt die Szenen-Rotation mit diesem Raum (steht er nicht in `tvScenes`, läuft er einmalig zuerst), Tablet öffnet den Tab. Kurzname genügt, `FHEMVIZ->` wird automatisch probiert |
+| `?width=1280` | Feste Layout-Breite (320–3840); setzt `?zoom=` außer Kraft |
+| `?skin=zeilen` | Optik übersteuern (`bento` = Kacheln, `zeilen` = Listenzeilen fürs Handy) |
+| `?flash=0` | Aufleuchten bei Wertänderung abschalten |
+| `?edit=1` | Editiermodus (siehe oben) |
 
 ## Eigene Widgets (Plugin-API)
 
@@ -236,9 +334,9 @@ CONCEPT.md             Konzept & Architektur
 
 ## Roadmap
 
-Nächster Meilenstein: **v0.8 Energiefluss-Widget** (ersetzt Floorplan-
-Solardashboards mit ihren Pfeil-Hilfsgeräten durch ein konfigurierbares
-Fluss-Diagramm). Danach: Chart-Widget (FileLog/DbLog), webCmd-Slider.
+Energiefluss (`flow`), Diagramme (`chart`, FileLog/DbLog) und die
+Gruppen-Kacheln sind umgesetzt. Offen: weitere Skins, Widget-Vorschau im
+Editiermodus.
 
 ## Lizenz
 
