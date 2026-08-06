@@ -108,6 +108,18 @@ const CARD_CSS = `
   .ctlrow > .sub:first-child { flex: 0 0 5.5em; }
   .ctlrow > .sub:last-child { flex: 0 0 2.8em; text-align: right; }
   .ctlrow input[type=range] { flex: 1; margin: 0; min-width: 0; }
+  /* Auswahlzeile (webCmd mit Werteliste): die feste Label-Spalte gilt nur fuer
+   * Regler, damit mehrere Regler buendig laufen. Ein <select> ist so breit wie
+   * seine laengste Option ("comfort") - mit fester Label-Spalte stand es dann
+   * mitten in der Zeile, mit abgeschnittenem Label davor ("Wunschte…") und
+   * viel Leerraum dahinter. Hier bekommt das Label den Platz und die Auswahl
+   * sitzt rechts wie jedes andere Bedienelement. */
+  .ctlrow.selrow > .sub:first-child { flex: 1 1 auto; }
+  /* Nur die Auswahl MIT Label wandert nach rechts (Geschwister-Selektor statt
+   * :has, das aeltere WebViews nicht koennen). Eine Auswahl ohne Label - etwa
+   * die Senderliste eines readingsProxy mit "webCmd state" - fuellt weiter die
+   * Zeile. */
+  .ctlrow.selrow > .sub + select.pill { flex: 0 1 auto; margin-left: auto; max-width: 60%; }
 
   /* Fortschrittsbalken (vizReadings-Flag "bar", Skala 0-100). */
   .vbar {
