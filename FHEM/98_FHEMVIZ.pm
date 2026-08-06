@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.46
+# Version:  v0.34.47
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.46";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.47";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -133,6 +133,7 @@ sub FHEMVIZ_Initialize {
           "backgroundDim " .
           "skin " .
           "skinBlur:1,0 " .
+          "sound " .
           "flash:1,0,values " .
           "roomPrefix " .
           "showRooms " .
@@ -306,6 +307,9 @@ sub FHEMVIZ_Get {
         my $skin          = AttrVal($name, "skin", "");
         my $skinBlur      = AttrVal($name, "skinBlur", "");
         my $flash         = AttrVal($name, "flash", "");
+        # Ton bei "set show"/"set msg" (leer = stumm, "beep" = eingebauter
+        # Zweiklang, sonst URL einer Tondatei).
+        my $sound         = AttrVal($name, "sound", "");
         # Raum-Praefix dieser Sicht: wird in Tabs/Ueberschriften abgeschnitten.
         # Eine zweite Sicht (z. B. eine Gaeste-Seite) nutzt eigene Raeume wie
         # "Opa->Wohnzimmer" und zeigt sie trotzdem als "Wohnzimmer".
@@ -321,10 +325,10 @@ sub FHEMVIZ_Get {
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,'
-              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"page":%s,'
+              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.46"),
+            FHEMVIZ_jsonStr("v0.34.47"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -340,6 +344,7 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($skin),
             FHEMVIZ_jsonStr($skinBlur),
             FHEMVIZ_jsonStr($flash),
+            FHEMVIZ_jsonStr($sound),
             FHEMVIZ_jsonStr($page),
             FHEMVIZ_jsonStr($roomPrefix),
             FHEMVIZ_jsonStr($showRooms),
@@ -662,6 +667,26 @@ sub FHEMVIZ_Attr {
         und die Räume tauchen im Haupt-Dashboard nicht auf, weil sie nicht
         unter <code>FHEMVIZ-&gt;</code> liegen. Beispiel:<br>
         <code>attr vizOpa roomPrefix Opa-&gt;</code></li>
+    <li><a id="FHEMVIZ-attr-sound"></a><b>sound</b><br>
+        Typ: textField. Kurzer <b>Ton</b>, wenn ein Bild (<code>set show</code>)
+        oder eine Nachricht (<code>set msg</code>) hereinkommt &ndash; am
+        Wandtablet fällt ein eingeblendeter Kamera-Schnappschuss sonst nur
+        auf, wenn man gerade hinsieht. Werte:
+        <ul>
+          <li>leer bzw. <code>off</code> &ndash; stumm (Default)</li>
+          <li><code>beep</code> &ndash; eingebauter Zweiklang (880/660&nbsp;Hz,
+              weich ein- und ausgeblendet), keine Tondatei nötig</li>
+          <li>eine <b>URL</b> &ndash; wird als Tondatei abgespielt, z. B.
+              <code>/fhem/images/klingel.mp3</code></li>
+        </ul>
+        <b>Wichtig zur Autoplay-Sperre:</b> Browser lassen Ton erst nach einer
+        Nutzergeste zu. Nach einem Neuladen der Seite bleibt der erste Ton
+        also stumm, bis das Tablet einmal berührt wurde &ndash; danach
+        klingelt es auch bei Ereignissen, die von FHEM kommen. In einem
+        Kiosk-Browser wie Fully die Medienwiedergabe erlauben, dann geht es
+        sofort. Beispiel Türklingel:<br>
+        <code>attr myViz sound beep</code><br>
+        <code>define n_klingel notify MQTT2_DOORBELL:motion:.* set myViz show http://kamera/snapshot.jpg 20</code></li>
     <li><a id="FHEMVIZ-attr-showRooms"></a><b>showRooms</b><br>
         Typ: textField. <b>Whitelist</b> (kommaseparierte Regex-Liste): ist
         sie gesetzt, erscheinen NUR passende Räume; Geräte ohne passenden
