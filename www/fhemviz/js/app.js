@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.46";
+const SPA_VERSION = "v0.34.47";
 
 const el = (id) => document.getElementById(id);
 
@@ -1090,6 +1090,94 @@ function hideOverlay() {
   if (o) o.remove();
 }
 
+/* ----------------------------------- Ton -----------------------------------
+ * attr <viz> sound: kurzer Ton, wenn ein Overlay (set show) oder ein Banner
+ * (set msg) hereinkommt - am Wandtablet faellt ein eingeblendetes Kamerabild
+ * sonst nur auf, wenn man gerade hinsieht.
+ *
+ * Der Browser laesst Ton erst nach einer NUTZERGESTE zu (Autoplay-Sperre).
+ * Darum wird der AudioContext beim ersten Tippen/Tastendruck geweckt; im
+ * Kiosk-Browser mit erlaubter Medienwiedergabe (Fully) klappt es schon davor.
+ */
+let audioCtx = null;
+let soundSpec = "";
+let soundWarned = false;
+
+function soundWarn(e) {
+  if (soundWarned) return;
+  soundWarned = true;
+  // eslint-disable-next-line no-console
+  console.warn(
+    "FHEMVIZ: Ton nicht abgespielt (Autoplay-Sperre?) -", e && e.message
+  );
+}
+
+function wakeAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  } catch (e) {
+    soundWarn(e);
+    return null;
+  }
+}
+
+function setupSound(spec) {
+  soundSpec = String(spec || "").trim();
+  if (/^(off|none|0|nein)$/i.test(soundSpec)) soundSpec = "";
+  // Nur der eingebaute Ton braucht den AudioContext; eine Tondatei laeuft
+  // ueber <audio> und wird von der Nutzergeste ohnehin freigeschaltet.
+  if (!/^(beep|ton|1|on|ja)$/i.test(soundSpec)) return;
+  for (const ev of ["pointerdown", "keydown", "touchstart"]) {
+    window.addEventListener(ev, wakeAudio, { passive: true });
+  }
+  wakeAudio();
+}
+
+/** Eingebauter Zweiklang - kein Tondatei-Anhaengsel noetig. */
+function beep() {
+  const ctx = wakeAudio();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime;
+    // Zwei kurze Sinustoene mit weichem Ein-/Ausblenden: ein harter Piep
+    // klingt auf Tablet-Lautsprechern nach Fehlermeldung.
+    for (const [f, dt] of [
+      [880, 0],
+      [660, 0.18],
+    ]) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + dt);
+      g.gain.exponentialRampToValueAtTime(0.35, t0 + dt + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.35);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(t0 + dt);
+      osc.stop(t0 + dt + 0.4);
+    }
+  } catch (e) {
+    soundWarn(e);
+  }
+}
+
+function playSound() {
+  if (!soundSpec) return;
+  if (/^(beep|ton|1|on|ja)$/i.test(soundSpec)) return beep();
+  try {
+    const a = new Audio(soundSpec);
+    const p = a.play();
+    if (p && p.catch) p.catch(soundWarn);
+  } catch (e) {
+    soundWarn(e);
+  }
+}
+
 function showOverlay(url, sec) {
   hideOverlay();
   if (!/^https?:\/\/|^\//i.test(url)) {
@@ -1223,6 +1311,7 @@ async function main() {
     // Ueberschriften und die Szenen-Auflösung schneiden ihn ab. Eine zweite
     // Sicht (Gaeste-Seite) nutzt so eigene Raeume ohne "Opa ›" in den Tabs.
     if (cfg.roomPrefix !== undefined) setRoomPrefix(cfg.roomPrefix);
+    setupSound(cfg.sound);
     applyTheme(cfg.theme);
     applyBackground(cfg);
     // Skin VOR dem ersten Rendern setzen (URL ?skin= geht vor attr skin).
@@ -1530,7 +1619,10 @@ async function main() {
         if (id === vizDevice + "-show") {
           const v = String(value).trim();
           if (!v || /^(off|none|auto)$/i.test(v)) hideOverlay();
-          else showOverlay(v, showDuration);
+          else {
+            showOverlay(v, showDuration);
+            playSound();
+          }
           return;
         }
         // set <viz> msg <text> [sek]: kurze Textnachricht oben als Banner
@@ -1543,7 +1635,10 @@ async function main() {
         if (id === vizDevice + "-msg") {
           const v = String(value).trim();
           if (!v || /^(off|none|clear)$/i.test(v)) hideToast();
-          else showToast(v, msgDuration);
+          else {
+            showToast(v, msgDuration);
+            playSound();
+          }
           return;
         }
         // set <viz> page <raum>|auto: dauerhafte Umschaltung. TV pinnt die
