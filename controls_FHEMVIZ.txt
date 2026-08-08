@@ -1,4 +1,4 @@
-UPD 2026-08-08_20:09:20 77922 FHEM/98_FHEMVIZ.pm
+UPD 2026-08-08_20:11:39 77922 FHEM/98_FHEMVIZ.pm
 UPD 2026-07-26_16:02:19 203778 www/fhemviz/backgrounds/cubes.png
 UPD 2026-08-06_06:22:02 24142 www/fhemviz/css/fhemviz.css
 UPD 2026-07-27_22:14:28 3735 www/fhemviz/css/skin-bento.css
@@ -26,9 +26,9 @@ UPD 2026-08-05_06:11:31 2258 www/fhemviz/js/widgets/dimmer.js
 UPD 2026-07-27_19:13:01 19330 www/fhemviz/js/widgets/flow.js
 UPD 2026-08-01_05:43:21 6642 www/fhemviz/js/widgets/forecast.js
 UPD 2026-07-23_08:51:10 2841 www/fhemviz/js/widgets/image.js
-UPD 2026-08-08_20:07:54 9538 www/fhemviz/js/widgets/mealplan.js
+UPD 2026-08-08_20:11:39 9538 www/fhemviz/js/widgets/mealplan.js
 UPD 2026-07-29_18:03:20 12860 www/fhemviz/js/widgets/mediagroup.js
-UPD 2026-08-08_20:08:18 11820 www/fhemviz/js/widgets/registry.js
+UPD 2026-08-08_20:11:39 11820 www/fhemviz/js/widgets/registry.js
 UPD 2026-07-21_06:21:39 3887 www/fhemviz/js/widgets/sensor.js
 UPD 2026-07-29_18:03:20 5691 www/fhemviz/js/widgets/sensorgroup.js
 UPD 2026-08-05_06:11:31 4790 www/fhemviz/js/widgets/shutter.js
