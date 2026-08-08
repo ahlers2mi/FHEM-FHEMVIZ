@@ -78,7 +78,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup,car,cameragroup",
+    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup,car,cameragroup,mealplan",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:1,0",
     "vizHide:1,0",
@@ -712,7 +712,7 @@ sub FHEMVIZ_Attr {
   registriert, erscheinen im Attribut-Dropdown jedes Geräts)
   <ul>
     <li><a id="FHEMVIZ-attr-vizWidget"></a><b>vizWidget</b>
-        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering|car|cameragroup<br>
+        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering|car|cameragroup|mealplan<br>
         Widget-Typ erzwingen; übersteuert genericDeviceType/webCmd/Heuristik
         und die Rausch-Filter (Gerät wird immer angezeigt). Automatisch
         erkannt werden u. a. <code>genericDeviceType</code>
@@ -869,6 +869,20 @@ sub FHEMVIZ_Attr {
         <code>attr MQTT2_Tesla_Model3 setList wish_charge_limit:slider,20,5,100 …</code><br>
         Statusleiste: gr&uuml;n = Wunschlimit erreicht, bernstein = es fehlt
         noch etwas, rot unter 10 %,
+        <code>mealplan</code> = Wochenplan/Essensplan: heute gro&szlig; mit Foto,
+        darunter die restlichen Tage als Streifen mit Vorschaubild, Sternen und
+        Status. Gedacht f&uuml;r ein HTTPMOD-Ger&auml;t am
+        <a href="https://github.com/ahlers2mi/BRING-Interface">BRING-Interface</a>;
+        gelesen werden die Readings <code>mo</code>&hellip;<code>so</code>
+        (Gericht), <code>&lt;tag&gt;_sterne</code>, <code>&lt;tag&gt;_bild</code>
+        (absolute Bild-Adresse) und <code>morgen_vorbereitung</code> (Vorlauf
+        wie „auftauen", wird auff&auml;llig gezeigt). Fehlt ein Reading,
+        entf&auml;llt genau dieser Teil. Bedient wird direkt in der Kachel:
+        W&uuml;rfeln, Bewerten, Wocheneinkauf &ndash; jeder Knopf erscheint nur,
+        wenn das Ger&auml;t den passenden <code>set</code>-Befehl in
+        <code>PossibleSets</code> anbietet. Empfehlung
+        <code>vizSize 2x2</code>. Der Unterschied zur Bild-Kachel mit
+        <code>/plan.svg</code>: die zeigt nur, diese l&auml;sst sich bedienen,
         <code>image</code> = Bild/Icon-Kachel (z. B. Wettervorhersage-Icon
         aus einem <code>weblink image …</code>; Quelle sonst über
         <code>vizImage</code>). Das <code>actions</code>-Widget (aus

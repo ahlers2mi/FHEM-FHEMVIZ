@@ -30,6 +30,7 @@ import { FhemvizWatering } from "./watering.js";
 import { FhemvizImage } from "./image.js";
 import { FhemvizCar } from "./car.js";
 import { FhemvizCameraGroup } from "./cameragroup.js";
+import { FhemvizMealplan } from "./mealplan.js";
 
 export const WIDGET_REGISTRY = {
   switch: "fhemviz-switch",
@@ -55,6 +56,7 @@ export const WIDGET_REGISTRY = {
   image: "fhemviz-image",
   car: "fhemviz-car",
   cameragroup: "fhemviz-cameragroup",
+  mealplan: "fhemviz-mealplan",
   // TODO: thermostat, media.
 };
 
@@ -97,6 +99,7 @@ export function registerCoreWidgets() {
     ["fhemviz-image", FhemvizImage],
     ["fhemviz-car", FhemvizCar],
     ["fhemviz-cameragroup", FhemvizCameraGroup],
+    ["fhemviz-mealplan", FhemvizMealplan],
   ];
   for (const [tag, cls] of defs) {
     if (!customElements.get(tag)) customElements.define(tag, cls);
