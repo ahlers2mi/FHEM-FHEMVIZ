@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.47";
+const SPA_VERSION = "v0.34.48";
 
 const el = (id) => document.getElementById(id);
 
@@ -230,7 +230,7 @@ function renderClockPage(root, store, cfg) {
         it.label || (dev.attr && dev.attr.alias) || dev.name || it.reading;
       // Farbe/Schwellwerte aus dem 5. headerInfo-Feld - auf der Uhr-Seite
       // sind die Zahlen gross, ein roter Batteriestand faellt dort auf.
-      const col = vizColorFor(it.color, parseFloat(String(v).replace(",", ".")));
+      const col = vizColorFor(it.color, parseFloat(String(v).replace(",", ".")), dev);
       return `<div class="cp-k">
         <div class="cp-v"${col ? ` style="color:${col}"` : ""}>${escapeHtml(v)}${
           it.unit ? `<small>${escapeHtml(it.unit)}</small>` : ""
@@ -388,7 +388,7 @@ function vizStatusData(store, c) {
   if (c.reading) {
     const v = vizPlain((c.device.readings || {})[c.reading] ?? "–");
     const num = parseFloat(String(v).replace(",", "."));
-    const color = c.color ? vizColorFor(c.color, num) : "";
+    const color = c.color ? vizColorFor(c.color, num, c.device) : "";
     const value = `${v}${c.unit ? " " + c.unit : ""}`;
     return { text: `${alias} ${value}`, alias, value, warn: false, color };
   }
@@ -605,7 +605,7 @@ function setupHeaderInfo(store, spec) {
         const span = document.createElement("span");
         span.className = "hi-val";
         // Farbe/Schwellwerte aus dem 5. Feld (gleiche Logik wie vizReadings).
-        const col = vizColorFor(it.color, parseFloat(String(v).replace(",", ".")));
+        const col = vizColorFor(it.color, parseFloat(String(v).replace(",", ".")), d);
         if (col) span.style.color = col;
         span.innerHTML =
           (it.label ? `<span class="hi-lbl">${escapeHtml(it.label)}</span>` : "") +

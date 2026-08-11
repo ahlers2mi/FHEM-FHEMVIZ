@@ -239,21 +239,41 @@ export function vizColorVar(name) {
 }
 
 /**
- * Farbe aufloesen: fester Name ODER Schwellwerte "farbe@[op]zahl" mit |
- * getrennt (op-Default >=, erlaubt >= > <= < ==). Erster Treffer gewinnt;
+ * Schwellwert einer Farbregel aufloesen: feste Zahl ODER der Wert eines
+ * anderen Readings DESSELBEN Geraets, wahlweise mit Versatz - "poolTemp",
+ * "poolTemp+2", "poolTemp-0.5". Nicht aufloesbar -> null (Regel faellt aus).
+ */
+function vizSchwelle(txt, dev) {
+  const s = String(txt || "").trim();
+  if (/^-?\d+(?:[.,]\d+)?$/.test(s)) return parseFloat(s.replace(",", "."));
+  const m = s.match(/^([A-Za-z_][\w.-]*?)\s*(?:([+-])\s*(\d+(?:[.,]\d+)?))?$/);
+  if (!m || !dev) return null;
+  const roh = m[1] === "state" ? dev.state : (dev.readings || {})[m[1]];
+  const wert = parseFloat(String(vizPlain(roh ?? "")).replace(",", "."));
+  if (isNaN(wert)) return null;
+  const off = m[3] ? parseFloat(m[3].replace(",", ".")) : 0;
+  return m[2] === "-" ? wert - off : wert + off;
+}
+
+/**
+ * Farbe aufloesen: fester Name ODER Schwellwerte "farbe@[op]schwelle" mit |
+ * getrennt (op-Default >=, erlaubt >= > <= < ==). Die Schwelle ist eine Zahl
+ * oder - wenn dev uebergeben wird - der Name eines anderen Readings, optional
+ * mit Versatz ("ok@>poolTemp", "warn@>=poolTemp+3"). Erster Treffer gewinnt;
  * kein Treffer / nicht-numerisch -> "".
  */
-export function vizColorFor(spec, num) {
+export function vizColorFor(spec, num, dev) {
   const s = String(spec || "").trim();
   if (!s) return "";
   if (s.indexOf("@") < 0) return vizColorVar(s); // fester Name
   if (isNaN(num)) return "";
   for (const rule of s.split("|").map((r) => r.trim()).filter(Boolean)) {
-    const m = rule.match(/^([a-zäöü]+)@(<=|>=|<|>|==)?\s*(-?\d+(?:[.,]\d+)?)$/i);
+    const m = rule.match(/^([a-zäöü]+)@(<=|>=|<|>|==)?\s*(.+)$/i);
     if (!m) continue;
     const name = m[1];
     const op = m[2] || ">=";
-    const t = parseFloat(m[3].replace(",", "."));
+    const t = vizSchwelle(m[3], dev);
+    if (t === null) continue; // Reading (noch) nicht da -> Regel ueberspringen
     const hit =
       op === ">=" ? num >= t :
       op === ">"  ? num >  t :
@@ -644,7 +664,7 @@ export class FhemvizWidget extends HTMLElement {
    * bewusst nicht auswertet.
    */
   colorFor(spec, num) {
-    return vizColorFor(spec, num);
+    return vizColorFor(spec, num, this.device);
   }
 
   /**

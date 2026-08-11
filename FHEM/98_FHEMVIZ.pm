@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.47
+# Version:  v0.34.48
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.47";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.48";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -328,7 +328,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.47"),
+            FHEMVIZ_jsonStr("v0.34.48"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -972,7 +972,19 @@ sub FHEMVIZ_Attr {
         Ersetzt die früher per Notify gesetzten <code>_colour</code>-Readings.
         Beispiele:<br>
         <code>attr Mobil5data vizReadings temperature:Temperatur:C,humidity:Feuchtigkeit:%:bad@75|warn@65,moisturecontent:Wasser:g/m3:bad@14|warn@13</code><br>
-        <code>...:blau@&lt;=5|bad@&gt;=30|warn@&gt;=25</code> (kalt blau, heiß rot)</li>
+        <code>...:blau@&lt;=5|bad@&gt;=30|warn@&gt;=25</code> (kalt blau, heiß rot)<br>
+        <b>Vergleich mit einem anderen Reading (ab v0.34.48):</b> statt einer
+        Zahl darf als Schwelle der <b>Name eines anderen Readings desselben
+        Geräts</b> stehen, wahlweise mit Versatz
+        (<code>reading</code>, <code>reading+2</code>, <code>reading-0.5</code>).
+        Damit lässt sich ein Wert relativ zu einem zweiten einfärben, etwa der
+        Pool-Zulauf gegen die Beckentemperatur:<br>
+        <code>attr poolControl vizReadings poolTemp:Wasser:°C:bad@&gt;=34|ok@&gt;=26|blau@&lt;24,inflowTemp:Zulauf:°C:warn@&gt;=poolTemp+3|ok@&gt;poolTemp|blau@&lt;poolTemp</code><br>
+        Der Zulauf ist damit grün, solange er das Becken aufheizt, blau wenn er
+        kühler ist, und orange ab 3&nbsp;Grad darüber. Die Farbe wird bei jeder
+        Änderung <b>beider</b> Readings neu bestimmt. Lässt sich ein Reading
+        nicht auflösen (fehlt oder ist nicht numerisch), wird nur diese eine
+        Regel übersprungen.</li>
     <li><a id="FHEMVIZ-attr-vizState"></a><b>vizState</b><br>
         Reading, aus dem die <b>Zustandszeile</b> der Kachel kommt (statt
         <code>state</code>). Nützlich bei Modulen und Proxys
