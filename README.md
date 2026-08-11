@@ -5,7 +5,7 @@ FHEM-Standard („FHEM-Standard-first"). Ein System, zwei Betriebsarten:
 **Tablet** (Touch, Raum-Tabs unten) und **TV/Kiosk** (bedienlos,
 Szenen-Rotation, steuerbar per FHEM-Event).
 
-Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) · Stand: **v0.34.47**
+Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) · Stand: **v0.34.49**
 
 > Vollständige Referenz aller Attribute mit Beispielen: die **FHEM-Hilfe** des
 > Moduls (`commandref` → FHEMVIZ bzw. das `?` am Gerät). Dieses README ist der
@@ -60,6 +60,7 @@ ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet
 | `headerInfo` | wie `statusBar`, plus `icon=gerät:größe` | Werte groß in der Kopfzeile (Außentemperatur, Wetter-Icon) |
 | `roomPrefix` | Default `FHEMVIZ->` | Raum-Präfix **dieser** Sicht; wird in Tabs und Überschriften abgeschnitten. Damit kann eine **zweite Sicht** eigene Räume benutzen (`Opa->Wohnzimmer` → Tab „Wohnzimmer") und im Haupt-Dashboard nicht auftauchen |
 | `sound` | leer / `beep` / URL | **Ton**, wenn ein Bild (`set show`) oder eine Nachricht (`set msg`) hereinkommt. `beep` = eingebauter Zweiklang, keine Tondatei nötig. Achtung Autoplay-Sperre: nach einem Neuladen erst nach der ersten Berührung – in Fully die Medienwiedergabe erlauben |
+| `pwa` | `1` / `0` (Default 1) | **„Zum Startbildschirm hinzufügen“**: Manifest wird zur Laufzeit erzeugt – `start_url` behält `?room=`/`?zoom=`/`?skin=` (die installierte App startet in der Ansicht, aus der sie angelegt wurde), der Name führt den Raum mit („FHEMVIZ Media“). Die Symbole stecken als `data:`-URI mit drin, damit sie auch hinter `basicAuth` beim Android-App-Bau ankommen. `0` = statisches `manifest.webmanifest` wie bisher |
 | `flash` | `1` / `0` / `values` | Kurzes Aufleuchten bei Wertänderung (`values` = nur der Wert, nicht die ganze Kachel) |
 | `disable` | `0` / `1` | Sicht abschalten |
 

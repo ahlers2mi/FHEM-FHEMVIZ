@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.48
+# Version:  v0.34.49
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.48";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.49";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -133,6 +133,7 @@ sub FHEMVIZ_Initialize {
           "backgroundDim " .
           "skin " .
           "skinBlur:1,0 " .
+          "pwa:1,0 " .
           "sound " .
           "flash:1,0,values " .
           "roomPrefix " .
@@ -310,6 +311,8 @@ sub FHEMVIZ_Get {
         # Ton bei "set show"/"set msg" (leer = stumm, "beep" = eingebauter
         # Zweiklang, sonst URL einer Tondatei).
         my $sound         = AttrVal($name, "sound", "");
+        # Manifest zur Laufzeit (Symbole eingebettet, start_url mit Parametern).
+        my $pwa           = AttrVal($name, "pwa", "1");
         # Raum-Praefix dieser Sicht: wird in Tabs/Ueberschriften abgeschnitten.
         # Eine zweite Sicht (z. B. eine Gaeste-Seite) nutzt eigene Raeume wie
         # "Opa->Wohnzimmer" und zeigt sie trotzdem als "Wohnzimmer".
@@ -325,10 +328,10 @@ sub FHEMVIZ_Get {
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,'
-              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"page":%s,'
+              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.48"),
+            FHEMVIZ_jsonStr("v0.34.49"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -345,6 +348,7 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($skinBlur),
             FHEMVIZ_jsonStr($flash),
             FHEMVIZ_jsonStr($sound),
+            FHEMVIZ_jsonStr($pwa),
             FHEMVIZ_jsonStr($page),
             FHEMVIZ_jsonStr($roomPrefix),
             FHEMVIZ_jsonStr($showRooms),
@@ -687,6 +691,28 @@ sub FHEMVIZ_Attr {
         sofort. Beispiel Türklingel:<br>
         <code>attr myViz sound beep</code><br>
         <code>define n_klingel notify MQTT2_DOORBELL:motion:.* set myViz show http://kamera/snapshot.jpg 20</code></li>
+    <li><a id="FHEMVIZ-attr-pwa"></a><b>pwa</b> 1|0<br>
+        Default 1. Betrifft <b>&bdquo;Zum Startbildschirm hinzufügen&ldquo;</b>.
+        Die Seite baut ihr Manifest zur Laufzeit selbst und hängt es als
+        <code>data:</code>-Adresse ein &ndash; mit zwei Effekten:
+        <ul>
+          <li><b>Die Parameter bleiben erhalten.</b> <code>start_url</code> ist
+              die Adresse, aus der heraus installiert wurde, samt
+              <code>?room=</code>, <code>?zoom=</code>, <code>?skin=</code>.
+              Vorher startete eine installierte App immer im
+              Standard-Dashboard (Android wie iOS). Der Name führt den Raum
+              mit (&bdquo;FHEMVIZ Media&ldquo;), so lassen sich mehrere
+              Ansichten nebeneinander ablegen.</li>
+          <li><b>Die Symbole stecken mit im Manifest</b> (als
+              <code>data:</code>-URI, vom Browser über die laufende Sitzung
+              geholt). Steht FHEM hinter <code>basicAuth</code>, kommt der
+              Dienst, der auf Android das App-Symbol baut, sonst nicht an
+              <code>icons/icon-192.png</code> &ndash; die App bleibt dann ohne
+              Symbol. Eingebettet gibt es nichts mehr abzurufen.</li>
+        </ul>
+        Lassen sich die Symbole nicht laden, bleibt das statische
+        <code>manifest.webmanifest</code> unverändert stehen. Mit
+        <code>attr &lt;viz&gt; pwa 0</code> schaltet man den Umbau ganz ab.</li>
     <li><a id="FHEMVIZ-attr-showRooms"></a><b>showRooms</b><br>
         Typ: textField. <b>Whitelist</b> (kommaseparierte Regex-Liste): ist
         sie gesetzt, erscheinen NUR passende Räume; Geräte ohne passenden
@@ -973,7 +999,7 @@ sub FHEMVIZ_Attr {
         Beispiele:<br>
         <code>attr Mobil5data vizReadings temperature:Temperatur:C,humidity:Feuchtigkeit:%:bad@75|warn@65,moisturecontent:Wasser:g/m3:bad@14|warn@13</code><br>
         <code>...:blau@&lt;=5|bad@&gt;=30|warn@&gt;=25</code> (kalt blau, heiß rot)<br>
-        <b>Vergleich mit einem anderen Reading (ab v0.34.48):</b> statt einer
+        <b>Vergleich mit einem anderen Reading (ab v0.34.49):</b> statt einer
         Zahl darf als Schwelle der <b>Name eines anderen Readings desselben
         Geräts</b> stehen, wahlweise mit Versatz
         (<code>reading</code>, <code>reading+2</code>, <code>reading-0.5</code>).

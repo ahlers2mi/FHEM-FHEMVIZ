@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.48";
+const SPA_VERSION = "v0.34.49";
 
 const el = (id) => document.getElementById(id);
 
@@ -1125,6 +1125,85 @@ function wakeAudio() {
   }
 }
 
+/**
+ * Datei ueber die LAUFENDE Sitzung holen und als data:-URI zurueckgeben.
+ * Genau das ist der Trick: der Browser hat die Anmeldung, ein fremder Dienst
+ * nicht. Fehlschlag -> "" (der Aufrufer laesst dann alles wie es ist).
+ */
+async function alsDataUri(url) {
+  try {
+    const res = await fetch(url, { credentials: "same-origin" });
+    if (!res.ok) return "";
+    const blob = await res.blob();
+    return await new Promise((ok) => {
+      const fr = new FileReader();
+      fr.onload = () => ok(String(fr.result || ""));
+      fr.onerror = () => ok("");
+      fr.readAsDataURL(blob);
+    });
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Manifest zur Laufzeit erzeugen und als data:-URI einhaengen. Zwei Gruende:
+ *
+ * 1. start_url bekommt die AKTUELLE Adresse samt ?room=/?zoom=/?skin= - eine
+ *    installierte App startet damit in der Ansicht, aus der sie angelegt
+ *    wurde, statt im Standard-Dashboard (betraf Android wie iOS).
+ * 2. Die Symbole stecken als data:-URI mit drin. Steht FHEM hinter einer
+ *    Anmeldung, kommt der Dienst, der auf Android das App-Symbol baut, sonst
+ *    nicht an die Icon-Dateien und die App bleibt ohne Symbol.
+ *
+ * Schlaegt irgendetwas fehl, bleibt das statische manifest.webmanifest stehen.
+ * Abschaltbar mit attr <viz> pwa 0.
+ */
+async function setupManifest(cfg) {
+  const link = document.querySelector('link[rel="manifest"]');
+  if (!link) return;
+  if (/^(0|off|none|nein|false)$/i.test(String(cfg.pwa ?? "1").trim())) return;
+  const icons = [];
+  for (const [datei, groesse] of [
+    ["./icons/icon-192.png", "192x192"],
+    ["./icons/icon-512.png", "512x512"],
+  ]) {
+    const uri = await alsDataUri(datei);
+    if (!uri) continue;
+    // "any maskable" in EINEM Eintrag - die 512er zweimal einzubetten wuerde
+    // das Manifest ohne Gewinn um gut 120 kB aufblaehen.
+    icons.push({
+      src: uri,
+      sizes: groesse,
+      type: "image/png",
+      purpose: groesse === "512x512" ? "any maskable" : "any",
+    });
+  }
+  if (!icons.length) return; // ohne Symbol lieber das statische Manifest lassen
+  // Name je Ansicht, damit mehrere Verknuepfungen unterscheidbar sind:
+  // "FHEMVIZ Media", "FHEMVIZ Solar" ...
+  const raum = new URLSearchParams(location.search).get("room") || "";
+  const kurz = raum.replace(/^.*->/, "").trim();
+  const titel = kurz ? `FHEMVIZ ${kurz}` : "FHEMVIZ";
+  const manifest = {
+    name: titel,
+    short_name: titel,
+    description: "FHEM-Dashboard",
+    display: "standalone",
+    orientation: "any",
+    background_color: "#0a0c0f",
+    theme_color: "#0a0c0f",
+    start_url: location.pathname + location.search,
+    scope: location.pathname.replace(/[^/]*$/, ""),
+    icons,
+  };
+  link.setAttribute(
+    "href",
+    "data:application/manifest+json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(manifest)),
+  );
+}
+
 function setupSound(spec) {
   soundSpec = String(spec || "").trim();
   if (/^(off|none|0|nein)$/i.test(soundSpec)) soundSpec = "";
@@ -1439,6 +1518,9 @@ async function main() {
       jump: (room) =>
         renderLayout(root, store, client, { ...baseOpts, activeRoom: room }),
     });
+    // Manifest nachtraeglich und nebenlaeufig - es haelt den ersten Aufbau
+    // nicht auf und wird erst beim "Zum Startbildschirm" gebraucht.
+    setupManifest(cfg);
 
     // ?room=Solar (alias ?scene=): Startseite. TV beginnt die Rotation mit
     // diesem Raum, Tablet oeffnet den Tab (statt des zuletzt gemerkten).
