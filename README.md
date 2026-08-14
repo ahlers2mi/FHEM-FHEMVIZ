@@ -333,6 +333,41 @@ controls_FHEMVIZ.txt   FHEM-update-Manifest (wird per Workflow gepflegt)
 CONCEPT.md             Konzept & Architektur
 ```
 
+## Nach einem `update`: Version und Browser-Cache
+
+Die SPA vergleicht beim Laden ihre eigene Version (`SPA_VERSION` in
+`www/fhemviz/js/app.js`) mit der des Moduls (aus `get <viz> config`). Weichen
+sie ab, steht in der Statuszeile:
+
+```
+Versionskonflikt: Modul v0.34.50 / Oberfläche v0.34.49
+```
+
+Die **zweite** Zahl kommt aus dem geladenen `app.js`. Ist sie älter, hängt der
+Browser-Cache; ist sie neuer, wurde das Modul nach dem `update` nicht neu
+geladen (`reload 98_FHEMVIZ`).
+
+**FHEMVIZ hat keinen Service Worker.** Ein hängender Stand ist also immer der
+normale HTTP-Cache, kein PWA-Cache – das macht ihn leichter loszuwerden:
+
+- **Android, installierte App:** Einstellungen → Apps → FHEMVIZ → Speicher →
+  *Cache leeren*. Nicht „Speicher löschen“, das wirft auch den gemerkten Tab
+  und die übrigen `localStorage`-Einstellungen weg.
+- **Android, Chrome:** Einstellungen → Datenschutz → Browserdaten löschen →
+  „Bilder und Dateien im Cache“, Zeitraum „Letzte Stunde“ genügt.
+- **Desktop:** Strg+F5.
+
+Ein `?x=1` an der URL hilft **nicht** – das umgeht den Cache nur für
+`index.html`. Die Ladekette (`app.js` und die rund 30 Module, die es
+importiert) trägt keine Versionskennung, wird also weiter aus dem Cache
+bedient.
+
+> **Beim Veröffentlichen:** die Versionszahl steht an vier Stellen –
+> Kopfkommentar und `$FHEMVIZ_VERSION` in `98_FHEMVIZ.pm`, die Ausgabe von
+> `get config`, und `SPA_VERSION` in `app.js`. Wird eine vergessen, meldet
+> die Oberfläche bei *jedem* Laden einen Versionskonflikt, und der Hinweis
+> auf den Cache führt in die Irre.
+
 ## Roadmap
 
 Energiefluss (`flow`), Diagramme (`chart`, FileLog/DbLog) und die

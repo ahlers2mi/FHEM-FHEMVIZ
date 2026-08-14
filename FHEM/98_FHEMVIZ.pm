@@ -37,6 +37,17 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
+#
+# ACHTUNG bei einem Versionswechsel: die Zahl steht an VIER Stellen und muss
+# ueberall gleich sein.
+#   1. der Kopfkommentar oben ("# Version:")
+#   2. diese Zeile
+#   3. die Ausgabe von "get config" (FHEMVIZ_jsonStr weiter unten)
+#   4. SPA_VERSION in www/fhemviz/js/app.js
+# Die SPA vergleicht 3 gegen 4 und meldet sonst bei JEDEM Laden
+# "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
+# Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
+# unvollstaendig war (passiert in v0.34.50, siehe PR #126).
 my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.50";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
