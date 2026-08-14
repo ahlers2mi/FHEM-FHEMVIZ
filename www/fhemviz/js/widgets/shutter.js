@@ -1,7 +1,8 @@
 /*
- * FHEMVIZ - Rollladen-Widget (v0.7.11).
+ * FHEMVIZ - Rollladen-Widget (v0.7.12).
  * Behang-Grafik (Fuellstand von oben = geschlossener Anteil; Annahme
- * FHEM-Standard: pct 100 = offen, 0 = zu) + Prozentwert + Slider.
+ * FHEM-Standard: pct 100 = offen, 0 = zu) + Prozentwert + Slider + die
+ * Knopfreihe Auf/Stop/Zu (Stop nur, wenn das Geraet ihn kennt).
  * Befehl/Spanne aus PossibleSets (pct bevorzugt, sonst state:slider,...).
  */
 
@@ -27,6 +28,17 @@ const SHUTTER_CSS = `
   button.blindbtn { background: none; border: 0; padding: 0; cursor: pointer; }
   button.blindbtn:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 2px; border-radius: 6px; }
   :host([data-tv]) .blindbox { width: 44px; height: 60px; }
+  .shbtns { display: flex; gap: 6px; margin-top: 8px; }
+  button.shb {
+    font: inherit; font-size: 0.85rem; flex: 1; min-height: 40px;
+    border-radius: 9px; border: 1px solid var(--viz-border, #262c35);
+    background: var(--viz-raised, #1c212a); color: var(--viz-text, #e8eaed);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  button.shb:focus-visible { outline: 2px solid var(--viz-action, #4c8dff); outline-offset: 1px; }
+  button.shb:active { background: var(--viz-accent, #ffb020); color: var(--viz-bg, #0a0c0f); }
+  :host([data-tv]) button.shb { min-height: 52px; font-size: 1rem; }
 `;
 
 export class FhemvizShutter extends FhemvizWidget {
@@ -38,6 +50,27 @@ export class FhemvizShutter extends FhemvizWidget {
     m = sets.match(/(?:^|\s)state:slider,(-?[\d.]+),([\d.]+),(-?[\d.]+)/);
     if (m) return { cmd: "state", min: +m[1], step: +m[2], max: +m[3] };
     return { cmd: "pct", min: 0, step: 1, max: 100 };
+  }
+
+  /**
+   * Befehle fuer die Knopfreihe - dieselbe Rangfolge wie in der
+   * shuttergroup: pct mit den Endlagen aus dem Slider, dann open/close
+   * (ROLLO: "closed"), und up/down nur als Rueckfall. Grund: bei CUL_HM
+   * sind up/down RELATIV (ein Schritt, Standard 10 %), ein Klick auf "Zu"
+   * wuerde die Rollade damit nur 10 % weiterfahren statt ganz zu.
+   */
+  _cmds() {
+    const sets = String(this.device.possibleSets || "");
+    const has = (w) => new RegExp("(?:^|\\s)" + w + "(?:\\b|:)").test(sets);
+    const ersterTreffer = (...w) => w.find((x) => has(x));
+    const m = sets.match(/(?:^|\s)pct(?::slider,(-?[\d.]+),([\d.]+),(-?[\d.]+))?/);
+    const auf = m
+      ? `pct ${m[3] ?? 100}`
+      : ersterTreffer("open", "opened", "up") || "pct 100";
+    const zu = m
+      ? `pct ${m[1] ?? 0}`
+      : ersterTreffer("close", "closed", "down") || "pct 0";
+    return { up: auf, down: zu, stop: has("stop") ? "stop" : null };
   }
 
   _pct() {
@@ -66,6 +99,19 @@ export class FhemvizShutter extends FhemvizWidget {
       : `<input id="slider" type="range" min="${spec.min}" max="${spec.max}"
            step="${spec.step}" value="${pct}"
            aria-label="${this.escape(this.displayName())} Position">`;
+    const cmds = this._cmds();
+    const knopf = (sym, aria, cmd) =>
+      cmd
+        ? `<button class="shb" data-cmd="${this.escape(cmd)}"
+             aria-label="${this.escape(this.displayName() + " " + aria)}">${sym}</button>`
+        : "";
+    const knoepfe = this.readonly
+      ? ""
+      : `<div class="shbtns">${knopf("▲", "öffnen", cmds.up)}${knopf(
+          "■",
+          "stop",
+          cmds.stop
+        )}${knopf("▼", "schließen", cmds.down)}</div>`;
     return `
       <style>${SHUTTER_CSS}</style>
       <div class="card${closed > 0 ? " on" : ""}">
@@ -84,6 +130,7 @@ export class FhemvizShutter extends FhemvizWidget {
           </div>
         </div>
         ${slider}
+        ${knoepfe}
         ${this.readingRowsHtml()}
       </div>`;
   }
@@ -98,6 +145,9 @@ export class FhemvizShutter extends FhemvizWidget {
         this.sendCommand(spec.cmd === "state" ? String(target) : `${spec.cmd} ${target}`);
       });
     }
+    this.shadowRoot.querySelectorAll("button.shb").forEach((b) => {
+      b.addEventListener("click", () => this.sendCommand(b.dataset.cmd));
+    });
     const s = this.shadowRoot.getElementById("slider");
     if (s) {
       const cmd = this._spec().cmd;
