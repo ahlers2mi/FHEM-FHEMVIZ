@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.49
+# Version:  v0.34.50
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -37,7 +37,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # Zentrale Konstanten des Grundgeruests ----------------------------------------
 
 # Version-String, wird in FHEMVIZ_Define an das Internal FVERSION gehaengt.
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.49";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.50";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -331,7 +331,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.49"),
+            FHEMVIZ_jsonStr("v0.34.50"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -757,6 +757,13 @@ sub FHEMVIZ_Attr {
         <code>vizAgenda</code>,
         <code>contact</code> = Fenster/Tür (offen = Bernstein; structure =
         Gruppen-Kachel "2 offen · 1 gekippt" mit Mini-Symbolen),
+        <code>shutter</code> = einzelner Rollladen: Behang-Grafik, Prozentwert,
+        Schieberegler und darunter die Knopfreihe <i>Auf &middot; Stop &middot;
+        Zu</i>. Der Stop-Knopf erscheint nur, wenn das Gerät den Befehl
+        <code>stop</code> kennt (ab v0.34.50) &ndash; bei einem Garagentor auf
+        einem HomeMatic-Rollladenaktor also automatisch. Auf/Zu fahren die
+        Endlagen über <code>pct</code>, nicht über die bei CUL_HM
+        <b>relativen</b> <code>up</code>/<code>down</code>,
         <code>shuttergroup</code> = Rollladen-Gruppe: EINE Kachel für ein
         <code>structure</code>-Gerät aus Rollladen mit Master-Zeile (steuert
         alle) und je Rollade einer Zeile mit Position + Auf/Stop/Zu.
