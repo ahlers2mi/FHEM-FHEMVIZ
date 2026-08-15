@@ -355,7 +355,20 @@ normale HTTP-Cache, kein PWA-Cache – das macht ihn leichter loszuwerden:
   und die übrigen `localStorage`-Einstellungen weg.
 - **Android, Chrome:** Einstellungen → Datenschutz → Browserdaten löschen →
   „Bilder und Dateien im Cache“, Zeitraum „Letzte Stunde“ genügt.
+- **iOS, gezielt:** Einstellungen → Safari → Erweitert → Website-Daten → den
+  Eintrag des FHEM-Hosts nach links wischen und löschen. Trifft nur diese
+  eine Seite, der Rest von Safari bleibt unangetastet.
+- **iOS, Holzhammer:** Einstellungen → Safari → *Verlauf und Websitedaten
+  löschen*. Wirft auch `localStorage` weg (gemerkter Tab, Zoom, Skin) – und
+  zwar für alle Seiten.
+- **iOS, installierte Verknüpfung:** löschen und über *Teilen → Zum
+  Home-Bildschirm* neu anlegen. Sie merkt sich ihre Startadresse beim
+  Anlegen; ein späteres Aufräumen des Caches ändert daran nichts.
 - **Desktop:** Strg+F5.
+
+Zur **Unterscheidung** taugt ein privater Tab: er lädt an jedem Cache vorbei.
+Steht dort keine Konfliktmeldung, war es der Cache; steht sie auch dort, ist
+eine der vier Versionszahlen (siehe unten) tatsächlich verschieden.
 
 Ein `?x=1` an der URL hilft **nicht** – das umgeht den Cache nur für
 `index.html`. Die Ladekette (`app.js` und die rund 30 Module, die es
