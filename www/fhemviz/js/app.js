@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.50";
+const SPA_VERSION = "v0.34.51";
 
 const el = (id) => document.getElementById(id);
 
@@ -1193,8 +1193,13 @@ async function setupManifest(cfg) {
     orientation: "any",
     background_color: "#0a0c0f",
     theme_color: "#0a0c0f",
-    start_url: location.pathname + location.search,
-    scope: location.pathname.replace(/[^/]*$/, ""),
+    // ABSOLUT, nicht relativ: das Manifest haengt als data:-URI am Dokument,
+    // und relative Adressen werden gegen die Adresse des Manifests aufgeloest.
+    // Eine data:-URI hat keine - Safari verwirft start_url dann, und die
+    // Verknuepfung landet ohne ?device=/?room=/?skin= auf dem Standard-
+    // Dashboard. Chrome verzeiht es, iOS nicht.
+    start_url: location.origin + location.pathname + location.search,
+    scope: location.origin + location.pathname.replace(/[^/]*$/, ""),
     icons,
   };
   link.setAttribute(
