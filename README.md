@@ -381,6 +381,39 @@ bedient.
 > die Oberfläche bei *jedem* Laden einen Versionskonflikt, und der Hinweis
 > auf den Cache führt in die Irre.
 
+## Nach einem FHEM-Neustart: der csrfToken
+
+FHEMWEB würfelt bei jedem Start einen neuen `csrfToken`. Ein Tab, der schon
+offen war – das Wandtablet also praktisch immer – kennt nur den alten. Der
+Longpoll (`?inform=`) braucht keinen Token und verbindet sich brav neu, die
+Kopfzeile sagt weiter **live**. Jeder `?cmd=`-Aufruf wird dagegen mit
+`400 Bad Request` abgewiesen: Resync, Diagramme und **alle Schaltbefehle**
+laufen ins Leere. Von außen sieht das aus wie „das Tablet hat die Verbindung
+verloren“. Im FHEM-Log steht dazu:
+
+```
+FHEMWEB WEB CSRF error: csrf_958391631924104 ne csrf_905432197403753
+  for client WEB_192.168.10.87_53298 / command jsonlist2 room=FHEMVIZ->.*
+```
+
+Seit **v0.34.52** heilt die SPA das selbst. FHEMWEB hängt den aktuellen Token
+als Header `X-FHEM-csrfToken` an *jede* Antwort – auch an die 400er, mit der
+es gerade abgewiesen hat. Der Client übernimmt ihn von dort und wiederholt den
+Befehl einmal; zusätzlich zieht er ihn bei jedem Longpoll-Reconnect nach, also
+schon vor dem ersten Fehlversuch. Ein Neuladen der Seite ist nicht mehr nötig.
+
+Zwei Nebenwirkungen desselben Problems sind mit behoben:
+
+- Ein abgewiesener `set`-Befehl kam vorher als normaler Text zurück und galt
+  als Erfolg. Jetzt wirft `command()` bei einer Fehlerantwort.
+- Schlägt der Resync (alle 3 min) zweimal hintereinander fehl, steht in der
+  Kopfzeile **„Daten veraltet“** statt „live“ – eingefrorene Werte bei grüner
+  Statuszeile sind sonst nicht zu erkennen.
+
+Ebenfalls ab v0.34.52: Wird der Tablet-Bildschirm wieder wach oder kommt das
+WLAN zurück (`visibilitychange` / `online`), werden Longpoll und Daten sofort
+erneuert, statt bis zu 2,5 Minuten auf den Watchdog zu warten.
+
 ## Roadmap
 
 Energiefluss (`flow`), Diagramme (`chart`, FileLog/DbLog) und die
