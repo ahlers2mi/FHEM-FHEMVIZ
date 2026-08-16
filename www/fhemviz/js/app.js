@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.34.51";
+const SPA_VERSION = "v0.34.52";
 
 const el = (id) => document.getElementById(id);
 
@@ -1662,13 +1662,26 @@ async function main() {
     // nachziehen. Faengt verpasste Aenderungen nach einem inform-Aussetzer
     // ab (Rolladen "zu", Forecast von gestern nach langer Laufzeit). Laeuft
     // bei jedem (Re-)Connect und zusaetzlich periodisch als Sicherheitsnetz.
+    const zeigeLive = () =>
+      setStatus(`${count} Gerät(e) · live${zoomLabel} · ${SPA_VERSION}`, "live");
     let resyncBusy = false;
+    let resyncFehler = 0;
     const resync = async () => {
       if (resyncBusy) return;
       resyncBusy = true;
       try {
         store.resync(await client.snapshot(cfg.devspec));
+        if (resyncFehler) {
+          resyncFehler = 0;
+          zeigeLive();
+        }
       } catch (e) {
+        // Ein stiller Fehlschlag hier ist tueckisch: der Longpoll laeuft
+        // weiter, die Kopfzeile sagt "live" - aber die Werte sind eingefroren.
+        // Ab dem zweiten Mal deshalb sichtbar machen.
+        if (++resyncFehler >= 2) {
+          setStatus(`${count} Gerät(e) · Daten veraltet${zoomLabel} · ${SPA_VERSION}`, "error");
+        }
         // eslint-disable-next-line no-console
         console.warn("FHEMVIZ resync fehlgeschlagen:", e && e.message);
       } finally {
@@ -1676,6 +1689,16 @@ async function main() {
       }
     };
     setInterval(resync, 180000); // alle 3 min
+
+    // Aufwachen: Bildschirm wieder an bzw. WLAN zurueck -> nicht auf den
+    // Watchdog warten, sondern Longpoll und Daten sofort erneuern.
+    const aufwachen = () => {
+      if (document.visibilityState === "hidden") return;
+      client.kickInform();
+      resync();
+    };
+    document.addEventListener("visibilitychange", aufwachen);
+    window.addEventListener("online", aufwachen);
 
     // Live-Kanal: Geraete der Sicht + das FHEMVIZ-Geraet selbst
     // (dessen scene-Readings steuern die TV-Szenen).
@@ -1748,7 +1771,7 @@ async function main() {
       },
       onStatus: (s) => {
         if (s === "live") {
-          setStatus(`${count} Gerät(e) · live${zoomLabel} · ${SPA_VERSION}`, "live");
+          zeigeLive();
           // Nach einer Unterbrechung (nicht beim ersten Connect) sofort den
           // Snapshot nachziehen - verpasste Events waeren sonst verloren.
           if (hadLive) resync();

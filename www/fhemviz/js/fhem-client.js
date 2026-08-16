@@ -36,6 +36,39 @@ export class FhemClient {
     return `${this.base}?cmd=${encodeURIComponent(cmd)}&XHR=1${csrf}`;
   }
 
+  /**
+   * Token aus dem Antwort-Header uebernehmen. FHEMWEB haengt
+   * "X-FHEM-csrfToken" an JEDE Antwort (01_FHEMWEB.pm, $FW_headerlines) -
+   * auch an die 400er, mit der es einen falschen Token abweist. Damit steht
+   * der frische Token schon nach dem Fehlschlag bereit.
+   */
+  _absorbToken(resp) {
+    const t = resp.headers.get("X-FHEM-csrfToken");
+    if (t && t !== this.csrfToken) this.csrfToken = t;
+  }
+
+  /**
+   * ?cmd=-Aufruf mit Token-Nachfuehrung. Startet FHEM neu, wechselt der
+   * csrfToken - der geladene Tab kennt dann nur noch den alten und FHEMWEB
+   * antwortet auf JEDES cmd mit "400 Bad Request" und der Logzeile
+   * "CSRF error: <alt> ne <neu>". Der Longpoll braucht keinen Token und
+   * laeuft weiter, die Oberflaeche zeigt also "live", waehrend Resync,
+   * Diagramme und alle Schaltbefehle stumm ins Leere laufen.
+   * Darum: bei 400 den Token aus der Antwort ziehen und einmal wiederholen.
+   */
+  async _cmdFetch(cmd) {
+    let r = await fetch(this._url(cmd), { credentials: "same-origin" });
+    this._absorbToken(r);
+    if (r.status === 400) {
+      // Schickt FHEMWEB den Token nicht im Header (attr csrfTokenHTTPHeader 0),
+      // ihn ueber den Extra-Aufruf holen.
+      if (!r.headers.get("X-FHEM-csrfToken")) await this.fetchCsrfToken();
+      r = await fetch(this._url(cmd), { credentials: "same-origin" });
+      this._absorbToken(r);
+    }
+    return r;
+  }
+
   /** CSRF-Token aus dem Header X-FHEM-csrfToken holen. */
   async fetchCsrfToken() {
     const r = await fetch(`${this.base}?XHR=1`, { credentials: "same-origin" });
@@ -45,9 +78,7 @@ export class FhemClient {
 
   /** get <device> config -> Sicht-Konfiguration (devspec/theme/readonly). */
   async getConfig(device) {
-    const r = await fetch(this._url(`get ${device} config`), {
-      credentials: "same-origin",
-    });
+    const r = await this._cmdFetch(`get ${device} config`);
     if (!r.ok) throw new Error(`get ${device} config: HTTP ${r.status}`);
     const text = (await r.text()).trim();
     if (!text) throw new Error(`get ${device} config: leere Antwort`);
@@ -63,7 +94,7 @@ export class FhemClient {
   /** Snapshot via jsonlist2. */
   async snapshot(devspec, readingRegex) {
     const cmd = "jsonlist2 " + devspec + (readingRegex ? " " + readingRegex : "");
-    const r = await fetch(this._url(cmd), { credentials: "same-origin" });
+    const r = await this._cmdFetch(cmd);
     if (!r.ok) throw new Error(`jsonlist2 ${devspec}: HTTP ${r.status}`);
     const text = (await r.text()).trim();
     if (!text) throw new Error(`jsonlist2 ${devspec}: leere Antwort`);
@@ -91,6 +122,10 @@ export class FhemClient {
             signal: ctrl.signal,
           });
           if (!resp.ok || !resp.body) throw new Error("inform HTTP " + resp.status);
+          // Bester Zeitpunkt fuer den Token: nach einem FHEM-Neustart bricht
+          // der Longpoll ab, und der Reconnect bringt den neuen Token mit -
+          // noch vor dem naechsten Resync.
+          self._absorbToken(resp);
           onStatus && onStatus("live");
 
           const reader = resp.body.getReader();
@@ -136,6 +171,17 @@ export class FhemClient {
     };
   }
 
+  /**
+   * Laufenden Longpoll abbrechen und damit sofort neu verbinden lassen.
+   * Fuer das Wandtablet: schlaeft der Bildschirm ein, friert der Browser die
+   * Zeitgeber ein und der Stream ist beim Aufwachen oft tot, ohne dass ein
+   * Fehler ankommt. Ohne Anstoss haengt die Anzeige bis der Watchdog nach
+   * 2,5 Minuten zuschlaegt.
+   */
+  kickInform() {
+    if (this._informAbort) this._informAbort.abort();
+  }
+
   /** Eine inform-Zeile parsen: ["<dev>-<reading>","<raw>","<formatiert>"]. */
   _handleInformLine(line, onEvent) {
     let arr;
@@ -153,9 +199,15 @@ export class FhemClient {
     onEvent && onEvent(id, value);
   }
 
-  /** Schreibenden Befehl (set/attr) absetzen (CSRF via _url). */
+  /**
+   * Schreibenden Befehl (set/attr) absetzen (CSRF via _cmdFetch).
+   * Wirft bei einer Fehlerantwort - vorher wurde der Fehlertext einfach
+   * zurueckgegeben, ein abgewiesener Schaltbefehl sah also aus wie Erfolg.
+   */
   async command(cmd) {
-    const r = await fetch(this._url(cmd), { credentials: "same-origin" });
-    return r.text();
+    const r = await this._cmdFetch(cmd);
+    const text = await r.text();
+    if (!r.ok) throw new Error(`${cmd}: HTTP ${r.status} ${text.trim()}`);
+    return text;
   }
 }
