@@ -155,14 +155,26 @@ export class FhemvizMealplan extends FhemvizWidget {
     return (DAYS.find((d) => d.js === js) || DAYS[0]).key;
   }
 
+  /**
+   * Die sieben Tage, beginnend bei HEUTE. Die Readings sind nach Wochentag
+   * benannt (mo..so), der Plan dahinter ist aber ein rollendes Fenster ab
+   * heute: an einem Freitag steht in `mo` der kommende Montag. Deshalb wird
+   * die Liste rotiert statt starr bei Montag angefangen - sonst zeigte die
+   * Kachel oben Tage, die schon vorbei sind.
+   */
   _days() {
     const heute = this._todayKey();
-    return DAYS.map((d) => ({
+    const start = Math.max(0, DAYS.findIndex((d) => d.key === heute));
+    const reihenfolge = [...DAYS.slice(start), ...DAYS.slice(0, start)];
+    return reihenfolge.map((d) => ({
       ...d,
       name: this._reading(d.key),
       stars: Number(this._reading(`${d.key}_sterne`)) || 0,
       img: this._reading(`${d.key}_bild`),
       status: this._reading(`${d.key}_status`),
+      // Nur gefüllt, wenn das Gerät die Datums-Readings anbietet (ab
+      // BRING-Interface v1.14) - fehlen sie, entfällt die Zeile einfach.
+      datum: this._reading(`${d.key}_datum`),
       isToday: d.key === heute,
     }));
   }
