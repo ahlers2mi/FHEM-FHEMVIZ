@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Wasservorrat-Widget (v0.35.0).
+ * FHEMVIZ - Wasservorrat-Widget (v0.35.1).
  *
  * Zeichnet die Regenwasseranlage als lebendiges Schema: Dach und Fallrohr,
  * Regenfass mit Schwimmerhoehe, gestapelte IBC, dazwischen Pumpen- und
@@ -233,14 +233,14 @@ export class FhemvizWatertank extends FhemvizWidget {
 
     const barrelTxt =
       barrelL === null
-        ? ""
+        ? `<text class="wt-empty" x="74" y="78" text-anchor="middle">kein Wert</text>`
         : `<text class="wt-num" x="74" y="${
             barrelFrac > 0.62 ? 49 : 98 - 46 * barrelFrac - 3
           }" text-anchor="middle">${this._fmt(barrelL)} l</text>`;
 
     const ibcTxt =
       ibcL === null
-        ? ""
+        ? `<text class="wt-empty" x="176" y="60" text-anchor="middle">kein Wert</text>`
         : `<text class="wt-num" x="176" y="${
             ibcFrac > 0.82 ? 10 : IBC_BOT - (IBC_BOT - IBC_TOP) * ibcFrac - 3
           }" text-anchor="middle">${this._fmt(ibcL)} l</text>`;
@@ -347,19 +347,30 @@ export class FhemvizWatertank extends FhemvizWidget {
 
         .wt-schema { width: 100%; flex: 1 1 auto; min-height: 0; display: block; }
         .wt-schema text { font-family: inherit; }
-        .wt-t { font-size: 7px; fill: var(--viz-muted); }
+        .wt-t { font-size: 7.5px; fill: var(--viz-muted); }
         .wt-num { font-size: 8.5px; font-weight: 600; fill: var(--viz-text); }
-        .wt-vessel { fill: var(--viz-raised); stroke: var(--viz-border); stroke-width: 1; }
-        .wt-cage { stroke: var(--viz-border); stroke-width: 0.6; fill: none; }
-        .wt-roof { stroke: var(--viz-muted); stroke-width: 1.4; fill: none; stroke-linecap: round; }
-        .wt-pipe { stroke: var(--viz-border); stroke-width: 1.6; fill: none; stroke-linecap: round; }
-        .wt-pipe.live { stroke: var(--viz-water-rain); }
-        .wt-pipe.mains { stroke: var(--viz-water-mains); }
-        .wt-pump { fill: var(--viz-raised); stroke: var(--viz-border); stroke-width: 1; }
+        .wt-vessel {
+          fill: color-mix(in srgb, var(--viz-muted) 16%, transparent);
+          stroke: color-mix(in srgb, var(--viz-muted) 70%, transparent);
+          stroke-width: 1.2;
+        }
+        .wt-cage { stroke: color-mix(in srgb, var(--viz-muted) 42%, transparent); stroke-width: 0.7; fill: none; }
+        .wt-roof { stroke: var(--viz-muted); stroke-width: 1.6; fill: none; stroke-linecap: round; }
+        .wt-pipe {
+          stroke: color-mix(in srgb, var(--viz-muted) 75%, transparent);
+          stroke-width: 1.9; fill: none; stroke-linecap: round;
+        }
+        .wt-pipe.live { stroke: var(--viz-water-rain); stroke-width: 2.2; }
+        .wt-pipe.mains { stroke: var(--viz-water-mains); stroke-width: 2.2; }
+        .wt-pump {
+          fill: color-mix(in srgb, var(--viz-muted) 28%, transparent);
+          stroke: color-mix(in srgb, var(--viz-muted) 75%, transparent); stroke-width: 1.2;
+        }
         .wt-pump.on { fill: var(--viz-water-rain); stroke: var(--viz-water-rain); }
-        .wt-rain { fill: var(--viz-water-rain); opacity: 0.72; }
-        .wt-mains { fill: var(--viz-water-mains); opacity: 0.6; }
-        .wt-float { stroke: var(--viz-water-mains); stroke-width: 0.9; stroke-dasharray: 2.5 2; fill: none; }
+        .wt-rain { fill: var(--viz-water-rain); opacity: 0.85; }
+        .wt-mains { fill: var(--viz-water-mains); opacity: 0.7; }
+        .wt-float { stroke: var(--viz-water-mains); stroke-width: 1.1; stroke-dasharray: 2.5 2; fill: none; }
+        .wt-empty { font-size: 8px; fill: var(--viz-muted); opacity: 0.8; }
         .wt-drop { fill: var(--viz-water-rain); opacity: 0.85; animation: wtfall 1.4s linear infinite; }
         .wt-drop:nth-of-type(2) { animation-delay: 0.45s; }
         .wt-drop:nth-of-type(3) { animation-delay: 0.9s; }
