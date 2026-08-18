@@ -1,4 +1,4 @@
-UPD 2026-08-18_13:33:43 83912 FHEM/98_FHEMVIZ.pm
+UPD 2026-08-18_15:31:55 83912 FHEM/98_FHEMVIZ.pm
 UPD 2026-07-26_16:02:19 203778 www/fhemviz/backgrounds/cubes.png
 UPD 2026-08-18_13:33:43 24449 www/fhemviz/css/fhemviz.css
 UPD 2026-07-27_22:14:28 3735 www/fhemviz/css/skin-bento.css
@@ -11,7 +11,7 @@ UPD 2026-08-11_19:21:37 3498 www/fhemviz/icons/icon-180.png
 UPD 2026-08-11_19:21:37 3975 www/fhemviz/icons/icon-192.png
 UPD 2026-08-11_19:21:37 11425 www/fhemviz/icons/icon-512.png
 UPD 2026-08-06_06:22:02 2169 www/fhemviz/index.html
-UPD 2026-08-18_13:33:43 67436 www/fhemviz/js/app.js
+UPD 2026-08-18_15:31:55 67436 www/fhemviz/js/app.js
 UPD 2026-08-16_18:23:01 8110 www/fhemviz/js/fhem-client.js
 UPD 2026-08-05_05:50:13 38993 www/fhemviz/js/layout.js
 UPD 2026-08-03_15:34:35 5715 www/fhemviz/js/store.js
@@ -40,6 +40,6 @@ UPD 2026-07-23_08:06:59 4754 www/fhemviz/js/widgets/text.js
 UPD 2026-08-02_09:02:12 4267 www/fhemviz/js/widgets/vent.js
 UPD 2026-08-02_09:02:12 6611 www/fhemviz/js/widgets/ventgroup.js
 UPD 2026-07-23_06:10:25 7658 www/fhemviz/js/widgets/watering.js
-UPD 2026-08-18_13:33:43 17879 www/fhemviz/js/widgets/watertank.js
+UPD 2026-08-18_15:31:55 18458 www/fhemviz/js/widgets/watertank.js
 UPD 2026-07-21_17:49:51 6596 www/fhemviz/js/widgets/weather.js
 UPD 2026-08-15_08:23:06 605 www/fhemviz/manifest.webmanifest
