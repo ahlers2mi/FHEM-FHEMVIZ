@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.34.52
+# Version:  v0.35.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.34.52";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.35.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -89,7 +89,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 #                   out_leistung:Haus:W:bad,netzleistung_all:Netz:W:ok,
 #                   batterie_leistung:Batterie:W:warn
 my @FHEMVIZ_DEV_ATTRS = (
-    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,image,solvis,mediagroup,car,cameragroup,mealplan",
+    "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,watertank,image,solvis,mediagroup,car,cameragroup,mealplan",
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:1,0",
     "vizHide:1,0",
@@ -342,7 +342,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.34.52"),
+            FHEMVIZ_jsonStr("v0.35.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -749,7 +749,7 @@ sub FHEMVIZ_Attr {
   registriert, erscheinen im Attribut-Dropdown jedes Geräts)
   <ul>
     <li><a id="FHEMVIZ-attr-vizWidget"></a><b>vizWidget</b>
-        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering|car|cameragroup|mealplan<br>
+        switch|sensor|dimmer|shutter|shuttergroup|actions|text|agenda|contact|vent|flow|forecast|weather|chart|watering|watertank|car|cameragroup|mealplan<br>
         Widget-Typ erzwingen; übersteuert genericDeviceType/webCmd/Heuristik
         und die Rausch-Filter (Gerät wird immer angezeigt). Automatisch
         erkannt werden u. a. <code>genericDeviceType</code>
@@ -887,6 +887,9 @@ sub FHEMVIZ_Attr {
         <code>watering</code> = Gartenbewässerung mit Status, Fass-Füllstand,
         Bodenfeuchte und Bedien-Buttons (siehe <code>vizWatering</code> /
         <code>vizWateringButtons</code>),
+        <code>watertank</code> = Regenwasseranlage als lebendiges Schema: Dach,
+        Fallrohr, Fass mit Schwimmerhöhe, gestapelte IBC und die Wege dazwischen
+        (siehe <code>vizTank</code>),
         <code>car</code> = Fahrzeug/E-Auto: gro&szlig;er Ladestand, Reichweite
         und ein Akkubalken, in dem der wei&szlig;e Strich das
         <b>Wunschlimit</b> markiert und die blasse Fl&auml;che davor zeigt, was
@@ -1108,6 +1111,36 @@ sub FHEMVIZ_Attr {
         aktives Ventil, den Fass-Füllstand als Balken, Bodenfeuchte
         (schwellwert-gefärbt), Restzeit, Zyklus und einen Regen-Hinweis.
         Meist genügt der Default (kein Attribut nötig).</li>
+    <li><a id="FHEMVIZ-attr-vizTank"></a><b>vizTank</b><br>
+        Typ: textField-long. Feinzuordnung der Wasservorrat-Kachel
+        (<code>vizWidget watertank</code>) als <code>rolle=reading</code>-Liste,
+        kommasepariert. Sinnvoll mit <code>vizSize 2x2</code>.<br>
+        Die Kachel zeichnet die Anlage als Schema und füllt Fass und IBC in
+        <b>Litern</b>. Rollen (Default in Klammern): <code>barrel</code>
+        (barrelLevel_l), <code>ibc</code> (ibcLevel_l), <code>rainTotal</code>
+        (pumpedRain_total_l), <code>mainsTotal</code> (mains_total_l),
+        <code>harvestToday</code> (harvest_today_l), <code>rainAmount</code>
+        (rainAmount_mm), <code>raining</code> (raining), <code>alert</code>
+        (rainCollectionAlert), <code>sinceFill</code> (rainSinceFill_mm),
+        <code>filling</code> (ibcFilling), <code>returning</code>
+        (ibcToBarrelActive), <code>mains</code> (mainsSupply),
+        <code>fillRate</code> (ibcFillFlow_lpm), <code>valve</code>
+        (currentValveName).<br>
+        Die Größen kommen aus den <b>Attributen des Geräts</b>:
+        <code>barrelUsableVolume</code>, <code>barrelFloatLevel</code> (die
+        gestrichelte Linie im Fass) und <code>ibcUsableVolume</code>. Ohne sie
+        bleiben die Behälter leer – geraten wird nichts.<br>
+        <b>Zwei Wasserfarben:</b> Regenwasser cyan, Leitungswasser stumpfes
+        Graublau. Der Anteil im IBC stammt aus dem Verhältnis
+        <code>mains_total_l</code> zu <code>pumpedRain_total_l</code>; im Fass
+        gilt alles unterhalb der Schwimmerhöhe als Leitungswasser, solange
+        <code>mainsSupply</code> offen ist. Fehlen die Summen, bleibt alles cyan.<br>
+        Je angefangene 1000&nbsp;l <code>ibcUsableVolume</code> wird ein
+        Behälter gezeichnet (2000&nbsp;l = zwei gestapelte);
+        <code>vizTankBoxes</code> überschreibt das.<br>
+        Bedien-Buttons übernimmt die Kachel aus <code>vizWateringButtons</code>,
+        eigene gehen über <code>vizTankButtons</code> (gleiche Schreibweise);
+        ein einzelner Bindestrich schaltet sie hier ab.</li>
     <li><a id="FHEMVIZ-attr-vizCar"></a><b>vizCar</b><br>
         Typ: textField-long. Feinzuordnung der Fahrzeug-Kachel als
         <code>rolle=wert</code>-Liste (kommasepariert). Rollen

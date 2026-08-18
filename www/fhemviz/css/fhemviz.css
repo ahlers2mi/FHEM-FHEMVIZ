@@ -19,6 +19,8 @@
   --viz-warn: #ed6c02;
   --viz-error: #cc3b3b;
   --viz-action: #2f6feb;   /* bedienbare Elemente */
+  --viz-water-rain: #2a93bd;   /* gesammeltes Regenwasser */
+  --viz-water-mains: #8a95a3;  /* Leitungswasser - bewusst stumpf */
   --viz-radius: 14px;
   --viz-gap: 12px;
   --viz-tile-min: 180px;
@@ -38,6 +40,8 @@
     --viz-warn: #ffab40;
     --viz-error: #ff5d5d;
     --viz-action: #4c8dff;
+    --viz-water-rain: #4fc3e8;
+    --viz-water-mains: #767f8c;
   }
 }
 [data-theme="dark"] {
@@ -45,12 +49,14 @@
   --viz-border: #262c35; --viz-text: #e8eaed; --viz-muted: #77808c;
   --viz-accent: #ffb020; --viz-ok: #34c77b; --viz-warn: #ffab40;
   --viz-error: #ff5d5d; --viz-action: #4c8dff;
+  --viz-water-rain: #4fc3e8; --viz-water-mains: #767f8c;
 }
 [data-theme="light"] {
   --viz-bg: #eef0f2; --viz-surface: #ffffff; --viz-raised: #e4e7ea;
   --viz-border: #d8dce1; --viz-text: #1b1e23; --viz-muted: #5d646e;
   --viz-accent: #c97a06; --viz-ok: #1e9e5f; --viz-warn: #ed6c02;
   --viz-error: #cc3b3b; --viz-action: #2f6feb;
+  --viz-water-rain: #2a93bd; --viz-water-mains: #8a95a3;
 }
 
 /* Grundlayout --------------------------------------------------------------- */

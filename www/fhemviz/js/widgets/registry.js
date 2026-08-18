@@ -27,6 +27,7 @@ import { FhemvizForecast } from "./forecast.js";
 import { FhemvizWeather } from "./weather.js";
 import { FhemvizChart } from "./chart.js";
 import { FhemvizWatering } from "./watering.js";
+import { FhemvizWatertank } from "./watertank.js";
 import { FhemvizImage } from "./image.js";
 import { FhemvizCar } from "./car.js";
 import { FhemvizCameraGroup } from "./cameragroup.js";
@@ -53,6 +54,7 @@ export const WIDGET_REGISTRY = {
   weather: "fhemviz-weather",
   chart: "fhemviz-chart",
   watering: "fhemviz-watering",
+  watertank: "fhemviz-watertank",
   image: "fhemviz-image",
   car: "fhemviz-car",
   cameragroup: "fhemviz-cameragroup",
@@ -96,6 +98,7 @@ export function registerCoreWidgets() {
     ["fhemviz-weather", FhemvizWeather],
     ["fhemviz-chart", FhemvizChart],
     ["fhemviz-watering", FhemvizWatering],
+    ["fhemviz-watertank", FhemvizWatertank],
     ["fhemviz-image", FhemvizImage],
     ["fhemviz-car", FhemvizCar],
     ["fhemviz-cameragroup", FhemvizCameraGroup],
