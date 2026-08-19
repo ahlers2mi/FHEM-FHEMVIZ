@@ -676,7 +676,10 @@ class TvController {
     this.pageTimers.forEach(clearTimeout);
     this.pageTimers = [];
     clearInterval(this._clockTimer);
-    clearInterval(this._cpTimer); // Uhr-Seite (#uhr) nicht weiterlaufen lassen
+    // Uhr-Seite (#uhr) nicht weiterlaufen lassen - und ihre ausgeblendete
+    // Kopfleiste zurueckholen, sonst fehlen headerInfo/statusBar in der
+    // Tablet-Ansicht, bis die Rotation wieder eine Seite zeigt.
+    this._leaveClockPage();
     document.body.classList.remove("viz-alert");
     el("viz-clock").hidden = true;
     el("viz-progress").hidden = true;
@@ -687,6 +690,21 @@ class TvController {
   /** Feste TV-Flaeche vermessen (siehe measureViewport). */
   _fit() {
     measureViewport();
+  }
+
+  /**
+   * Uhr-Seite verlassen. Ihr Sekundentakt (_cpTimer) rendert die Uhr immer
+   * wieder in dieselbe Flaeche - wer sie nicht abstellt, dem ueberschreibt
+   * sie die frisch gezeigte Szene nach spaetestens einer Sekunde. Dazu die
+   * Kopfleiste zurueckholen, die nur auf der Uhr-Seite ausgeblendet ist.
+   */
+  _leaveClockPage() {
+    clearInterval(this._cpTimer);
+    this._cpTimer = null;
+    if (document.body.classList.contains("viz-clockonly")) {
+      document.body.classList.remove("viz-clockonly");
+      this._fit();
+    }
   }
 
   _tickClock() {
@@ -813,6 +831,7 @@ class TvController {
     }
     clearTimeout(this.timer);
     clearTimeout(this.eventTimer);
+    this._leaveClockPage();
     document.body.classList.add("viz-alert");
     this._render(resolved);
     this._page(sec, sceneLabel(resolved) + " · Event");
@@ -859,6 +878,7 @@ class TvController {
     // Blaettertakt aus tvScenes uebernehmen, sonst 20 s pro Durchlauf.
     const sc = this.scenes.find((s) => s.room === this.pinned);
     const sec = sc ? sc.sec : 20;
+    this._leaveClockPage();
     this._render(this.pinned);
     // Kein Fortschrittsbalken: die Seite laeuft nicht ab.
     el("viz-progress").classList.remove("run");
