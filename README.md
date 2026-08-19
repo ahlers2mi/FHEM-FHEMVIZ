@@ -115,7 +115,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 `switch` · `sensor` · `dimmer` · `shutter` · `actions` · `text` · `agenda` ·
 `contact` · `vent` · `flow` · `forecast` · `weather` · `chart` · `watering` ·
-`image` · `solvis` · `car`
+`watertank` · `image` · `solvis` · `car` · `mealplan`
 
 **Gruppen-Kacheln** — EINE Kachel für ein `structure`-Gerät, mit einer Zeile
 je Mitglied (die Mitglieder müssen im `devspec` liegen, dürfen aber per
@@ -204,6 +204,24 @@ define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
 
 Der rote Rahmen signalisiert die Event-Übernahme; nach Ablauf kehrt die
 Rotation automatisch zurück.
+
+### Uhr-Seite `#uhr` als Szene
+
+`#uhr` (auch `#uebersicht`) ist kein Raum, sondern eine eigene Seite in der
+Rotation: große Uhrzeit und Datum, darunter die Kennzahlen aus `headerInfo`
+und je `statusBar`-Eintrag eine Zeile. Sie braucht keine eigene
+Konfiguration — gezeigt wird, was für Kopfzeile und Statusleiste ohnehin
+eingerichtet ist:
+
+```
+attr myViz tvScenes #uhr:20,Solar:30,Wohnzimmer:20
+```
+
+Auf dieser Seite entfällt die Kopfleiste, sonst stünde alles doppelt auf dem
+Schirm; Titel und Statuszeile bleiben. Als einzige Seite rendert sie sich im
+Sekundentakt neu, damit die Uhr läuft — dieser Takt wird beim Verlassen
+abgeräumt (`set … scene`, `set … page`, Touch-Übernahme). Vor **v0.35.2**
+lief er weiter und übermalte die neue Seite nach einer Sekunde wieder.
 
 ### Webseite/Kamerabild einblenden: `set myViz show`
 
