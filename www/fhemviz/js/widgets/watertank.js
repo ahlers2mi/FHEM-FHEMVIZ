@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Wasservorrat-Widget (v0.35.1).
+ * FHEMVIZ - Wasservorrat-Widget (v0.35.2).
  *
  * Zeichnet die Regenwasseranlage als lebendiges Schema: Dach und Fallrohr,
  * Regenfass mit Schwimmerhoehe, gestapelte IBC, dazwischen Pumpen- und
@@ -40,6 +40,8 @@ const DEFAULT_MAP = {
   returning: "ibcToBarrelActive",
   mains: "mainsSupply",
   fillRate: "ibcFillFlow_lpm",
+  fillStarted: "ibcFillStarted",
+  returnRate: "ibcToBarrelFlow_lpm",
   valve: "currentValveName",
 };
 
@@ -75,6 +77,17 @@ export class FhemvizWatertank extends FhemvizWidget {
 
   _isYes(v) {
     return /^(yes|ja|on|true|1)$/i.test(String(v).trim());
+  }
+
+  /** Sekunden seit einem FHEM-Zeitstempel; null, wenn unbrauchbar. */
+  _since(stamp) {
+    const m = String(stamp).match(/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d):(\d\d)/);
+    if (!m) return null;
+    const t = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime();
+    const secs = (Date.now() - t) / 1000;
+    // Ein alter Zeitstempel waere ein stehengebliebenes Reading - dann lieber
+    // nicht mitrechnen, sonst wandert die Anzeige ins Nirgendwo.
+    return secs >= 0 && secs < 6 * 3600 ? secs : null;
   }
 
   /** Zahl mit deutschem Komma, ohne ueberfluessige Nullen. */
@@ -162,8 +175,31 @@ export class FhemvizWatertank extends FhemvizWidget {
       barrelMainsFrac = Math.min(1, floatL / barrelL);
     }
 
-    const barrelFrac = barrelCap ? (barrelL ?? 0) / barrelCap : 0;
-    const ibcFrac = ibcCap ? (ibcL ?? 0) / ibcCap : 0;
+
+    // Das Modul bucht das bewegte Volumen erst am ENDE eines Laufs. Ohne
+    // Zutun stuenden beide Behaelter waehrend der Foerderung still, obwohl das
+    // Rohr leuchtet - vier Minuten lang fliesst sichtbar Wasser, das nirgends
+    // ankommt. Hier wird deshalb mitgerechnet, bis die echte Buchung kommt.
+    // Positiv = vom Fass in den IBC.
+    let moved = 0;
+    if (filling) {
+      const rate = this._n(map, "fillRate");
+      const secs = this._since(this._r(map, "fillStarted"));
+      if (rate > 0 && secs !== null) moved = Math.min((rate * secs) / 60, barrelL ?? 0);
+    } else if (returning) {
+      const rate = this._n(map, "returnRate");
+      const secs = this._since((this.device.times || {})[map.returning] || "");
+      if (rate > 0 && secs !== null) moved = -Math.min((rate * secs) / 60, ibcL ?? 0);
+    }
+    this._live = filling || returning;
+
+    const clamp = (v, cap) =>
+      v === null ? null : Math.max(0, cap ? Math.min(cap, v) : v);
+    const barrelShown = clamp(barrelL === null ? null : barrelL - moved, barrelCap);
+    const ibcShown = clamp(ibcL === null ? null : ibcL + moved, ibcCap);
+
+    const barrelFrac = barrelCap ? (barrelShown ?? 0) / barrelCap : 0;
+    const ibcFrac = ibcCap ? (ibcShown ?? 0) / ibcCap : 0;
 
     // Ein IBC je angefangene 1000 l - bei 2000 l stehen zwei uebereinander,
     // so wie in der Anlage. vizTankBoxes ueberschreibt das.
@@ -232,26 +268,26 @@ export class FhemvizWatertank extends FhemvizWidget {
       : "";
 
     const barrelTxt =
-      barrelL === null
+      barrelShown === null
         ? `<text class="wt-empty" x="74" y="78" text-anchor="middle">kein Wert</text>`
         : `<text class="wt-num" x="74" y="${
             barrelFrac > 0.62 ? 49 : 98 - 46 * barrelFrac - 3
-          }" text-anchor="middle">${this._fmt(barrelL)} l</text>`;
+          }" text-anchor="middle">${this._fmt(barrelShown)} l</text>`;
 
     const ibcTxt =
-      ibcL === null
+      ibcShown === null
         ? `<text class="wt-empty" x="176" y="60" text-anchor="middle">kein Wert</text>`
         : `<text class="wt-num" x="176" y="${
             ibcFrac > 0.82 ? 10 : IBC_BOT - (IBC_BOT - IBC_TOP) * ibcFrac - 3
-          }" text-anchor="middle">${this._fmt(ibcL)} l</text>`;
+          }" text-anchor="middle">${this._fmt(ibcShown)} l</text>`;
 
     // Restzeit bis voll - nur waehrend einer Befuellung und nur mit gelernter Rate.
     let hint = "";
-    if (filling && ibcCap && ibcL !== null) {
+    if (filling && ibcCap && ibcShown !== null) {
       const rate = this._n(map, "fillRate");
-      if (rate && rate > 0 && ibcCap > ibcL) {
+      if (rate && rate > 0 && ibcCap > ibcShown) {
         hint = `<text class="wt-t" x="176" y="${IBC_TOP - 5}" text-anchor="middle">voll in ${this._fmt(
-          (ibcCap - ibcL) / rate
+          (ibcCap - ibcShown) / rate
         )} min</text>`;
       }
     }
@@ -259,7 +295,7 @@ export class FhemvizWatertank extends FhemvizWidget {
     const schema = `
       <svg class="wt-schema" viewBox="0 0 220 108" preserveAspectRatio="xMidYMid meet"
            role="img" aria-label="${this.escape(
-             `Wasservorrat: Fass ${this._fmt(barrelL)} Liter, IBC ${this._fmt(ibcL)} Liter`
+             `Wasservorrat: Fass ${this._fmt(barrelShown)} Liter, IBC ${this._fmt(ibcShown)} Liter`
            )}">
         <path class="wt-roof" d="M8 30 L60 12"/><path class="wt-roof" d="M8 30 L64 30"/>
         ${drops}${downpipe}
@@ -280,8 +316,8 @@ export class FhemvizWatertank extends FhemvizWidget {
     if (today !== null) figs.push({ v: this._fmt(today, 1), u: "l", k: "heute geerntet", rain: 1 });
     const rainMm = this._n(map, "rainAmount");
     if (rainMm !== null) figs.push({ v: this._fmt(rainMm, 1), u: "mm", k: "Regen im Fenster" });
-    if (ibcCap && ibcL !== null) {
-      figs.push({ v: this._fmt((ibcL / ibcCap) * 100), u: "%", k: "IBC" });
+    if (ibcCap && ibcShown !== null) {
+      figs.push({ v: this._fmt((ibcShown / ibcCap) * 100), u: "%", k: "IBC" });
     }
     const figHtml = figs.length
       ? `<div class="wt-figs">` +
@@ -428,5 +464,17 @@ export class FhemvizWatertank extends FhemvizWidget {
       const def = defs[parseInt(btn.dataset.i, 10)];
       if (def) btn.addEventListener("click", () => this.sendCommand(def.cmd));
     });
+
+    // Waehrend eines Laufs alle 5 s neu zeichnen. Die Readings aendern sich in
+    // der Zeit nicht, es gaebe also sonst keinen Anlass zum Neuzeichnen - und
+    // die mitgerechneten Fuellstaende stuenden trotzdem still.
+    clearInterval(this._tick);
+    this._tick = this._live ? setInterval(() => this._paint(), 5000) : null;
+  }
+
+  disconnectedCallback() {
+    clearInterval(this._tick);
+    this._tick = null;
+    super.disconnectedCallback();
   }
 }
