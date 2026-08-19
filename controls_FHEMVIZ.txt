@@ -11,7 +11,7 @@ UPD 2026-08-11_19:21:37 3498 www/fhemviz/icons/icon-180.png
 UPD 2026-08-11_19:21:37 3975 www/fhemviz/icons/icon-192.png
 UPD 2026-08-11_19:21:37 11425 www/fhemviz/icons/icon-512.png
 UPD 2026-08-06_06:22:02 2169 www/fhemviz/index.html
-UPD 2026-08-19_13:27:08 67436 www/fhemviz/js/app.js
+UPD 2026-08-19_13:40:11 68195 www/fhemviz/js/app.js
 UPD 2026-08-16_18:23:01 8110 www/fhemviz/js/fhem-client.js
 UPD 2026-08-05_05:50:13 38993 www/fhemviz/js/layout.js
 UPD 2026-08-03_15:34:35 5715 www/fhemviz/js/store.js
