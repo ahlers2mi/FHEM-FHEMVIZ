@@ -288,13 +288,23 @@ html[data-vizmode="tv"] .viz-hero > * { min-height: 150px; }
   min-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px) - 90px);
 }
 /* Fernseher: #fhemviz-app ist schon genau einen Schirm hoch und ein
- * Flex-Container - das Band nimmt den ganzen Rest, die Gruppen darunter
- * fallen weg (sie waeren nur angeschnitten, hier wird nie gescrollt). */
+ * Flex-Container - das Band bekommt GENAU diese Hoehe, die Gruppen darunter
+ * fallen weg (sie waeren nur angeschnitten, hier wird nie gescrollt).
+ *
+ * height:100% statt flex:1 - das ist der Unterschied zwischen "passt" und
+ * "ragt hinaus". Mit flex:1 bleibt die Flex-Basis der INHALT: eine Kachel,
+ * die von sich aus hoeher wird (watertank rechnet seine SVG-Hoehe aus der
+ * Breite, mealplan hat sieben feste Zeilen), wuchs ueber den Schirm hinaus
+ * und das Auto-Paging blaetterte mitten durch die Zeichnung ("1/2").
+ * Mit einer festen Hoehe ist die Karte definiert hoch, und die Kachel
+ * schrumpft von innen hinein (SVG mit preserveAspectRatio, flex:1 1 auto). */
 html[data-vizmode="tv"] .viz-hero.full {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
-html[data-vizmode="tv"] .viz-hero.full > * { min-height: 0; }
+html[data-vizmode="tv"] .viz-hero.full > * { min-height: 0; height: 100%; }
 html[data-vizmode="tv"] .viz-room.hero-full > .viz-groups { display: none; }
 .viz-groups {
   display: flex; flex-wrap: wrap; align-items: start;

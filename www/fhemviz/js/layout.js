@@ -826,8 +826,11 @@ export function renderLayout(root, store, client, opts = {}) {
           // 2x1 (breit, aber nicht die riesige 2x2-Typo) - sonst wird der
           // Inhalt bei schmaleren Layouts (z. B. width 1000) abgeschnitten.
           // Bei "full" ist der Platz da: groesste Typo (2x2), fuer die Ferne.
-          if (heroFull) w.setAttribute("data-size", "2x2");
-          else if (!w.getAttribute("data-size")) w.setAttribute("data-size", "2x1");
+          // Ein am Geraet gesetztes vizSize hat aber Vorrang - das Ueber-
+          // schreiben machte aus einer bewusst kleinen Kachel eine riesige.
+          if (!w.getAttribute("data-size")) {
+            w.setAttribute("data-size", heroFull ? "2x2" : "2x1");
+          }
           // Auch im Hero-Band die Werkzeuge anbieten: sonst waere "Hero" eine
           // Einbahnstrasse - die Kachel verlaesst das Raster und man kaeme
           // nicht mehr an den Schalter, um sie zurueckzuholen.
