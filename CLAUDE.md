@@ -1,0 +1,95 @@
+# FHEMVIZ – Arbeitsweise und Projektwissen
+
+## Ablauf bei Änderungen (wichtig)
+
+Der Nutzer arbeitet in dieser Reihenfolge:
+
+```
+ich: denken, ändern, testen  →  PR
+Nutzer: mergen  →  Branch löschen  →  in FHEM: update  →  reload 98_FHEMVIZ  →  modify
+```
+
+Daraus folgt für **jede** Änderungsrunde:
+
+1. **Vor dem Anfangen** `git fetch origin main` und den Arbeitsbranch auf
+   `origin/main` setzen bzw. darauf rebasen. Der Branch wird nach jedem Merge
+   gelöscht; ein lokal noch vorhandener Branch enthält damit gemergte
+   Geschichte, die nicht erneut in einen PR gehört.
+2. **Nach dem Push immer prüfen, ob ein OFFENER PR existiert** – und wenn
+   nicht, einen neuen anlegen. Ein gemergter PR nimmt keine weiteren Commits
+   auf: sie liegen dann unsichtbar auf dem Branch, während der Nutzer glaubt,
+   alles sei drin.
+   > **Das Warnsignal steht in der Push-Ausgabe:** schreibt der Server
+   > `remote: Create a pull request for '<branch>' … by visiting`, dann gibt es
+   > für diesen Branch **keinen** offenen PR. Diese Zeile ist zweimal
+   > übersehen worden, und beide Male fehlten dem Nutzer die Fixes.
+3. Ein PR pro Runde. Merkt der Nutzer währenddessen etwas an, kommt es in
+   denselben PR – solange er noch offen ist.
+
+## Versionsnummer: vier Stellen
+
+Die Zahl steht an **vier** Stellen und muss überall gleich sein, sonst meldet
+die Oberfläche bei jedem Laden einen Versionskonflikt:
+
+1. Kopfkommentar `# Version:` in `FHEM/98_FHEMVIZ.pm`
+2. `my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v…"`
+3. die Ausgabe von `get config` (`FHEMVIZ_jsonStr("v…")`)
+4. `SPA_VERSION` in `www/fhemviz/js/app.js`
+
+**Nicht pauschal per `sed` ersetzen.** Im POD stehen „ab v0.x.y"-Angaben, die
+die *Einführungsversion* eines Attributs nennen – ein `sed 's/v0.35.3/v0.35.4/g'`
+zieht die mit hoch und behauptet dann etwas Falsches. Gezielt die vier Zeilen
+ändern und danach `grep` gegenprüfen.
+
+`controls_FHEMVIZ.txt` **nie** von Hand anfassen – das pflegt ein Workflow auf
+`main`.
+
+## Änderungen wirklich prüfen: FHEMWEB-Attrappe + Playwright
+
+Layout-Fehler lassen sich nicht am Code erraten – zweimal ist genau das
+schiefgegangen (`vizHero full` ragte über den Schirm, obwohl die CSS-Regel
+„richtig" aussah). Die Umgebung hier hat Chromium und Playwright, damit geht
+ein echter Test:
+
+- Ein kleiner Node-Server bedient die **drei** Endpunkte, die die SPA braucht:
+  `?cmd=get <viz> config` (Konfigurations-JSON), `?cmd=jsonlist2 <devspec>`
+  (`{Results:[{Name,Internals,Attributes,PossibleSets,Readings}]}`) und
+  `?XHR=1&inform=…` (Longpoll – Antwort offen lassen, nie beenden).
+  Statische Dateien unter `/fhem/fhemviz/` ausliefern.
+- Gerätedaten aus dem Repo `FHEM-Instanz` nehmen (`fhem.cfg` für Attribute,
+  `fhem.save` für Readings) – dann prüft man den echten Fall, nicht ein
+  Fantasiegerät.
+- Playwright mit `executablePath: "/opt/pw-browsers/chromium"`, Viewport
+  1280×800, URL `…/index.html?mode=tv&device=myViz&width=1000`.
+- **Nicht nur schauen, messen.** Der verlässliche Prüfwert für „ragt etwas
+  hinaus" ist `app.scrollHeight - app.clientHeight` (muss 0 sein) am Element
+  `#fhemviz-app`; dazu die Kopfzeile: steht dort „· 1/2", blättert das
+  Auto-Paging, also passt es nicht.
+- Achtung: `getBoundingClientRect()` liefert im TV-Modus **skalierte** Werte
+  (`?width=` setzt `transform: scale()`), `getComputedStyle` dagegen CSS-Pixel.
+  Beim Vergleich der beiden Zahlen sonst falsche Schlüsse.
+
+## Bedienbarkeit: im TV-Modus ist alles readonly
+
+`app.js` setzt `readonly: tv || cfg.readonly === true`. Ein rotierender
+Wandschirm schaltet also nichts; ein Tipp wechselt über `tvTouch` in die
+bedienbare Tablet-Ansicht. **Jedes** Widget muss `this.readonly` prüfen, bevor
+es Knöpfe, Regler oder Schalter zeichnet – `mealplan` tat es nicht und zeigte
+auf dem Wandtablet Knöpfe, die nichts taten (`sendCommand()` prallt an
+derselben Prüfung ab).
+
+## Höhen im TV-Modus: die Kette muss durchgehen
+
+`html[data-vizmode="tv"] #fhemviz-app` ist genau einen Schirm hoch
+(`--viz-vh` minus Kopfhöhe) und ein Flex-Container. Dazwischen liegt aber
+`.viz-room`, und das hat von sich aus **keine** Höhe – ein `height: 100%` an
+einem Kind davon greift ins Leere (Prozent auf unbestimmte Höhe = `auto`).
+Wer eine Kachel auf Schirmhöhe bringen will, muss die Kette schließen:
+Raum zum Flex-Container machen, dann `flex` + `min-height: 0` nach unten
+durchreichen. `min-height: 0` ist Pflicht, sonst verweigert Flexbox das
+Schrumpfen unter die Inhaltshöhe.
+
+Kacheln, die ihre Höhe selbst ausrechnen, überlaufen sonst:
+`watertank` leitet die SVG-Höhe aus der Breite ab (viewBox 220:108),
+`mealplan` hat sieben feste Zeilen. Widgets erkennen den Vollbild-Fall am
+Attribut `data-hero="full"` und dürfen darauf reagieren.
