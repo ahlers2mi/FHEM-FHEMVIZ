@@ -245,17 +245,22 @@ export class FhemvizMealplan extends FhemvizWidget {
       )
       .join("");
 
+    // Nur im bedienbaren Modus, nicht TV/readonly - wie in jedem anderen
+    // Widget. Fehlte hier: sendCommand() prallt an this.readonly ohnehin ab,
+    // die Knoepfe standen auf dem Wandtablet also da UND taten nichts. Dazu
+    // nahmen sie in der Vollbild-Kachel die Hoehe weg, die den Tagen fehlte.
     const btn = (cmd, text) =>
-      this._canSet(cmd)
+      this._canSet(cmd) && !this.readonly
         ? `<button class="mp-btn" data-cmd="${this.escape(cmd)}">${text}</button>`
         : "";
 
-    const rateHtml = this._canSet("bewerten")
-      ? `<div class="mp-btns mp-rate">${RATINGS.map(
-          (r) =>
-            `<button class="mp-btn" data-cmd="bewerten ${r.cmd}" title="${r.title}">${r.icon}</button>`
-        ).join("")}</div>`
-      : "";
+    const rateHtml =
+      this._canSet("bewerten") && !this.readonly
+        ? `<div class="mp-btns mp-rate">${RATINGS.map(
+            (r) =>
+              `<button class="mp-btn" data-cmd="bewerten ${r.cmd}" title="${r.title}">${r.icon}</button>`
+          ).join("")}</div>`
+        : "";
 
     return `
       <style>${MEALPLAN_CSS}</style>
@@ -286,12 +291,16 @@ export class FhemvizMealplan extends FhemvizWidget {
           <div class="mp-days">${rows}</div>
 
           ${rateHtml}
-          <div class="mp-btns">
+          ${
+            this.readonly
+              ? ""
+              : `<div class="mp-btns">
             ${btn("wuerfeln_heute", "🎲 heute")}
             ${btn("wuerfeln_leere_tage", "🎲 freie Tage")}
             ${btn("einkaufsliste", "🛒 Einkauf")}
             ${btn("abgleichen", "↻ abgleichen")}
-          </div>
+          </div>`
+          }
         </div>
       </div>`;
   }
