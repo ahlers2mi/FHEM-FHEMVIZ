@@ -287,24 +287,31 @@ html[data-vizmode="tv"] .viz-hero > * { min-height: 150px; }
    * darunter und bleibt scrollbar. */
   min-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px) - 90px);
 }
-/* Fernseher: #fhemviz-app ist schon genau einen Schirm hoch und ein
- * Flex-Container - das Band bekommt GENAU diese Hoehe, die Gruppen darunter
- * fallen weg (sie waeren nur angeschnitten, hier wird nie gescrollt).
+/* Fernseher: die Kachel darf NICHT ueber den Schirm hinausragen - hier wird
+ * nie gescrollt, und das Auto-Paging blaettert sonst mitten durch die
+ * Zeichnung ("1/2" bei einer einzigen Kachel).
  *
- * height:100% statt flex:1 - das ist der Unterschied zwischen "passt" und
- * "ragt hinaus". Mit flex:1 bleibt die Flex-Basis der INHALT: eine Kachel,
- * die von sich aus hoeher wird (watertank rechnet seine SVG-Hoehe aus der
- * Breite, mealplan hat sieben feste Zeilen), wuchs ueber den Schirm hinaus
- * und das Auto-Paging blaetterte mitten durch die Zeichnung ("1/2").
- * Mit einer festen Hoehe ist die Karte definiert hoch, und die Kachel
- * schrumpft von innen hinein (SVG mit preserveAspectRatio, flex:1 1 auto). */
-html[data-vizmode="tv"] .viz-hero.full {
-  flex: 0 0 auto;
-  height: 100%;
+ * Dazu muss die Hoehe eine durchgehende Kette bilden. #fhemviz-app ist schon
+ * genau einen Schirm hoch und ein Flex-Container - aber DAZWISCHEN liegt
+ * .viz-room, und das hat von sich aus keine Hoehe. Ein height:100% am Band
+ * greift deshalb ins Leere (Prozent auf unbestimmte Hoehe = auto), genau
+ * daran ist der erste Versuch gescheitert. Also: der Raum wird selbst zum
+ * Flex-Container und nimmt die Restflaeche, das Band schrumpft darin.
+ * min-height:0 ist Pflicht, sonst verweigert Flexbox das Schrumpfen unter
+ * die Inhaltshoehe - und genau das braucht es hier. */
+html[data-vizmode="tv"] .viz-room.hero-full {
+  flex: 1 1 auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+html[data-vizmode="tv"] .viz-hero.full {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
   overflow: hidden;
 }
-html[data-vizmode="tv"] .viz-hero.full > * { min-height: 0; height: 100%; }
+html[data-vizmode="tv"] .viz-hero.full > * { min-height: 0; }
 html[data-vizmode="tv"] .viz-room.hero-full > .viz-groups { display: none; }
 .viz-groups {
   display: flex; flex-wrap: wrap; align-items: start;

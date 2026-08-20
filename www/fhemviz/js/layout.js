@@ -822,7 +822,10 @@ export function renderLayout(root, store, client, opts = {}) {
           // ein eigenes Layout; Typo aber gross (mind. 2x2), fuer die Ferne.
           w.style.gridColumn = "";
           w.style.gridRow = "";
-          w.setAttribute("data-hero", "");
+          // data-hero="full": Widgets koennen darauf reagieren - bei "full"
+          // gibt die FLAECHE die Hoehe vor, nicht der Inhalt. Wer feste
+          // Zeilen hat (mealplan), muss sie dann teilen statt zu ueberlaufen.
+          w.setAttribute("data-hero", heroFull ? "full" : "");
           // 2x1 (breit, aber nicht die riesige 2x2-Typo) - sonst wird der
           // Inhalt bei schmaleren Layouts (z. B. width 1000) abgeschnitten.
           // Bei "full" ist der Platz da: groesste Typo (2x2), fuer die Ferne.

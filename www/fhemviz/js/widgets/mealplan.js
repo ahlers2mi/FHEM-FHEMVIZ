@@ -125,6 +125,32 @@ const MEALPLAN_CSS = `
   :host([data-tv]) .mp-row .mp-name { font-size: 1.05rem; }
   :host([data-tv]) .mp-row { --mp-thumb: 54px; }
   :host([data-tv]) .mp-row .mp-img { height: 44px; }
+
+  /* vizHero full: hier gibt die FLAECHE die Hoehe vor, nicht der Inhalt.
+   * Die sieben Tageszeilen sind sonst zusammen hoeher als der Schirm und die
+   * Karte (overflow:hidden) schneidet unten ab - zuletzt fehlten Mittwoch
+   * und die ganze Knopfreihe. Also: Kopf und Knoepfe behalten ihre Hoehe,
+   * die Tagesliste teilt sich den Rest und die Zeilen schrumpfen mit. */
+  :host([data-hero="full"]) .mp { flex: 1 1 auto; min-height: 0; }
+  :host([data-hero="full"]) .mp-btns,
+  :host([data-hero="full"]) .mp-rate { flex: 0 0 auto; }
+  /* Der Kopf mit dem Foto ist der groesste Einzelposten - gedeckelt, damit
+   * fuer die sieben Tage und die Knoepfe genug bleibt. */
+  :host([data-hero="full"]) .mp-hero { flex: 0 1 auto; max-height: 30%; }
+  :host([data-hero="full"]) .mp-hero .mp-img { min-height: 0; }
+  /* overflow als Netz: lieber eine angeschnittene Zeile als eine, die ueber
+   * die Knopfreihe darunter laeuft. */
+  :host([data-hero="full"]) .mp-days { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  :host([data-hero="full"]) .mp-days .mp-row {
+    flex: 1 1 0; min-height: 26px; padding-top: 2px; padding-bottom: 2px;
+  }
+  /* Das Vorschaubild hat eine FESTE Hoehe - in einer schrumpfenden Zeile ragt
+   * es sonst oben und unten heraus (und das Tageskuerzel mit ihm). Hier
+   * waechst es stattdessen mit der Zeile. */
+  :host([data-hero="full"]) .mp-days .mp-row .mp-img {
+    height: auto; align-self: stretch; min-height: 0;
+  }
+  :host([data-hero="full"]) .mp-days .mp-img.empty::after { font-size: 1.1rem; }
   :host([data-tv]) .mp-btn { font-size: 1rem; padding: 9px 14px; }
 
   @media (max-width: 420px) {
@@ -219,17 +245,22 @@ export class FhemvizMealplan extends FhemvizWidget {
       )
       .join("");
 
+    // Nur im bedienbaren Modus, nicht TV/readonly - wie in jedem anderen
+    // Widget. Fehlte hier: sendCommand() prallt an this.readonly ohnehin ab,
+    // die Knoepfe standen auf dem Wandtablet also da UND taten nichts. Dazu
+    // nahmen sie in der Vollbild-Kachel die Hoehe weg, die den Tagen fehlte.
     const btn = (cmd, text) =>
-      this._canSet(cmd)
+      this._canSet(cmd) && !this.readonly
         ? `<button class="mp-btn" data-cmd="${this.escape(cmd)}">${text}</button>`
         : "";
 
-    const rateHtml = this._canSet("bewerten")
-      ? `<div class="mp-btns mp-rate">${RATINGS.map(
-          (r) =>
-            `<button class="mp-btn" data-cmd="bewerten ${r.cmd}" title="${r.title}">${r.icon}</button>`
-        ).join("")}</div>`
-      : "";
+    const rateHtml =
+      this._canSet("bewerten") && !this.readonly
+        ? `<div class="mp-btns mp-rate">${RATINGS.map(
+            (r) =>
+              `<button class="mp-btn" data-cmd="bewerten ${r.cmd}" title="${r.title}">${r.icon}</button>`
+          ).join("")}</div>`
+        : "";
 
     return `
       <style>${MEALPLAN_CSS}</style>
@@ -260,12 +291,16 @@ export class FhemvizMealplan extends FhemvizWidget {
           <div class="mp-days">${rows}</div>
 
           ${rateHtml}
-          <div class="mp-btns">
+          ${
+            this.readonly
+              ? ""
+              : `<div class="mp-btns">
             ${btn("wuerfeln_heute", "🎲 heute")}
             ${btn("wuerfeln_leere_tage", "🎲 freie Tage")}
             ${btn("einkaufsliste", "🛒 Einkauf")}
             ${btn("abgleichen", "↻ abgleichen")}
-          </div>
+          </div>`
+          }
         </div>
       </div>`;
   }
