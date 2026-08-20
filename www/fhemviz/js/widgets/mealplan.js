@@ -86,8 +86,13 @@ const MEALPLAN_CSS = `
 
   /* Die anderen Tage: kompakte Streifen, damit auch sieben Zeilen passen. */
   .mp-days { display: flex; flex-direction: column; gap: 6px; }
+  /* Die Bildspalte MUSS so breit sein wie das Bild - sonst ragt es in die
+   * Namensspalte und verdeckt den Anfang des Gerichts (im TV-Modus ist das
+   * Bild 54 px breit, die Spalte stand fest auf 40). Darum eine Variable,
+   * die beide Werte gemeinsam setzt. */
   .mp-row {
-    display: grid; grid-template-columns: auto 40px 1fr auto; gap: 10px;
+    --mp-thumb: 40px;
+    display: grid; grid-template-columns: auto var(--mp-thumb) 1fr auto; gap: 10px;
     align-items: center; padding: 6px 8px; min-width: 0;
     background: var(--viz-raised, #1c212a);
     border: 1px solid var(--viz-border, #262c35); border-radius: 10px;
@@ -96,7 +101,7 @@ const MEALPLAN_CSS = `
     font-size: 0.78rem; font-weight: 600; color: var(--viz-muted, #77808c);
     width: 1.6rem; flex-shrink: 0;
   }
-  .mp-row .mp-img { width: 40px; height: 34px; }
+  .mp-row .mp-img { width: var(--mp-thumb); height: 34px; }
   .mp-row .mp-name {
     font-size: 0.9rem; min-width: 0; overflow: hidden;
     text-overflow: ellipsis; white-space: nowrap;
@@ -118,7 +123,8 @@ const MEALPLAN_CSS = `
 
   :host([data-tv]) .mp-dish { font-size: 1.5rem; }
   :host([data-tv]) .mp-row .mp-name { font-size: 1.05rem; }
-  :host([data-tv]) .mp-row .mp-img { width: 54px; height: 44px; }
+  :host([data-tv]) .mp-row { --mp-thumb: 54px; }
+  :host([data-tv]) .mp-row .mp-img { height: 44px; }
   :host([data-tv]) .mp-btn { font-size: 1rem; padding: 9px 14px; }
 
   @media (max-width: 420px) {

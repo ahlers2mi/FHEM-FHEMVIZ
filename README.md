@@ -102,7 +102,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 | `vizIcon` | `lampe` / `steckdose` / `lautsprecher` / `luefter` / `pumpe` / `tv` / `heizung` / `power` | **Symbol-Modus** für Schalter: großes Icon mittig, Name darunter, bernstein = an — aus der Ferne lesbar; Tippen auf die Kachel schaltet |
 | `vizGroup` | Gruppenname(n), `-` = keine | Übersteuert `group` **nur im Dashboard** (FHEMWEB unberührt) — steuert, welche Kacheln zusammenstehen; `-` löst die Gruppe auf („Allgemein") |
 | `vizReadings` | `reading[:Label[:Einheit[:Farbe[:bar]]]]`, kommasepariert | Kachelinhalt **direkt aus Readings** statt state-Parsing; erster Eintrag = Hauptwert (groß). Farben semantisch: `ok`/`grün`, `warn`/`orange`, `bad`/`rot`, `accent`, `blau`. Statt eines festen Namens auch **Schwellwerte** `farbe@[vergleich]schwelle`, mehrere mit `\|`, erster Treffer gewinnt (`bad@>=34\|ok@>=26\|blau@<24`). Die Schwelle darf eine Zahl oder der **Name eines anderen Readings** desselben Geräts sein, optional mit Versatz (`ok@>poolTemp`, `warn@>=poolTemp+3`). Flag `bar` = zusätzlicher Fortschrittsbalken (Skala 0–100, z. B. Autarkie-/Akku-Prozent). Gesetzt = state wird ignoriert, Gerät immer angezeigt |
-| `vizHero` | `1` / `0` | Gerät als breiter **Blickfang** ganz oben im Raum (aus dem Raster gelöst) |
+| `vizHero` | `1` / `0` / `full` | Gerät als breiter **Blickfang** ganz oben im Raum (aus dem Raster gelöst). `full` = ganze sichtbare Fläche |
 | `vizState` / `vizStates` | Reading / `muster:Label[:Farbe]` | Welches Reading den Zustand trägt bzw. Klartext + Farbe dafür (`error:Störung:bad`) — nützlich bei Modulen, die in `state` den letzten Befehl ablegen |
 | `vizAlert` | `reading OP wert`, Komma = ODER | **Störung**: pulsierender roter Rahmen an der Kachel **und** Eintrag in der Hinweis-Leiste. OP: `> < >= <= = == != ~ !~` (`~` = Regex), Wert darf leer sein (`last_error!=` = „nicht leer") |
 | `vizAgenda` | `hide=<Stunden>` | Terminliste: wie lange ein **abgelaufener** Termin noch stehen bleibt (Default 8, `0` = nie) |
@@ -209,7 +209,8 @@ Rotation automatisch zurück.
 
 `attr <gerät> vizHero full` (ab v0.35.3) lässt den Blickfang die **ganze
 sichtbare Fläche** einnehmen statt nur eine Zeile — größte Schrift, Kachel auf
-volle Höhe gestreckt:
+volle Höhe gestreckt. `full` ist genau der Wert, den auch die Auswahlliste des
+Attributs anbietet (`0`, `1`, `full`):
 
 ```
 attr bewaesserung room FHEMVIZ->Wasser

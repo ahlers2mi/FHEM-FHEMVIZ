@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.35.3
+# Version:  v0.35.4
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.35.3";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.35.4";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -342,7 +342,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.35.3"),
+            FHEMVIZ_jsonStr("v0.35.4"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -970,7 +970,7 @@ sub FHEMVIZ_Attr {
         Platzierung/Betonung, unabhängig von <code>vizWidget</code>. Mehrere
         Hero-Geräte eines Raums teilen sich die Zeile. Beispiel:<br>
         <code>attr d_Wechselrichter_all vizHero 1</code><br>
-        <b><code>full</code></b> (auch <code>2</code>, ab v0.35.3): der
+        <b><code>full</code></b> (ab v0.35.4): der
         Blickfang nimmt die <b>ganze sichtbare Fläche</b> ein statt nur eine
         Zeile — größte Schrift (wie <code>vizSize 2x2</code>), Kachel auf
         volle Höhe gestreckt. Auf dem Fernseher ist die Kachel damit die
