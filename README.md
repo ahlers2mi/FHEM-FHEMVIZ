@@ -5,11 +5,21 @@ FHEM-Standard („FHEM-Standard-first"). Ein System, zwei Betriebsarten:
 **Tablet** (Touch, Raum-Tabs unten) und **TV/Kiosk** (bedienlos,
 Szenen-Rotation, steuerbar per FHEM-Event).
 
-Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) · Stand: **v0.34.49**
+![FHEMVIZ-Dashboard](docs/img/dashboard.png)
+
+Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) ·
+Änderungen: [`CHANGELOG.md`](./CHANGELOG.md) ·
+Arbeitsweise am Repo: [`CLAUDE.md`](./CLAUDE.md)
 
 > Vollständige Referenz aller Attribute mit Beispielen: die **FHEM-Hilfe** des
 > Moduls (`commandref` → FHEMVIZ bzw. das `?` am Gerät). Dieses README ist der
 > Überblick.
+
+**Was FHEMVIZ nicht tut:** es kennt keine Geräte. Es liest, was FHEM über sich
+erzählt — `PossibleSets`, `webCmd`, `genericDeviceType`, `eventMap`, `room`,
+`group`, `sortby` — und macht daraus Kacheln. Kein Build, kein Node, kein npm:
+die Oberfläche sind Web Components, die der Browser direkt lädt. Aktualisiert
+wird über den FHEMWEB-Longpoll, es gibt kein Polling.
 
 ---
 
@@ -113,9 +123,25 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 ### Widgets
 
-`switch` · `sensor` · `dimmer` · `shutter` · `actions` · `text` · `agenda` ·
-`contact` · `vent` · `flow` · `forecast` · `weather` · `chart` · `watering` ·
-`watertank` · `image` · `solvis` · `car` · `mealplan`
+Der Typ wird aus `genericDeviceType`, `webCmd` und den `PossibleSets` erraten;
+`attr <dev> vizWidget <typ>` erzwingt ihn.
+
+**Grundtypen** — reichen für die meisten Geräte, meist ohne jede Angabe:
+
+`switch` · `sensor` · `dimmer` · `shutter` · `contact` · `vent` · `actions` ·
+`text` · `agenda` · `image` · `chart`
+
+**Spezialkacheln** — für einen bestimmten Zweck gebaut. Die Bilder sind echte
+Aufnahmen der Oberfläche:
+
+| | |
+|---|---|
+| **`flow`** — Energiefluss. PV, Haus, Netz und Batterie mit laufenden Punkten in Flussrichtung; minus = entladen. Zuordnung über `attr <dev> vizFlow`.<br>![flow](docs/img/widget-flow.png) | **`watertank`** — Regenwasseranlage als Schema. Füllhöhen in Litern, gestrichelt die Schwimmerhöhe, Rohre leuchten nur bei echtem Transport. Behälterzahl aus `ibcUsableVolume`.<br>![watertank](docs/img/widget-watertank.png) |
+| **`mealplan`** — Wochenplan: heute groß mit Foto, die übrigen Tage als Streifen. Würfeln, bewerten und Einkauf direkt aus der Kachel — Knöpfe nur für set-Befehle, die es wirklich gibt.<br>![mealplan](docs/img/widget-mealplan.png) | **`solvis`** — Heizung: Schichtung im Speicher als Zylinder (S01/S04/S09/S03 von oben nach unten), dazu Solarkreis, Kollektor und Brenner.<br>![solvis](docs/img/widget-solvis.png) |
+| **`car`** — Fahrzeug mit Ladestand, Reichweite und Wunschlimit; die Wallbox kommt über `attr <dev> vizCar wallbox=<gerät>` dazu. Regler-Spannen aus den `PossibleSets`.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
+| **`weather`** — Wetterstation (Ecowitt/GW3000): Außen und Innen, Wind, Regen, UV, Druck.<br>![weather](docs/img/widget-weather.png) | **`shuttergroup`** — Rollläden aus einem `structure`: Master-Zeile „Alle" plus je Rollade Position und ▲■▼. Der gemeinsame Namensanfang fällt weg.<br>![shuttergroup](docs/img/widget-shuttergroup.png) |
+
+Dazu `watering` (Bewässerungs-Steuerung ohne Schema).
 
 **Gruppen-Kacheln** — EINE Kachel für ein `structure`-Gerät, mit einer Zeile
 je Mitglied (die Mitglieder müssen im `devspec` liegen, dürfen aber per
@@ -454,11 +480,33 @@ Ebenfalls ab v0.34.52: Wird der Tablet-Bildschirm wieder wach oder kommt das
 WLAN zurück (`visibilitychange` / `online`), werden Longpoll und Daten sofort
 erneuert, statt bis zu 2,5 Minuten auf den Watchdog zu warten.
 
-## Roadmap
+## Was noch offen ist
 
-Energiefluss (`flow`), Diagramme (`chart`, FileLog/DbLog) und die
-Gruppen-Kacheln sind umgesetzt. Offen: weitere Skins, Widget-Vorschau im
-Editiermodus.
+Kein Fahrplan mit Terminen — eine Liste dessen, was bekannt fehlt oder klemmt.
+Was fertig ist, steht im [`CHANGELOG.md`](./CHANGELOG.md).
+
+**Bekannte Grenzen**
+
+- **Die Ladekette trägt keine Versionskennung.** `index.html` → `app.js` → die
+  rund 30 Module dahinter werden vom Browser normal gecacht; nach einem
+  `update` hilft nur Nachladen (siehe Abschnitt oben). Ein Versionsanhang an
+  den Imports würde das dauerhaft erledigen.
+- **`eventMap` in Perl-Notation** (`eventMap {…}`) kann der Browser nicht
+  auswerten — dort bleibt der Rohwert stehen. Die Listenform funktioniert.
+- **`vizHero full` ist auf einen Schirm zugeschnitten.** Bei viel Inhalt und
+  wenig Bildschirmhöhe schneidet die Karte unten ab, statt zu blättern.
+  Alternative wäre: Seite 1 die Vollbild-Kachel, Seite 2+ der Rest des Raums
+  über das vorhandene Auto-Paging.
+- **Kein Service Worker**, also kein Offline-Betrieb. Bewusst so — ein
+  hängender PWA-Cache wäre schwerer loszuwerden als der HTTP-Cache.
+
+**Ideen**
+
+- Weitere Skins; `zeilen` und `bento` sind da.
+- Widget-Vorschau im Editiermodus (`?edit=1`), damit ein Typwechsel nicht
+  blind passiert.
+- Der Editiermodus kennt für `vizHero` nur an/aus — `full` muss per `attr`
+  gesetzt werden, weil ein Knopf mit drei Zuständen unklar wäre.
 
 ## Lizenz
 

@@ -1,0 +1,183 @@
+# Changelog
+
+Alle nennenswerten Änderungen. Neueste oben.
+
+Die Versionsnummer steht im Modul (`get <viz> config` bzw. der Kopf von
+`98_FHEMVIZ.pm`) und wird von der Oberfläche gegengeprüft — weichen beide ab,
+meldet die Statuszeile einen Versionskonflikt (siehe README).
+
+Zeitraum vor dem 1. August 2026: Aufbau der SPA (Web Components ohne Build),
+Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
+
+---
+
+## v0.35.6 — 20.08.2026
+
+**Behoben**
+
+- `mealplan` zeigte im TV-Modus Bedien-Knöpfe. Im TV-Modus ist die ganze Sicht
+  readonly; alle anderen Widgets prüfen das, dieses eine nicht. Die Knöpfe
+  standen also auf dem Wandtablet und taten nichts — `sendCommand()` prallt an
+  derselben Prüfung ohnehin ab. Nebeneffekt: sie nahmen der Vollbild-Kachel die
+  Höhe weg, die den Wochentagen fehlte.
+
+## v0.35.5 — 20.08.2026
+
+**Behoben**
+
+- `vizHero full` ragte über den Schirm: die Höhenkette war bei `.viz-room`
+  unterbrochen, ein `height: 100%` am Hero-Band griff damit ins Leere. Gemessen
+  waren es 692 px Kachel in 494 px Fläche — das Auto-Paging blätterte
+  mitten durch die Zeichnung („1/2" bei einer einzigen Kachel).
+- `mealplan` lief in der Vollbild-Kachel unten aus der Karte. Widgets erkennen
+  den Fall jetzt am Attribut `data-hero="full"` und dürfen darauf reagieren:
+  Kopf gedeckelt, Tagesliste teilt sich die Resthöhe.
+
+## v0.35.4 — 20.08.2026
+
+**Behoben**
+
+- `mealplan`: das Vorschaubild verdeckte den Anfang des Gerichts. Die
+  Bildspalte stand fest auf 40 px, im TV-Modus ist das Bild 54 px breit.
+- `vizHero full` überschrieb ein am Gerät gesetztes `vizSize` mit `2x2`.
+
+## v0.35.3 — 20.08.2026
+
+**Neu**
+
+- **`vizHero full`** — der Blickfang nimmt die ganze sichtbare Fläche ein statt
+  nur eine Zeile. Auf dem Fernseher ist die Kachel damit die Seite, auf
+  Tablet/Handy füllt sie den ersten Schirm. Gedacht für einen eigenen Raum mit
+  genau einem Gerät, der als TV-Szene rotiert.
+
+## v0.35.2 — 19.08.2026
+
+**Behoben**
+
+- TV-Modus: der Sekundentakt der Uhr-Seite (`#uhr`) lief beim Wechsel auf eine
+  Szene weiter und übermalte sie nach einer Sekunde wieder. Der rote
+  Ereignisrahmen blieb dabei stehen — sichtbar als „Szene erscheint kurz, dann
+  ist die Uhr wieder da". Dieselbe Ursache traf `set <viz> page` und die
+  Touch-Übernahme (dort blieb die Kopfleiste ausgeblendet).
+
+## 18./19.08.2026
+
+**Neu**
+
+- **Widget `watertank`** — Regenwasseranlage als lebendiges Anlagenschema:
+  Füllhöhen in Litern, gestrichelte Linie für die Schwimmerhöhe, Rohre leuchten
+  nur bei echtem Transport. Behälterzahl aus `ibcUsableVolume`.
+- `watertank` rechnet die Füllstände während eines Laufs mit und zeichnet alle
+  5 s neu — das Modul bucht erst am Ende. Nebeneffekt als Selbstkontrolle:
+  läuft der Behälter auf 0 und die Pumpe weiter, ist die gelernte Rate zu hoch.
+
+**Behoben**
+
+- `watertank`: Kontrast im Dark-Theme.
+
+## v0.34.52 — 16.08.2026
+
+**Behoben**
+
+- **csrfToken nach einem FHEM-Neustart.** FHEMWEB würfelt bei jedem Start einen
+  neuen Token; ein offener Tab kannte nur den alten. Der Longpoll braucht keinen
+  Token und lief weiter, die Kopfzeile meldete also „live" — jeder `?cmd=`-Aufruf
+  wurde dagegen mit `400` abgewiesen. Resync, Diagramme und **alle
+  Schaltbefehle** liefen stumm ins Leere. Der Client holt den Token jetzt aus dem
+  Header `X-FHEM-csrfToken` jeder Antwort nach, auch aus der Fehlerantwort.
+- `command()` gab eine Fehlerantwort als normalen Text zurück — ein abgewiesener
+  Schaltbefehl sah damit aus wie Erfolg.
+- Schlägt der Resync zweimal hintereinander fehl, steht in der Kopfzeile
+  „Daten veraltet" statt „live".
+- Aufwachen des Tablets (`visibilitychange`/`online`) erneuert Longpoll und
+  Daten sofort, statt bis zu 2,5 Minuten auf den Watchdog zu warten.
+- `mealplan`: die Kachel beginnt bei heute (rollendes Fenster), nicht starr bei
+  Montag.
+
+## 14./15.08.2026
+
+**Neu**
+
+- **Auf/Stop/Zu** für die einzelne Rollladen-Kachel. Endlagen über `pct 0/100`,
+  weil `up`/`down` bei CUL_HM **relativ** sind (ein Schritt, Standard 10 %).
+  Der Stop-Knopf erscheint nur, wenn das Gerät `stop` kennt.
+
+**Behoben**
+
+- Installierte Verknüpfung behält die URL-Parameter (iOS): ein relatives
+  `start_url` im Manifest lässt sich von einer `data:`-URI aus nicht auflösen —
+  ohne Angabe gilt die Dokument-Adresse, und die trägt die Parameter.
+- `SPA_VERSION` wird mit der Modul-Version nachgezogen. Eine vergessene der
+  vier Stellen meldet sonst bei *jedem* Laden einen Versionskonflikt.
+
+## 11.08.2026
+
+**Neu**
+
+- **Manifest zur Laufzeit**, Symbole als `data:`-URI eingebettet
+  (`attr <viz> pwa 0` schaltet ab). Damit erscheint das App-Symbol auf Android
+  auch, wenn FHEM hinter `basicAuth` steht: Android lädt das Symbol über einen
+  Google-Dienst nach, also ohne Sitzung — vorher blieb es leer.
+- App-Symbol ist das Kachel-Raster statt der Sonne.
+- Die Farbschwelle in `vizReadings` darf ein **anderes** Reading auswerten.
+
+## 08.08.2026
+
+**Neu**
+
+- **Widget `mealplan`** — Wochenplan aus dem BRING-Interface: heute groß mit
+  Foto, die übrigen Tage als Streifen, würfeln/bewerten/Einkauf direkt aus der
+  Kachel. Knöpfe erscheinen nur für set-Befehle, die in `PossibleSets` stehen.
+
+## 06.08.2026
+
+**Neu**
+
+- **Hinweis-Leiste für Störungen** — sammelt alle `vizAlert`-Attribute der
+  geladenen Geräte unter der Kopfzeile; ohne Störung ist sie unsichtbar.
+- `attr <viz> sound` — Ton beim Einblenden von Bild oder Nachricht.
+
+**Behoben**
+
+- Auswahlzeile mit Label: Dropdown klappt nach rechts statt in die Mitte.
+
+## 04./05.08.2026
+
+**Neu**
+
+- `attr <viz> roomPrefix` — eigene Raumnamen für eine zweite Sicht; das Präfix
+  wird in Tabs und Überschriften abgeschnitten.
+- Agenda färbt „Morgen" ein und blendet abgelaufene Termine aus.
+- Schiebeschalter auch in den `vizIcon`-Zeilen.
+
+**Behoben**
+
+- Ein Antippen der Reglerschiene schaltet nicht mehr (nur Ziehen zählt) —
+  vorher war ein Griff ans rechte Ende volle Lautstärke.
+- Der gemerkte Tab liegt je Sicht in `localStorage`; vorher haben sich zwei
+  Sichten die Raumwahl gegenseitig überschrieben.
+
+## 03.08.2026
+
+**Neu**
+
+- **Editiermodus `?edit=1`** — Reihenfolge, Größe, Hero und Ausblenden direkt
+  in der Oberfläche; später auch das Verschieben in andere Räume und
+  Abschnitte. Absichtlich kein Attribut am Gerät: so ist er nur für den einen
+  Browser an, der ihn aufruft, und das Wandtablet bleibt unberührt.
+- **Widget `cameragroup`** — Kameras als `structure`-Kachel.
+
+## 01./02.08.2026
+
+**Neu**
+
+- **Widget `car`** mit Wunschlimit und Wallbox (`attr <dev> vizCar`). Die
+  Regler-Spannen kommen aus den `PossibleSets` der Geräte.
+- Lüften-Palette nach dem `devStateIcon`, alle sieben Stufen unterscheidbar.
+
+**Behoben**
+
+- Uhr-Seite zeigte alles doppelt; jetzt ohne Kopfleiste statt ohne Inhalt.
+- Mehrere Skin-`zeilen`-Fehler: Prognose-Balken fehlten, Kacheln fluchteten
+  nicht, die Fenster-/Tür-Gruppe war viel zu hoch.
+- Langes Dropdown klappte beim Scrollen zu.
