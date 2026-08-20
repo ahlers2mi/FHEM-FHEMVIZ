@@ -97,11 +97,16 @@ function isHero(dev) {
 }
 
 /**
- * vizHero full (auch 2): der Blickfang nimmt die SICHTBARE FLAECHE ein statt
- * nur eine Bandzeile. Auf dem Fernseher ist die Kachel damit die Seite - die
- * Gruppen darunter werden ausgeblendet, weil sie ohnehin nur angeschnitten
- * wuerden (dort wird nie gescrollt). Auf Tablet/Handy fuellt sie den ersten
- * Schirm, der Rest des Raums steht darunter und bleibt erreichbar.
+ * vizHero full: der Blickfang nimmt die SICHTBARE FLAECHE ein statt nur eine
+ * Bandzeile. Auf dem Fernseher ist die Kachel damit die Seite - die Gruppen
+ * darunter werden ausgeblendet, weil sie ohnehin nur angeschnitten wuerden
+ * (dort wird nie gescrollt). Auf Tablet/Handy fuellt sie den ersten Schirm,
+ * der Rest des Raums steht darunter und bleibt erreichbar.
+ *
+ * "full" ist der EINE dokumentierte Name - genau so steht er auch in der
+ * Werteliste des Attributs. "2" und "voll" werden still mitgenommen, damit
+ * ein frueher von Hand gesetzter Wert nicht ploetzlich als "kein Hero"
+ * gelesen wird; angeboten werden sie nicht.
  */
 function isHeroFull(dev) {
   return /^(2|full|voll)$/i.test(String((dev.attr || {}).vizHero || ""));

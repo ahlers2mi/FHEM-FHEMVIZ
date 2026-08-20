@@ -970,7 +970,7 @@ sub FHEMVIZ_Attr {
         Platzierung/Betonung, unabhängig von <code>vizWidget</code>. Mehrere
         Hero-Geräte eines Raums teilen sich die Zeile. Beispiel:<br>
         <code>attr d_Wechselrichter_all vizHero 1</code><br>
-        <b><code>full</code></b> (auch <code>2</code>, ab v0.35.3): der
+        <b><code>full</code></b> (ab v0.35.3): der
         Blickfang nimmt die <b>ganze sichtbare Fläche</b> ein statt nur eine
         Zeile — größte Schrift (wie <code>vizSize 2x2</code>), Kachel auf
         volle Höhe gestreckt. Auf dem Fernseher ist die Kachel damit die
