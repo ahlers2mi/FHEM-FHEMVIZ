@@ -205,6 +205,27 @@ define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
 Der rote Rahmen signalisiert die Event-Übernahme; nach Ablauf kehrt die
 Rotation automatisch zurück.
 
+### Eine Kachel auf dem ganzen Schirm: `vizHero full`
+
+`attr <gerät> vizHero full` (ab v0.35.3) lässt den Blickfang die **ganze
+sichtbare Fläche** einnehmen statt nur eine Zeile — größte Schrift, Kachel auf
+volle Höhe gestreckt:
+
+```
+attr bewaesserung room FHEMVIZ->Wasser
+attr bewaesserung vizHero full
+attr myViz tvScenes #uhr:20,Solar:30,Wasser:25
+```
+
+Auf dem Fernseher ist die Kachel damit die Seite: die Gruppen darunter fallen
+weg, weil sie ohnehin nur angeschnitten würden (dort wird nie gescrollt). Auf
+Tablet/Handy füllt sie den ersten Schirm, der Rest des Raums steht darunter
+und bleibt erreichbar.
+
+Am besten in einem eigenen Raum mit genau einem Gerät, der als TV-Szene
+rotiert. Mehrere `full`-Geräte eines Raums teilen sich die Höhe. Zurück geht
+es mit `vizHero 1` (normales Band) oder `deleteattr <gerät> vizHero`.
+
 ### Uhr-Seite `#uhr` als Szene
 
 `#uhr` (auch `#uebersicht`) ist kein Raum, sondern eine eigene Seite in der
