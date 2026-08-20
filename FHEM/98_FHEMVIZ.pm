@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.35.2
+# Version:  v0.35.3
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.35.2";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.35.3";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -76,7 +76,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 # damit sie an jedem Geraet im FHEMWEB-Dropdown auftauchen.
 #   vizWidget   - Widget-Typ erzwingen (uebersteuert GDT/Heuristik/Rauschfilter)
 #   vizSize     - Kachelgroesse im Raster (1x1, 2x1, 1x2, 2x2)
-#   vizHero     - Geraet als breiter Blickfang ganz oben im Raum
+#   vizHero     - Geraet als breiter Blickfang ganz oben im Raum (full = ganze Flaeche)
 #   vizHide     - Geraet aus der Sicht ausblenden
 #   vizFlash    - Aufleuchten dieser Kachel bei Wertaenderung (0 = ruhig,
 #                 1 = auch bei globalem "attr flash 0"); Default: global
@@ -91,7 +91,7 @@ my $FHEMVIZ_DEFAULT_HIDESTATES =
 my @FHEMVIZ_DEV_ATTRS = (
     "vizWidget:switch,sensor,dimmer,shutter,shuttergroup,switchgroup,sensorgroup,actions,text,agenda,contact,vent,ventgroup,flow,forecast,weather,chart,watering,watertank,image,solvis,mediagroup,car,cameragroup,mealplan",
     "vizSize:1x1,2x1,1x2,2x2",
-    "vizHero:1,0",
+    "vizHero:0,1,full",
     "vizHide:1,0",
     "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power",
     "vizGroup",
@@ -342,7 +342,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.35.2"),
+            FHEMVIZ_jsonStr("v0.35.3"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -961,7 +961,7 @@ sub FHEMVIZ_Attr {
         Kachelgröße im Raster; 2x2 vergrößert Fläche und Schrift der
         Kachel (bleibt aber im Raster). Für einen echten, seitenbreiten
         Blickfang siehe <code>vizHero</code>.</li>
-    <li><a id="FHEMVIZ-attr-vizHero"></a><b>vizHero</b> 1|0<br>
+    <li><a id="FHEMVIZ-attr-vizHero"></a><b>vizHero</b> 1|0|full<br>
         Hebt das Gerät als <b>breiten Blickfang ganz oben im Raum</b> heraus
         (bzw. in der TV-Szene): eine volle Zeile über dem normalen Raster,
         große Schrift, dezenter Akzentrahmen. Aus dem Raster herausgelöst,
@@ -969,7 +969,18 @@ sub FHEMVIZ_Attr {
         (sensor/flow/forecast …) — <code>vizHero</code> ist nur die
         Platzierung/Betonung, unabhängig von <code>vizWidget</code>. Mehrere
         Hero-Geräte eines Raums teilen sich die Zeile. Beispiel:<br>
-        <code>attr d_Wechselrichter_all vizHero 1</code></li>
+        <code>attr d_Wechselrichter_all vizHero 1</code><br>
+        <b><code>full</code></b> (auch <code>2</code>, ab v0.35.3): der
+        Blickfang nimmt die <b>ganze sichtbare Fläche</b> ein statt nur eine
+        Zeile — größte Schrift (wie <code>vizSize 2x2</code>), Kachel auf
+        volle Höhe gestreckt. Auf dem Fernseher ist die Kachel damit die
+        Seite: die Gruppen darunter fallen weg, weil sie ohnehin nur
+        angeschnitten würden (dort wird nie gescrollt). Auf Tablet/Handy
+        füllt sie den ersten Schirm, der Rest des Raums steht darunter und
+        bleibt erreichbar. Gedacht für einen eigenen Raum mit genau einem
+        Gerät, der als TV-Szene rotiert; mehrere <code>full</code>-Geräte
+        eines Raums teilen sich die Höhe. Beispiel:<br>
+        <code>attr bewaesserung vizHero full</code></li>
     <li><a id="FHEMVIZ-attr-vizHide"></a><b>vizHide</b> 1|0<br>
         Gerät aus der Sicht ausblenden.</li>
     <li><a id="FHEMVIZ-attr-vizIcon"></a><b>vizIcon</b>

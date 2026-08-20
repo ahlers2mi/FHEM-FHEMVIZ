@@ -93,7 +93,18 @@ function sortKey(dev) {
 
 // vizHero: Geraet als breiter Blickfang oben im Raum (aus dem Raster geloest).
 function isHero(dev) {
-  return /^(1|true|yes|on)$/i.test(String((dev.attr || {}).vizHero || ""));
+  return /^(1|true|yes|on|2|full|voll)$/i.test(String((dev.attr || {}).vizHero || ""));
+}
+
+/**
+ * vizHero full (auch 2): der Blickfang nimmt die SICHTBARE FLAECHE ein statt
+ * nur eine Bandzeile. Auf dem Fernseher ist die Kachel damit die Seite - die
+ * Gruppen darunter werden ausgeblendet, weil sie ohnehin nur angeschnitten
+ * wuerden (dort wird nie gescrollt). Auf Tablet/Handy fuellt sie den ersten
+ * Schirm, der Rest des Raums steht darunter und bleibt erreichbar.
+ */
+function isHeroFull(dev) {
+  return /^(2|full|voll)$/i.test(String((dev.attr || {}).vizHero || ""));
 }
 
 /*
@@ -790,9 +801,14 @@ export function renderLayout(root, store, client, opts = {}) {
         }
       }
     }
+    // Mindestens ein "full"-Blickfang: das Band fuellt die Flaeche (eine
+    // Spalte, Kachel auf volle Hoehe gestreckt) und der Raum wird markiert,
+    // damit die Gruppen im TV-Modus wegfallen.
+    const heroFull = heroDevs.some(isHeroFull);
+    if (heroFull) roomEl.classList.add("hero-full");
     if (heroDevs.length) {
       const band = document.createElement("div");
-      band.className = "viz-hero";
+      band.className = "viz-hero" + (heroFull ? " full" : "");
       heroDevs
         .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
         .forEach((dev) => {
@@ -804,7 +820,9 @@ export function renderLayout(root, store, client, opts = {}) {
           w.setAttribute("data-hero", "");
           // 2x1 (breit, aber nicht die riesige 2x2-Typo) - sonst wird der
           // Inhalt bei schmaleren Layouts (z. B. width 1000) abgeschnitten.
-          if (!w.getAttribute("data-size")) w.setAttribute("data-size", "2x1");
+          // Bei "full" ist der Platz da: groesste Typo (2x2), fuer die Ferne.
+          if (heroFull) w.setAttribute("data-size", "2x2");
+          else if (!w.getAttribute("data-size")) w.setAttribute("data-size", "2x1");
           // Auch im Hero-Band die Werkzeuge anbieten: sonst waere "Hero" eine
           // Einbahnstrasse - die Kachel verlaesst das Raster und man kaeme
           // nicht mehr an den Schalter, um sie zurueckzuholen.

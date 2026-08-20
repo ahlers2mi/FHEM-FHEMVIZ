@@ -115,7 +115,7 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 `switch` · `sensor` · `dimmer` · `shutter` · `actions` · `text` · `agenda` ·
 `contact` · `vent` · `flow` · `forecast` · `weather` · `chart` · `watering` ·
-`image` · `solvis` · `car`
+`watertank` · `image` · `solvis` · `car` · `mealplan`
 
 **Gruppen-Kacheln** — EINE Kachel für ein `structure`-Gerät, mit einer Zeile
 je Mitglied (die Mitglieder müssen im `devspec` liegen, dürfen aber per
@@ -204,6 +204,45 @@ define n_tor_tv notify d_garage_neu:onoff:.* set myViz scene Garage 60
 
 Der rote Rahmen signalisiert die Event-Übernahme; nach Ablauf kehrt die
 Rotation automatisch zurück.
+
+### Eine Kachel auf dem ganzen Schirm: `vizHero full`
+
+`attr <gerät> vizHero full` (ab v0.35.3) lässt den Blickfang die **ganze
+sichtbare Fläche** einnehmen statt nur eine Zeile — größte Schrift, Kachel auf
+volle Höhe gestreckt:
+
+```
+attr bewaesserung room FHEMVIZ->Wasser
+attr bewaesserung vizHero full
+attr myViz tvScenes #uhr:20,Solar:30,Wasser:25
+```
+
+Auf dem Fernseher ist die Kachel damit die Seite: die Gruppen darunter fallen
+weg, weil sie ohnehin nur angeschnitten würden (dort wird nie gescrollt). Auf
+Tablet/Handy füllt sie den ersten Schirm, der Rest des Raums steht darunter
+und bleibt erreichbar.
+
+Am besten in einem eigenen Raum mit genau einem Gerät, der als TV-Szene
+rotiert. Mehrere `full`-Geräte eines Raums teilen sich die Höhe. Zurück geht
+es mit `vizHero 1` (normales Band) oder `deleteattr <gerät> vizHero`.
+
+### Uhr-Seite `#uhr` als Szene
+
+`#uhr` (auch `#uebersicht`) ist kein Raum, sondern eine eigene Seite in der
+Rotation: große Uhrzeit und Datum, darunter die Kennzahlen aus `headerInfo`
+und je `statusBar`-Eintrag eine Zeile. Sie braucht keine eigene
+Konfiguration — gezeigt wird, was für Kopfzeile und Statusleiste ohnehin
+eingerichtet ist:
+
+```
+attr myViz tvScenes #uhr:20,Solar:30,Wohnzimmer:20
+```
+
+Auf dieser Seite entfällt die Kopfleiste, sonst stünde alles doppelt auf dem
+Schirm; Titel und Statuszeile bleiben. Als einzige Seite rendert sie sich im
+Sekundentakt neu, damit die Uhr läuft — dieser Takt wird beim Verlassen
+abgeräumt (`set … scene`, `set … page`, Touch-Übernahme). Vor **v0.35.2**
+lief er weiter und übermalte die neue Seite nach einer Sekunde wieder.
 
 ### Webseite/Kamerabild einblenden: `set myViz show`
 

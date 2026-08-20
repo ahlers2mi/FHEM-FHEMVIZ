@@ -275,6 +275,27 @@ button.viz-alert-chip { cursor: pointer; }
               0 10px 30px rgba(0, 0, 0, 0.35);
 }
 html[data-vizmode="tv"] .viz-hero > * { min-height: 150px; }
+
+/* vizHero full: der Blickfang nimmt die sichtbare Flaeche ein.
+ * Eine Spalte, und die Kachel wird auf die volle Hoehe GESTRECKT - anders als
+ * im normalen Band (align-items:start), wo sie mit dem Inhalt waechst. */
+.viz-hero.full {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  margin-bottom: 0;
+  /* Tablet/Handy: erster Schirm gehoert der Kachel, der Rest des Raums steht
+   * darunter und bleibt scrollbar. */
+  min-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px) - 90px);
+}
+/* Fernseher: #fhemviz-app ist schon genau einen Schirm hoch und ein
+ * Flex-Container - das Band nimmt den ganzen Rest, die Gruppen darunter
+ * fallen weg (sie waeren nur angeschnitten, hier wird nie gescrollt). */
+html[data-vizmode="tv"] .viz-hero.full {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+html[data-vizmode="tv"] .viz-hero.full > * { min-height: 0; }
+html[data-vizmode="tv"] .viz-room.hero-full > .viz-groups { display: none; }
 .viz-groups {
   display: flex; flex-wrap: wrap; align-items: start;
   gap: 18px var(--viz-gap);
