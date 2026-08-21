@@ -21,9 +21,17 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
   `home=<text>` in `vizCar` heißt die Zeile „🏠 Zuhause" und wird farbig
   hervorgehoben, sobald das Ziel diesen Text enthält.
 - Die Zeile erscheint **nur bei frischen Werten** (Default 15 Minuten,
-  `routeAge=` ändert das). Die Route-Readings bleiben nach der Fahrt stehen —
-  im Bestand lagen „7 Minuten" zwei Tage lang im Gerät, eine Ankunftszeit
-  daraus wäre frei erfunden gewesen.
+  `routeAge=` ändert das) und nur, solange ein Ziel gesetzt ist. Beim
+  Fahrtende räumt der Adapter das Ziel weg, und die Restzeit bleibt sonst
+  stehen — im Bestand lagen „7 Minuten" zwei Tage lang im Gerät. Eine
+  Ankunftszeit daraus wäre frei erfunden gewesen.
+- **Ringanzeige als gemeinsames Bauteil** (`widgets/gauge.js`): 270-Grad-Bogen
+  mit Füllstand, Zielmarke und freiem Inhalt in der Mitte. Die `car`-Kachel
+  zeigt damit den Ladestand als Ring statt als flachen Balken — Marke = das
+  Wunschlimit, Mitte = Prozent und Reichweite, beim Laden atmet der Bogen.
+  Bewusst kein Auto-Sonderfall: derselbe Ring passt auf alles mit Anteil und
+  Ziel (Speicher mit Reserve, Feuchte mit Schwelle) und ist auch aus eigenen
+  Widgets über die Plugin-API zu importieren.
 
 ## v0.36.0 — 21.08.2026
 

@@ -37,12 +37,26 @@
  */
 
 import { FhemvizWidget, vizStatesInfo } from "./base-widget.js";
+import { ringGauge, GAUGE_CSS } from "./gauge.js";
 
 const CAR_CSS = `
+  ${GAUGE_CSS}
+  /* Kopf: Ring links, Angaben rechts. Wird die Kachel schmal, wandert der
+   * Ring nach oben - sonst quetscht er die Zahlen weg. */
+  .chead { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .chead .cinfo { flex: 1 1 auto; min-width: 0; display: flex;
+                  flex-direction: column; gap: 2px; }
+  @media (max-width: 420px) {
+    .chead { flex-direction: column; align-items: stretch; gap: 8px; }
+    .chead .gg { align-self: center; }
+  }
   /* Navigationszeile: etwas Luft nach oben, Fahrt nach Hause in Akzentfarbe.
    * Ein langer Zielname darf die Zeile nicht sprengen. */
   .crow { margin-top: 4px; gap: 10px; }
   .crow .sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Die Ankunftszeit darf NICHT gekuerzt werden - sie ist die Aussage der
+   * Zeile. Gekuerzt wird der Zielname, der kann lang sein. */
+  .crow .sub + .sub { flex: 0 0 auto; }
   .crow .sub.heim { color: var(--viz-accent, #ffb020); font-weight: 600; }
   .cbar {
     position: relative; height: 10px; margin: 3px 0 1px;
@@ -337,7 +351,10 @@ export class FhemvizCar extends FhemvizWidget {
       if (!(alterMin >= 0) || alterMin > maxAlter) return null;
     }
 
+    // Ohne Ziel keine Zeile. Beim Fahrtende raeumt der Adapter das Ziel weg -
+    // dann ist die Fahrt vorbei, und "unterwegs" zu raten waere geraten.
     const ziel = zielHit ? this.plain(zielHit.value).trim() : "";
+    if (!ziel) return null;
     const heim = (this._cfg().home || "").trim();
     const nachHause =
       !!heim && !!ziel && ziel.toLowerCase().includes(heim.toLowerCase());
@@ -345,7 +362,7 @@ export class FhemvizCar extends FhemvizWidget {
     const an = new Date(Date.now() + min * 60000);
     const p = (n) => String(n).padStart(2, "0");
     return {
-      label: nachHause ? "🏠 Zuhause" : ziel ? `→ ${ziel}` : "→ unterwegs",
+      label: nachHause ? "🏠 Zuhause" : `→ ${ziel}`,
       wert: `${p(an.getHours())}:${p(an.getMinutes())} · ${Math.round(min)} Min`,
       nachHause,
     };
@@ -383,6 +400,23 @@ export class FhemvizCar extends FhemvizWidget {
     if (soc !== null && soc <= 10) cls = " bad";
     else if (soc !== null && limit !== null) cls = soc >= limit ? " ok" : " on";
     else if (soc !== null) cls = " on";
+
+    // Blickfang: der gemeinsame Ring (gauge.js) statt des flachen Balkens.
+    // Marke = Wunschlimit, Mitte = Prozent und Reichweite, Bogen atmet beim
+    // Laden. Der Balken bleibt als Rueckfall fuer den Zeilen-Skin im CSS.
+    const laedt = !!power && power > 0.05;
+    const ring = ringGauge({
+      pct: soc,
+      mark: limit !== null && limit !== soc ? limit : null,
+      wert:
+        soc === null
+          ? "–"
+          : `${this.fmtNum(soc, 0)}<span class="unit">%</span>`,
+      sub: range !== null ? `${this.fmtNum(range, 0)} km` : "",
+      klasse: cls.trim(),
+      aktiv: laedt,
+      px: this.hasAttribute("data-tv") ? 156 : 132,
+    });
 
     const pct = (v) => Math.max(0, Math.min(100, v));
     const bar =
@@ -447,14 +481,13 @@ export class FhemvizCar extends FhemvizWidget {
     return `<style>${CAR_CSS}</style>
       <div class="card${cls}">
         <span class="label">${this.escape(this.displayName())}</span>
-        <div class="row">
-          <span class="value">${soc === null ? "–" : this.fmtNum(soc, 0)}${
-            soc === null ? "" : `<span class="unit">%</span>`
-          }</span>
-          <span class="sub">${this.escape(info)}</span>
+        <div class="chead">
+          ${ring}
+          <div class="cinfo">
+            ${routeRow || `<div class="row"><span class="sub">${this.escape(info)}</span></div>`}
+            ${routeRow ? `<div class="row"><span class="sub">${this.escape(info)}</span></div>` : ""}
+          </div>
         </div>
-        ${bar}
-        ${routeRow}
         ${wishRow}
         ${slider}
         ${extra}
