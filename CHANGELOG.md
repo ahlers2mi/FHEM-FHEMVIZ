@@ -38,13 +38,15 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
   Fahrtende räumt der Adapter das Ziel weg, und die Restzeit bleibt sonst
   stehen — im Bestand lagen „7 Minuten" zwei Tage lang im Gerät. Eine
   Ankunftszeit daraus wäre frei erfunden gewesen.
-- **Ringanzeige als gemeinsames Bauteil** (`widgets/gauge.js`): 270-Grad-Bogen
-  mit Füllstand, Zielmarke und freiem Inhalt in der Mitte. Die `car`-Kachel
-  zeigt damit den Ladestand als Ring statt als flachen Balken — Marke = das
-  Wunschlimit, Mitte = Prozent und Reichweite, beim Laden atmet der Bogen.
-  Bewusst kein Auto-Sonderfall: derselbe Ring passt auf alles mit Anteil und
-  Ziel (Speicher mit Reserve, Feuchte mit Schwelle) und ist auch aus eigenen
-  Widgets über die Plugin-API zu importieren.
+- **Ladestand wie in der Tesla-App:** ein Balken, die Füllung ist der
+  Ladestand, der **Griff darauf ist das Wunschlimit** und wird direkt gezogen.
+  Damit sitzt die Bedienung dort, wo der Wert steht, und die eigene
+  Reglerzeile darunter entfällt — eine Zeile weniger auf einer engen Kachel.
+  Darüber die Zeile „Ladelimit: X % · lädt 7,6 kW".
+- **Warnzeile aus dem Fahrzeug**: eine offene Ladeklappe
+  (`charge_port_door_open`) steht bernsteinfarben in der Kachel.
+- **Fahrzeugbild** über `attr <dev> vizCar image=<url>` — Höhe begrenzt, damit
+  ein großes Bild die Kachel nicht aufzieht.
 
 ## v0.36.0 — 21.08.2026
 

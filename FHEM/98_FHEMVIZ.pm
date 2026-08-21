@@ -1175,7 +1175,13 @@ sub FHEMVIZ_Attr {
         <code>auto</code>, <code>carlimit</code>, <code>power</code>
         &uuml;berschreiben die gesuchten <b>Reading-Namen</b> (siehe
         <code>vizWidget car</code>); <code>wallbox=&lt;ger&auml;t&gt;</code>
-        h&auml;ngt die <b>Wallbox</b> an die Kachel.<br>
+        h&auml;ngt die <b>Wallbox</b> an die Kachel,
+        <code>image=&lt;url&gt;</code> zeigt ein <b>Fahrzeugbild</b> oben in der
+        Kachel (H&ouml;he begrenzt, damit ein grosses Bild die Kachel nicht
+        aufzieht &ndash; Datei z. B. unter <code>www/</code> ablegen).<br>
+        Der Ladestand wird als <b>Balken</b> gezeigt, dessen <b>Griff das
+        Wunschlimit ist</b> und direkt gezogen wird; eine offene Ladeklappe
+        (<code>charge_port_door_open</code>) erscheint als Hinweiszeile.<br>
         <b>Navigation</b> (ab v0.37.0): liefert das Fahrzeug ein Fahrtziel und
         die Restzeit (Tesla/ioBroker: <code>active_route_destination</code> und
         <code>active_route_minutes_to_arrival</code>; eigene Namen &uuml;ber

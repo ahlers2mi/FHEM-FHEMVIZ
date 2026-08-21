@@ -139,7 +139,7 @@ Aufnahmen der Oberfläche:
 |---|---|
 | **`flow`** — Energiefluss. PV, Haus, Netz und Batterie mit laufenden Punkten in Flussrichtung; minus = entladen. Zuordnung über `attr <dev> vizFlow`.<br>![flow](docs/img/widget-flow.png) | **`watertank`** — Regenwasseranlage als Schema. Füllhöhen in Litern, gestrichelt die Schwimmerhöhe, Rohre leuchten nur bei echtem Transport. Behälterzahl aus `ibcUsableVolume`.<br>![watertank](docs/img/widget-watertank.png) |
 | **`mealplan`** — Wochenplan: heute groß mit Foto, die übrigen Tage als Streifen. Würfeln, bewerten und Einkauf direkt aus der Kachel — Knöpfe nur für set-Befehle, die es wirklich gibt.<br>![mealplan](docs/img/widget-mealplan.png) | **`solvis`** — Heizung: Schichtung im Speicher als Zylinder (S01/S04/S09/S03 von oben nach unten), dazu Solarkreis, Kollektor und Brenner.<br>![solvis](docs/img/widget-solvis.png) |
-| **`car`** — Ladestand als Ring, die Marke ist das Wunschlimit; beim Laden atmet der Bogen. Wallbox über `attr <dev> vizCar wallbox=<gerät>`. Liefert das Auto ein Fahrtziel, steht die **Ankunftszeit** dabei — geht die Fahrt nach Hause, farbig hervorgehoben.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
+| **`car`** — Ladestand als Balken, und der **Griff darauf ist das Wunschlimit** (Vorbild: die Tesla-App). Die blasse Strecke dazwischen ist, was noch geladen werden soll. Wallbox über `vizCar wallbox=<gerät>`, Bild über `image=<url>`. Liefert das Auto ein Fahrtziel, steht die **Ankunftszeit** dabei — nach Hause farbig hervorgehoben.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
 | **`weather`** — Wetterstation (Ecowitt/GW3000): Außen und Innen, Wind, Regen, UV, Druck.<br>![weather](docs/img/widget-weather.png) | **`shuttergroup`** — Rollläden aus einem `structure`: Master-Zeile „Alle" plus je Rollade Position und ▲■▼. Der gemeinsame Namensanfang fällt weg.<br>![shuttergroup](docs/img/widget-shuttergroup.png) |
 
 Dazu `watering` (Bewässerungs-Steuerung ohne Schema).
@@ -404,20 +404,6 @@ Im TV-Betrieb und bei `readonly 1` ist der Modus abgeschaltet.
 | `?edit=1` | Editiermodus (siehe oben) |
 
 ## Eigene Widgets (Plugin-API)
-
-Wiederverwendbare Bausteine liegen neben den Widgets und lassen sich
-importieren — die **Ringanzeige** ist der erste davon:
-
-```js
-import { ringGauge, GAUGE_CSS } from "./gauge.js";
-
-// 270-Grad-Bogen mit Zielmarke, Inhalt in der Mitte frei
-ringGauge({ pct: 62, mark: 80, wert: "62<span class='unit'>%</span>",
-            sub: "331 km", klasse: "ok", aktiv: true });
-```
-
-Passt auf alles, was einen Anteil und ein Ziel hat: Ladestand mit Wunschlimit,
-Speicher mit Reserve, Feuchte mit Schwelle.
 
 Eigene Widgets leben in `www/fhemviz/js/widgets/custom/index.js` — die Datei
 gehört dir und wird von FHEM `update` **nie überschrieben** (sie steht nicht

@@ -1,9 +1,12 @@
 /*
  * FHEMVIZ - Fahrzeug-Widget (vizWidget car, v0.34.27).
- * Ladestand gross, darunter ein Akkubalken: gefuellt = aktueller Stand,
- * blass daneben = die Strecke bis zum WUNSCHLIMIT, der weisse Strich ist
- * das Limit selbst. Der Regler darunter setzt das Wunschlimit, damit der
- * Akku mindestens auf dieses Niveau geladen wird.
+ * Ladestand gross, darunter EIN Balken (Vorbild: die Tesla-App): gefuellt =
+ * aktueller Stand, blass daneben die Strecke bis zum WUNSCHLIMIT, und der
+ * Griff auf dem Balken IST das Wunschlimit - er wird direkt gezogen. Damit
+ * sitzt die Bedienung dort, wo der Wert steht, statt in einer eigenen Zeile.
+ * Dazu die Zeile "Wunschlimit: X % - laedt Y kW", eine Hinweiszeile bei
+ * offener Ladeklappe und - wenn das Fahrzeug ein Fahrtziel liefert - Ziel
+ * mit Ankunftszeit.
  *
  * Auswahl: automatisch, wenn es Readings fuer Ladestand UND Reichweite
  * gibt (z. B. MQTT2_DEVICE mit battery_level + battery_range_km),
@@ -37,19 +40,62 @@
  */
 
 import { FhemvizWidget, vizStatesInfo } from "./base-widget.js";
-import { ringGauge, GAUGE_CSS } from "./gauge.js";
 
 const CAR_CSS = `
-  ${GAUGE_CSS}
-  /* Kopf: Ring links, Angaben rechts. Wird die Kachel schmal, wandert der
-   * Ring nach oben - sonst quetscht er die Zahlen weg. */
-  .chead { display: flex; align-items: center; gap: 16px; min-width: 0; }
-  .chead .cinfo { flex: 1 1 auto; min-width: 0; display: flex;
-                  flex-direction: column; gap: 2px; }
-  @media (max-width: 420px) {
-    .chead { flex-direction: column; align-items: stretch; gap: 8px; }
-    .chead .gg { align-self: center; }
+  /* Fahrzeugbild (attr vizCar image=<url>): oben, mittig, hoehenbegrenzt -
+   * ein zu grosses Bild darf die Kachel nicht aufziehen. */
+  .cimg {
+    width: 100%; max-height: 132px; object-fit: contain;
+    margin: 2px 0 4px; border-radius: 8px;
   }
+  :host([data-tv]) .cimg { max-height: 200px; }
+
+  /* Ladestand wie in der Tesla-App: EIN Balken. Die Fuellung ist der
+   * Ladestand, der Griff darauf ist das Wunschlimit und wird direkt gezogen -
+   * damit sitzt die Bedienung dort, wo der Wert steht, und die eigene
+   * Reglerzeile darunter entfaellt.
+   *
+   * Aufbau: Bahn und Fuellung sind Divs, darueber liegt ein durchsichtiger
+   * range-Regler, von dem nur der Griff sichtbar ist. Ein einzelnes
+   * input-Element kann keine zwei Werte zeigen (Stand UND Limit), deshalb
+   * diese Schichtung.
+   */
+  .clim { position: relative; height: 26px; margin: 4px 0 2px; }
+  .clim .bahn, .clim .fill, .clim .rest {
+    position: absolute; top: 8px; height: 10px; border-radius: 999px;
+  }
+  .clim .bahn { left: 0; right: 0; background: var(--viz-raised, #1c212a); }
+  .clim .fill { left: 0; background: var(--viz-accent, #ffb020); }
+  .card.ok  .clim .fill { background: var(--viz-ok, #34c77b); }
+  .card.bad .clim .fill { background: var(--viz-error, #ff5d5d); }
+  /* Blasse Strecke zwischen Stand und Limit: was noch geladen werden soll. */
+  .clim .rest { background: rgba(255, 176, 32, 0.22);
+                background: color-mix(in srgb, var(--viz-accent, #ffb020) 22%, transparent); }
+  .clim input[type=range] {
+    position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+    -webkit-appearance: none; appearance: none;
+    background: transparent; accent-color: auto;
+  }
+  .clim input[type=range]::-webkit-slider-runnable-track { background: transparent; height: 26px; }
+  .clim input[type=range]::-moz-range-track { background: transparent; height: 26px; }
+  .clim input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; margin-top: 3px;
+    border-radius: 50%; background: var(--viz-text, #e8eaed);
+    border: 2px solid var(--viz-surface, #151920); cursor: pointer;
+  }
+  .clim input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--viz-text, #e8eaed);
+    border: 2px solid var(--viz-surface, #151920); cursor: pointer;
+  }
+  .clim input[type=range]:focus-visible { outline: 2px solid var(--viz-action); outline-offset: 2px; }
+  /* Ohne Bedienung (TV/readonly) bleibt eine Marke statt des Griffs. */
+  .clim .marke { position: absolute; top: 5px; width: 2px; height: 16px;
+                 background: var(--viz-text, #e8eaed); }
+
+  /* Warnzeile aus dem Fahrzeug (Ladeklappe offen o. ae.) - bernstein wie in
+   * der Tesla-App, sie ist ein Hinweis und kein Fehler. */
+  .cwarn { font-size: 0.8rem; font-weight: 600; color: var(--viz-accent, #ffb020); }
   /* Navigationszeile: etwas Luft nach oben, Fahrt nach Hause in Akzentfarbe.
    * Ein langer Zielname darf die Zeile nicht sprengen. */
   .crow { margin-top: 4px; gap: 10px; }
@@ -58,21 +104,6 @@ const CAR_CSS = `
    * Zeile. Gekuerzt wird der Zielname, der kann lang sein. */
   .crow .sub + .sub { flex: 0 0 auto; }
   .crow .sub.heim { color: var(--viz-accent, #ffb020); font-weight: 600; }
-  .cbar {
-    position: relative; height: 10px; margin: 3px 0 1px;
-    border-radius: 999px; background: var(--viz-raised, #1c212a);
-    overflow: hidden;
-  }
-  .cbar > div { position: absolute; top: 0; bottom: 0; left: 0; }
-  /* Blasse Strecke bis zum Wunschlimit = was noch geladen werden soll.
-   * rgba-Zeile = Rueckfall fuer WebViews ohne color-mix. */
-  .cbar .gap { background: rgba(255, 176, 32, 0.25);
-               background: color-mix(in srgb, var(--viz-accent, #ffb020) 25%, transparent); }
-  .cbar .fill { background: var(--viz-accent, #ffb020); border-radius: 999px; }
-  .card.ok .cbar .fill  { background: var(--viz-ok, #34c77b); }
-  .card.bad .cbar .fill { background: var(--viz-error, #ff5d5d); }
-  .cbar .mark { width: 2px; background: var(--viz-text, #e8eaed); }
-  :host([data-tv]) .cbar { height: 14px; }
 
   /* Wallbox-Abschnitt: eigene Zeile mit Trennlinie darueber. */
   .wb {
@@ -401,40 +432,66 @@ export class FhemvizCar extends FhemvizWidget {
     else if (soc !== null && limit !== null) cls = soc >= limit ? " ok" : " on";
     else if (soc !== null) cls = " on";
 
-    // Blickfang: der gemeinsame Ring (gauge.js) statt des flachen Balkens.
-    // Marke = Wunschlimit, Mitte = Prozent und Reichweite, Bogen atmet beim
-    // Laden. Der Balken bleibt als Rueckfall fuer den Zeilen-Skin im CSS.
-    const laedt = !!power && power > 0.05;
-    const ring = ringGauge({
-      pct: soc,
-      mark: limit !== null && limit !== soc ? limit : null,
-      wert:
-        soc === null
-          ? "–"
-          : `${this.fmtNum(soc, 0)}<span class="unit">%</span>`,
-      sub: range !== null ? `${this.fmtNum(range, 0)} km` : "",
-      klasse: cls.trim(),
-      aktiv: laedt,
-      px: this.hasAttribute("data-tv") ? 156 : 132,
-    });
-
     const pct = (v) => Math.max(0, Math.min(100, v));
-    const bar =
-      soc === null
-        ? ""
-        : `<div class="cbar">
-             ${limit !== null && limit > soc ? `<div class="gap" style="width:${pct(limit)}%"></div>` : ""}
-             <div class="fill" style="width:${pct(soc)}%"></div>
-             ${limit !== null ? `<div class="mark" style="left:calc(${pct(limit)}% - 1px)"></div>` : ""}
-           </div>`;
+    const laedt = !!power && power > 0.05;
 
-    // Kopfzeile rechts: Reichweite und - wenn geliefert - die Ladeleistung.
-    const info = [
-      range !== null ? `${this.fmtNum(range, 0)} km` : "",
-      power ? `lädt ${this.fmtNum(power, 1)} kW` : "",
+    // Rechts neben dem Ladestand: Reichweite (die Ladeleistung steht in der
+    // Zeile darunter, sonst stuende sie zweimal im Bild).
+    const info = range !== null ? `${this.fmtNum(range, 0)} km` : "";
+
+    // Kopfzeile wie in der Tesla-App: Limit vorn, dahinter der Zustand.
+    // ABER als "Wunschlimit" benannt: Tesla meint mit "Ladelimit" das Limit
+    // IM FAHRZEUG, und das steht hier als eigene Zeile mit einem anderen Wert
+    // darunter. "Ladelimit: 25 %" ueber "Limit im Fahrzeug: 60 %" waere ein
+    // Widerspruch im Bild.
+    // "Laden gestoppt" wird nicht erfunden - steht kein Zustand im Gerät und
+    // laeuft nichts, bleibt der Platz leer.
+    const zustandTxt = laedt
+      ? `lädt ${this.fmtNum(power, 1)} kW`
+      : this.plain(this._read(["charging_state", "charge_state", "charger_state"])?.value || "");
+    const kopf = [
+      limit !== null ? `Wunschlimit: ${this.fmtNum(limit, 0)} %` : "",
+      zustandTxt,
     ]
       .filter(Boolean)
       .join(" · ");
+
+    // Der Balken: Fuellung = Ladestand, Griff = Wunschlimit (ziehbar).
+    // Ohne Bedienung bleibt eine Marke an der Limit-Position.
+    const climb =
+      soc === null && limit === null
+        ? ""
+        : `<div class="clim">
+             <div class="bahn"></div>
+             ${
+               limit !== null && soc !== null && limit > soc
+                 ? `<div class="rest" style="left:${pct(soc)}%;right:${100 - pct(limit)}%"></div>`
+                 : ""
+             }
+             ${soc !== null ? `<div class="fill" style="width:${pct(soc)}%"></div>` : ""}
+             ${
+               spec && !this.readonly && limit !== null
+                 ? `<input id="wish" type="range" step="${spec.step}"
+                      min="${Math.min(spec.min, limit)}" max="${spec.max}" value="${limit}"
+                      aria-label="Wunschlimit ${this.escape(this.displayName())}">`
+                 : limit !== null
+                   ? `<div class="marke" style="left:calc(${pct(limit)}% - 1px)"></div>`
+                   : ""
+             }
+           </div>`;
+
+    // Warnzeile aus dem Fahrzeug. Nur Readings, die es wirklich gibt:
+    // eine offene Ladeklappe meldet Tesla als charge_port_door_open.
+    const klappe = this._read(["charge_port_door_open"]);
+    const warn =
+      klappe && /^(true|1|open|yes|on)$/i.test(this.plain(klappe.value))
+        ? `<div class="cwarn">⚠ Ladeklappe offen</div>`
+        : "";
+
+    // Fahrzeugbild (attr vizCar image=<url>) - rein optional.
+    const bild = this._cfg().image
+      ? `<img class="cimg" src="${this.escape(this._cfg().image)}" alt="">`
+      : "";
 
     // Fahrt nach Hause faellt ins Auge (Akzentfarbe), ein fremdes Ziel nicht.
     const route = this._route();
@@ -445,19 +502,6 @@ export class FhemvizCar extends FhemvizWidget {
            <span class="sub${route.nachHause ? " heim" : ""}">${this.escape(route.wert)}</span>
          </div>`;
 
-    const wishRow =
-      limit === null
-        ? ""
-        : `<div class="row">
-             <span class="sub">Wunschlimit</span>
-             <span class="sub" id="wv">${this.fmtNum(limit, 0)} %</span>
-           </div>`;
-    const slider =
-      spec && !this.readonly && limit !== null
-        ? `<input id="wish" type="range" step="${spec.step}"
-             min="${Math.min(spec.min, limit)}" max="${spec.max}" value="${limit}"
-             aria-label="Wunschlimit ${this.escape(this.displayName())}">`
-        : "";
     // Zusatzzeilen zeigen, solange sie aus einem ANDEREN Reading kommen als
     // das Wunschlimit. Nur wenn es dasselbe Reading ist (etwa weil ohne
     // wish_charge_limit auf charge_limit_soc zurueckgefallen wurde), waere es
@@ -481,15 +525,17 @@ export class FhemvizCar extends FhemvizWidget {
     return `<style>${CAR_CSS}</style>
       <div class="card${cls}">
         <span class="label">${this.escape(this.displayName())}</span>
-        <div class="chead">
-          ${ring}
-          <div class="cinfo">
-            ${routeRow || `<div class="row"><span class="sub">${this.escape(info)}</span></div>`}
-            ${routeRow ? `<div class="row"><span class="sub">${this.escape(info)}</span></div>` : ""}
-          </div>
+        ${bild}
+        <div class="row">
+          <span class="value">${soc === null ? "–" : this.fmtNum(soc, 0)}${
+            soc === null ? "" : `<span class="unit">%</span>`
+          }</span>
+          <span class="sub">${this.escape(info)}</span>
         </div>
-        ${wishRow}
-        ${slider}
+        ${kopf ? `<div class="row"><span class="sub">${this.escape(kopf)}</span></div>` : ""}
+        ${climb}
+        ${warn}
+        ${routeRow}
         ${extra}
         ${this._extraRows()}
         ${this._wbHtml()}
