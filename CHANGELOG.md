@@ -11,6 +11,26 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.2 — 21.08.2026
+
+**Behoben**
+
+- **`vizHero full` wurde im Browser zu groß.** Bisher bestimmte allein die
+  **Breite**, wie hoch die Vollbild-Kachel wird. Widgets mit festem
+  Seitenverhältnis — `watertank` leitet die Höhe seiner Zeichnung aus der
+  Breite ab (viewBox 220:108) — wuchsen in einem breiten Browserfenster über
+  den Schirm hinaus: gemessen bei 1850×820 eine Kachel von **926 px in 780 px**
+  sichtbarer Fläche, die Seite scrollte 424 px. Jetzt zählt das Kleinere von
+  Breite und Höhe, die Zeichnung wird verkleinert und mittig gestellt
+  (Kachel 690, Zeichnung 577).
+  Eine Obergrenze allein genügte nicht: die Grid-Zeile richtet sich nach dem
+  Inhalt, die Grenze schnitt die Zeichnung nur ab (Kachel 690, Zeichnung
+  weiter 813). Erst `grid-template-rows: minmax(0, 1fr)` erlaubt der Zeile,
+  unter die Inhaltshöhe zu gehen.
+  Der **TV-Modus bleibt unberührt** — dort ist die Höhe bewusst genau ein
+  Schirm minus Rahmenabstand, damit das Auto-Paging sauber blättert; die
+  Browser-Grenze hätte die Kachel dort um 43 px gekürzt (im Test 660 → 617).
+
 ## v0.37.1 — 21.08.2026
 
 **Neu**

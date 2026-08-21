@@ -283,9 +283,39 @@ html[data-vizmode="tv"] .viz-hero > * { min-height: 150px; }
   grid-template-columns: 1fr;
   align-items: stretch;
   margin-bottom: 0;
-  /* Tablet/Handy: erster Schirm gehoert der Kachel, der Rest des Raums steht
-   * darunter und bleibt scrollbar. */
+}
+/* Damit die Karte unter ihre Inhaltshoehe schrumpfen DARF - ohne min-height:0
+ * verweigert Grid/Flexbox das, und eine Obergrenze wuerde die Zeichnung nur
+ * abschneiden statt sie zu verkleinern. */
+.viz-hero.full > * { min-height: 0; }
+/* Tablet/Handy/Browser: erster Schirm gehoert der Kachel, der Rest des Raums
+ * steht darunter und bleibt scrollbar. Die Groesse folgt BREITE UND HOEHE,
+ * es gilt das Kleinere von beidem.
+ *
+ * Vorher stand hier nur die min-height. Damit bestimmte allein die Breite,
+ * wie hoch die Kachel wird, und Widgets mit festem Seitenverhaeltnis
+ * (watertank leitet die SVG-Hoehe aus der Breite ab, viewBox 220:108) wuchsen
+ * in einem breiten Browserfenster ueber den Schirm hinaus: gemessen bei
+ * 1850x820 ein Band von 926 px in 780 px sichtbarer Flaeche, die Seite
+ * scrollte 424 px.
+ *
+ * max-height allein reicht NICHT. Die Grid-Zeile ist implizit "auto" und
+ * richtet sich nach dem Inhalt; die Obergrenze schneidet die Zeichnung dann
+ * nur ab (nachgemessen: Band 690, SVG weiter 813). Erst
+ * grid-template-rows: minmax(0, 1fr) erlaubt der Zeile, unter die
+ * Inhaltshoehe zu gehen - dann wird die Zeichnung KLEINER statt beschnitten
+ * (Band 690, SVG 577) und mittig gestellt (preserveAspectRatio
+ * "xMidYMid meet").
+ *
+ * Bewusst NICHT im TV-Modus: dort ist die Hoehe genau ein Schirm minus
+ * --viz-tv-pad-y (Regel unten), damit das Auto-Paging sauber blaettert. Eine
+ * Obergrenze mit anderem Abzug (90 px) kuerzte die Kachel um 43 px - im Test
+ * fiel das TV-Band von 660 auf 617. */
+html:not([data-vizmode="tv"]) .viz-hero.full {
+  grid-template-rows: minmax(0, 1fr);
   min-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px) - 90px);
+  max-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px) - 90px);
+  overflow: hidden;
 }
 /* Fernseher: die Kachel ist GENAU einen Schirm hoch - nicht mehr (sonst
  * blaettert das Auto-Paging mitten durch die Zeichnung) und nicht weniger.
