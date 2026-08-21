@@ -43,17 +43,12 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
   Damit sitzt die Bedienung dort, wo der Wert steht, und die eigene
   Reglerzeile darunter entfällt — eine Zeile weniger auf einer engen Kachel.
   Darüber die Zeile „Ladelimit: X % · lädt 7,6 kW".
-- **Warnzeile aus dem Fahrzeug**: eine offene Ladeklappe
-  (`charge_port_door_open`) steht bernsteinfarben in der Kachel.
 - **Fahrzeugbild** über `attr <dev> vizCar image=<url>`, auf Wunsch **je
   Ladezustand ein eigenes**: `image=laedt:<url>|steckt:<url>|frei:<url>`. Den
   Zustand ermittelt die Kachel aus der Leistung (Fahrzeug oder Wallbox), dem
   Zustandstext der Wallbox und `charge_port_door_open`; ein eigenes Reading
   geht per `plug=`. Drei zugeschnittene Beispielbilder liegen unter
   `www/fhemviz/img/car/` und kommen mit dem `update` mit.
-- Die Hinweiszeile „Ladeklappe offen" erscheint nur, wenn **nichts steckt**.
-  Beim Laden und bei eingestecktem Kabel ist die Klappe zu Recht offen — dort
-  wäre die Zeile Dauerrauschen; offen ohne Kabel heißt dagegen: vergessen.
 
 ## v0.36.0 — 21.08.2026
 

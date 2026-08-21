@@ -1190,8 +1190,7 @@ sub FHEMVIZ_Attr {
         f&uuml;r &bdquo;angesteckt&ldquo; geht per
         <code>plug=&lt;reading&gt;</code>.<br>
         Der Ladestand wird als <b>Balken</b> gezeigt, dessen <b>Griff das
-        Wunschlimit ist</b> und direkt gezogen wird; eine offene Ladeklappe
-        erscheint als Hinweiszeile.<br>
+        Wunschlimit ist</b> und direkt gezogen wird.<br>
         <b>Was das Wunschlimit bedeutet:</b> es ist das <b>Minimum, das immer
         geladen wird</b> &ndash; unabh&auml;ngig davon, wie die
         Solar&uuml;berschuss-Regelung gerade entscheidet. Die blasse Strecke

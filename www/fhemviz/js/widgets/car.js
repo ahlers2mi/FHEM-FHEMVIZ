@@ -4,9 +4,8 @@
  * aktueller Stand, blass daneben die Strecke bis zum WUNSCHLIMIT, und der
  * Griff auf dem Balken IST das Wunschlimit - er wird direkt gezogen. Damit
  * sitzt die Bedienung dort, wo der Wert steht, statt in einer eigenen Zeile.
- * Dazu die Zeile "Wunschlimit: X % - laedt Y kW", eine Hinweiszeile bei
- * offener Ladeklappe und - wenn das Fahrzeug ein Fahrtziel liefert - Ziel
- * mit Ankunftszeit.
+ * Dazu die Zeile "Wunschlimit: X % - laedt Y kW" und - wenn das Fahrzeug ein
+ * Fahrtziel liefert - Ziel mit Ankunftszeit.
  *
  * Auswahl: automatisch, wenn es Readings fuer Ladestand UND Reichweite
  * gibt (z. B. MQTT2_DEVICE mit battery_level + battery_range_km),
@@ -93,9 +92,6 @@ const CAR_CSS = `
   .clim .marke { position: absolute; top: 5px; width: 2px; height: 16px;
                  background: var(--viz-text, #e8eaed); }
 
-  /* Warnzeile aus dem Fahrzeug (Ladeklappe offen o. ae.) - bernstein wie in
-   * der Tesla-App, sie ist ein Hinweis und kein Fehler. */
-  .cwarn { font-size: 0.8rem; font-weight: 600; color: var(--viz-accent, #ffb020); }
   /* Navigationszeile: etwas Luft nach oben, Fahrt nach Hause in Akzentfarbe.
    * Ein langer Zielname darf die Zeile nicht sprengen. */
   .crow { margin-top: 4px; gap: 10px; }
@@ -539,20 +535,6 @@ export class FhemvizCar extends FhemvizWidget {
              }
            </div>`;
 
-    // Warnzeile aus dem Fahrzeug. Nur Readings, die es wirklich gibt:
-    // eine offene Ladeklappe meldet Tesla als charge_port_door_open.
-    //
-    // ABER nur meldenswert, wenn NICHTS steckt: beim Laden und bei
-    // eingestecktem Kabel ist die Klappe zu Recht offen, dann waere die Zeile
-    // Dauerrauschen. Offen ohne Kabel heisst dagegen: vergessen.
-    const klappe = this._read(["charge_port_door_open"]);
-    const warn =
-      klappe &&
-      /^(true|1|open|yes|on)$/i.test(this.plain(klappe.value)) &&
-      this._ladeZustand() === "frei"
-        ? `<div class="cwarn">⚠ Ladeklappe offen</div>`
-        : "";
-
     // Fahrzeugbild aus attr vizCar image=... - eine Adresse fuer immer, oder
     // je Ladezustand eine eigene (siehe _bildUrl).
     const bildUrl = this._bildUrl();
@@ -601,7 +583,6 @@ export class FhemvizCar extends FhemvizWidget {
         </div>
         ${kopf ? `<div class="row"><span class="sub">${this.escape(kopf)}</span></div>` : ""}
         ${climb}
-        ${warn}
         ${routeRow}
         ${extra}
         ${this._extraRows()}
