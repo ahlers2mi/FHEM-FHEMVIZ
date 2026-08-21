@@ -54,6 +54,7 @@ ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet
 | `devspec` | FHEM-devspec | **Pflicht.** Welche Geräte in der Sicht sind, z. B. `room=Dashboard.*` oder `d_garage_neu,mySolar.*` |
 | `mode` | `tablet` (Default) / `tv` | Betriebsart; per URL übersteuerbar (`?mode=tv`) |
 | `tvScenes` | `Raum:Sek,Raum:Sek` | Szenen-Rotation im TV-Modus, z. B. `Solar:30,Wohnzimmer:20,Garage:15`. Ohne Angabe: alle sichtbaren Räume à 20 s |
+| `tvHeroSec` | Sekunden | Eigene Standzeit der Vollbild-Kachel (`vizHero full`) innerhalb der Szenenzeit; ohne Angabe teilen sich alle Seiten die Zeit gleichmäßig |
 | `tvTouch` | Sekunden (Default 30, `0` = aus) | Touch-Übernahme im TV-Modus: Tipp auf den Schirm → bedienbare Tablet-Ansicht; nach `tvTouch` s ohne Aktion läuft die Rotation weiter (TV-Modus als Tablet-Bildschirmschoner) |
 | `theme` | `auto` (Default) / `light` / `dark` | Farbschema; `auto` folgt dem System |
 | `zoom` | `0.5`–`3` oder Prozent (`130`) | Standard-Skalierung für alle Browser dieses Geräts; `?zoom=` in der URL geht vor. Praktisch für Kiosk-Browser (Fully), die URL-Parameter verschlucken. Aktiver Zoom steht in der Statuszeile |
@@ -244,14 +245,24 @@ attr bewaesserung vizHero full
 attr myViz tvScenes #uhr:20,Solar:30,Wasser:25
 ```
 
-Auf dem Fernseher ist die Kachel damit die Seite: die Gruppen darunter fallen
-weg, weil sie ohnehin nur angeschnitten würden (dort wird nie gescrollt). Auf
-Tablet/Handy füllt sie den ersten Schirm, der Rest des Raums steht darunter
-und bleibt erreichbar.
+**Die anderen Kacheln des Raums bleiben.** Die Vollbild-Kachel belegt auf dem
+Fernseher die **erste Seite** der Szene, danach blättert das vorhandene
+Auto-Paging zu den übrigen weiter — die Kopfzeile zählt mit (`Draußen · 1/2`).
+Auf Tablet/Handy füllt sie den ersten Schirm, der Rest steht darunter.
 
-Am besten in einem eigenen Raum mit genau einem Gerät, der als TV-Szene
-rotiert. Mehrere `full`-Geräte eines Raums teilen sich die Höhe. Zurück geht
-es mit `vizHero 1` (normales Band) oder `deleteattr <gerät> vizHero`.
+Ohne weitere Angabe teilt sich die Szenenzeit gleichmäßig auf die Seiten.
+`tvHeroSec` am FHEMVIZ-Gerät gibt der großen Kachel eine **eigene Standzeit**:
+
+```
+attr myViz tvScenes Draußen:40,Küche:40
+attr myViz tvHeroSec 25          # 25 s die große Kachel, 15 s der Rest
+```
+
+Je Seite bleibt mindestens eine Sekunde; ein zu großer Wert wird gekappt. Ohne
+Vollbild-Kachel im Raum wirkt das Attribut nicht.
+
+Mehrere `full`-Geräte eines Raums bekommen je eine Seite. Zurück geht es mit
+`vizHero 1` (normales Band) oder `deleteattr <gerät> vizHero`.
 
 ### Uhr-Seite `#uhr` als Szene
 
@@ -493,10 +504,10 @@ Was fertig ist, steht im [`CHANGELOG.md`](./CHANGELOG.md).
   den Imports würde das dauerhaft erledigen.
 - **`eventMap` in Perl-Notation** (`eventMap {…}`) kann der Browser nicht
   auswerten — dort bleibt der Rohwert stehen. Die Listenform funktioniert.
-- **`vizHero full` ist auf einen Schirm zugeschnitten.** Bei viel Inhalt und
-  wenig Bildschirmhöhe schneidet die Karte unten ab, statt zu blättern.
-  Alternative wäre: Seite 1 die Vollbild-Kachel, Seite 2+ der Rest des Raums
-  über das vorhandene Auto-Paging.
+- **`vizHero full` ist auf einen Schirm zugeschnitten.** Die Kachel selbst
+  bekommt genau eine Seite; passt ihr *Inhalt* nicht hinein (viele feste
+  Zeilen bei geringer Bildschirmhöhe), schneidet die Karte unten ab statt zu
+  blättern. Der Rest des Raums ist davon nicht betroffen, der wird geblättert.
 - **Kein Service Worker**, also kein Offline-Betrieb. Bewusst so — ein
   hängender PWA-Cache wäre schwerer loszuwerden als der HTTP-Cache.
 

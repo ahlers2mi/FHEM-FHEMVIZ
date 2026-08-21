@@ -11,6 +11,23 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.36.0 — 21.08.2026
+
+**Geändert**
+
+- **`vizHero full` lässt die anderen Kacheln stehen.** Bisher blendete der
+  TV-Modus die übrigen Kacheln des Raums aus — die Vollbild-Kachel war die
+  ganze Seite. Jetzt belegt sie die **erste Seite** der Szene, und das
+  vorhandene Auto-Paging blättert danach zu den übrigen weiter; die Kopfzeile
+  zählt mit (`Draußen · 1/2`). Möglich, weil die Kachel eine feste Höhe von
+  genau einem Schirm hat statt sich den Platz per Flexbox zu nehmen.
+
+**Neu**
+
+- **`attr <viz> tvHeroSec <Sekunden>`** — eigene Standzeit für die
+  Vollbild-Kachel. Was von der Szenenzeit übrig bleibt, teilen sich die
+  Kachelseiten danach. Ohne das Attribut bleibt es bei der Gleichverteilung.
+
 ## v0.35.6 — 20.08.2026
 
 **Behoben**

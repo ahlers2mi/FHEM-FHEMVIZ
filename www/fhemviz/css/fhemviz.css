@@ -287,32 +287,35 @@ html[data-vizmode="tv"] .viz-hero > * { min-height: 150px; }
    * darunter und bleibt scrollbar. */
   min-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px) - 90px);
 }
-/* Fernseher: die Kachel darf NICHT ueber den Schirm hinausragen - hier wird
- * nie gescrollt, und das Auto-Paging blaettert sonst mitten durch die
- * Zeichnung ("1/2" bei einer einzigen Kachel).
+/* Fernseher: die Kachel ist GENAU einen Schirm hoch - nicht mehr (sonst
+ * blaettert das Auto-Paging mitten durch die Zeichnung) und nicht weniger.
  *
- * Dazu muss die Hoehe eine durchgehende Kette bilden. #fhemviz-app ist schon
- * genau einen Schirm hoch und ein Flex-Container - aber DAZWISCHEN liegt
- * .viz-room, und das hat von sich aus keine Hoehe. Ein height:100% am Band
- * greift deshalb ins Leere (Prozent auf unbestimmte Hoehe = auto), genau
- * daran ist der erste Versuch gescheitert. Also: der Raum wird selbst zum
- * Flex-Container und nimmt die Restflaeche, das Band schrumpft darin.
- * min-height:0 ist Pflicht, sonst verweigert Flexbox das Schrumpfen unter
- * die Inhaltshoehe - und genau das braucht es hier. */
-html[data-vizmode="tv"] .viz-room.hero-full {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
+ * Feste Hoehe statt flex: das Band ist damit die erste Seite, und die
+ * uebrigen Kacheln des Raums stehen darunter. Der Raum wird dadurch hoeher
+ * als die Flaeche, und das vorhandene Auto-Paging blaettert weiter:
+ * Seite 1 die Vollbild-Kachel, Seite 2+ der Rest. Nichts faellt weg.
+ *
+ * Frueher stand hier flex:1 1 auto - dann blieb die Flex-Basis der INHALT
+ * und Kacheln, die ihre Hoehe selbst ausrechnen (watertank aus der Breite,
+ * mealplan sieben feste Zeilen), wuchsen ueber den Schirm hinaus. */
 html[data-vizmode="tv"] .viz-hero.full {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px) - var(--viz-tv-pad-y, 56px));
   min-height: 0;
-  height: auto;
   overflow: hidden;
+  /* Abstand zur ersten normalen Kachel: sie beginnt auf der naechsten Seite,
+   * der Abstand darf die Hoehe der Hero-Seite also nicht mitbestimmen. */
+  margin-bottom: var(--viz-gap, 16px);
 }
 html[data-vizmode="tv"] .viz-hero.full > * { min-height: 0; }
-html[data-vizmode="tv"] .viz-room.hero-full > .viz-groups { display: none; }
+/* Der Kachelteil ist mindestens einen Schirm hoch. Ohne das bleibt der Raum
+ * knapp unter zwei Schirmen, das Blaettern laeuft in den Scroll-Anschlag und
+ * Seite 2 zeigt oben noch die Unterkante der Hero-Kachel.
+ * Hier bewusst OHNE --viz-tv-pad-y: der Innenabstand des Rahmens zaehlt beim
+ * Anschlag mit, die Mindesthoehe braucht ihn also als Zugabe. */
+html[data-vizmode="tv"] .viz-room.hero-full > .viz-groups {
+  min-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px));
+}
 .viz-groups {
   display: flex; flex-wrap: wrap; align-items: start;
   gap: 18px var(--viz-gap);
@@ -355,6 +358,9 @@ html[data-vizmode="tv"] .viz-tabs { display: none; }
 html[data-vizzoom]:not([data-vizmode="tv"]) body { overscroll-behavior-y: none; }
 html[data-vizmode="tv"] body { overflow: hidden; }
 html[data-vizmode="tv"] #fhemviz-app {
+  /* Senkrechter Innenabstand steht als Variable daneben (26 + 30), weil
+   * .viz-hero.full daraus die Hoehe "genau ein Schirm" ableitet. Wer hier
+   * das padding aendert, muss --viz-tv-pad-y mitziehen. */
   padding: 26px 34px 30px;
   /* Fernseher scrollen nie: feste Flaeche, Ueberlauf blaettert die
    * Szenen-Rotation automatisch seitenweise (app.js, Auto-Paging).
@@ -367,6 +373,7 @@ html[data-vizmode="tv"] #fhemviz-app {
   justify-content: safe center; /* wenige Kacheln mittig, Ueberlauf oben */
 }
 html[data-vizmode="tv"] {
+  --viz-tv-pad-y: 56px; /* = 26px oben + 30px unten an #fhemviz-app */
   --viz-tile-min: 260px;
   --viz-tile-row: 140px;
   --viz-gap: 16px;
