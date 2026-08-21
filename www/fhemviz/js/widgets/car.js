@@ -39,6 +39,11 @@
 import { FhemvizWidget, vizStatesInfo } from "./base-widget.js";
 
 const CAR_CSS = `
+  /* Navigationszeile: etwas Luft nach oben, Fahrt nach Hause in Akzentfarbe.
+   * Ein langer Zielname darf die Zeile nicht sprengen. */
+  .crow { margin-top: 4px; gap: 10px; }
+  .crow .sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .crow .sub.heim { color: var(--viz-accent, #ffb020); font-weight: 600; }
   .cbar {
     position: relative; height: 10px; margin: 3px 0 1px;
     border-radius: 999px; background: var(--viz-raised, #1c212a);
@@ -298,6 +303,54 @@ export class FhemvizCar extends FhemvizWidget {
     return (dev.attr && dev.attr.alias) || dev.name;
   }
 
+  /**
+   * Laufende Navigation: Ziel und Restzeit (Tesla/ioBroker liefert
+   * active_route_destination + active_route_minutes_to_arrival).
+   *
+   * ENTSCHEIDEND ist die FRISCHE. Die Route-Readings bleiben nach der Fahrt
+   * stehen - im Bestand lag "7 Minuten bis Moubis Dülmen" zwei Tage lang im
+   * Gerät. Eine Ankunftszeit daraus zu rechnen waere frei erfunden. Darum:
+   * nur zeigen, wenn der Zeitstempel der Restzeit jung ist (Default 15 min,
+   * per "routeAge=<minuten>" in vizCar aenderbar, 0 = Pruefung aus).
+   *
+   * Ist ein Zuhause-Name gesetzt ("home=<text>" in vizCar) und das Ziel
+   * enthaelt ihn, heisst die Zeile "Zuhause" statt des Ortsnamens.
+   */
+  _route() {
+    const zielHit = this._read(
+      [this._cfg().dest, "active_route_destination", "destination_name"].filter(Boolean)
+    );
+    const minHit = this._read(
+      [this._cfg().eta, "active_route_minutes_to_arrival", "minutes_to_arrival"].filter(Boolean)
+    );
+    if (!minHit) return null;
+    const min = parseFloat(this.plain(minHit.value).replace(",", "."));
+    if (isNaN(min) || min < 0) return null;
+
+    const maxAlter = this._cfg().routeage === undefined ? 15 : parseInt(this._cfg().routeage, 10);
+    if (maxAlter > 0) {
+      const t = ((this.device || {}).times || {})[minHit.name];
+      if (!t) return null; // ohne Zeitstempel lieber nichts behaupten
+      // FHEM-Format "2026-08-19 15:16:40" - fuer Date() mit T verbinden,
+      // sonst legen manche Engines es als UTC aus.
+      const alterMin = (Date.now() - new Date(String(t).replace(" ", "T")).getTime()) / 60000;
+      if (!(alterMin >= 0) || alterMin > maxAlter) return null;
+    }
+
+    const ziel = zielHit ? this.plain(zielHit.value).trim() : "";
+    const heim = (this._cfg().home || "").trim();
+    const nachHause =
+      !!heim && !!ziel && ziel.toLowerCase().includes(heim.toLowerCase());
+
+    const an = new Date(Date.now() + min * 60000);
+    const p = (n) => String(n).padStart(2, "0");
+    return {
+      label: nachHause ? "🏠 Zuhause" : ziel ? `→ ${ziel}` : "→ unterwegs",
+      wert: `${p(an.getHours())}:${p(an.getMinutes())} · ${Math.round(min)} Min`,
+      nachHause,
+    };
+  }
+
   render() {
     const soc = this._soc();
     const range = this._range();
@@ -349,6 +402,15 @@ export class FhemvizCar extends FhemvizWidget {
       .filter(Boolean)
       .join(" · ");
 
+    // Fahrt nach Hause faellt ins Auge (Akzentfarbe), ein fremdes Ziel nicht.
+    const route = this._route();
+    const routeRow = !route
+      ? ""
+      : `<div class="row crow">
+           <span class="sub${route.nachHause ? " heim" : ""}">${this.escape(route.label)}</span>
+           <span class="sub${route.nachHause ? " heim" : ""}">${this.escape(route.wert)}</span>
+         </div>`;
+
     const wishRow =
       limit === null
         ? ""
@@ -392,6 +454,7 @@ export class FhemvizCar extends FhemvizWidget {
           <span class="sub">${this.escape(info)}</span>
         </div>
         ${bar}
+        ${routeRow}
         ${wishRow}
         ${slider}
         ${extra}

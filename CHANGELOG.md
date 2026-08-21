@@ -11,6 +11,20 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.0 — 21.08.2026
+
+**Neu**
+
+- **Die `car`-Kachel zeigt die laufende Fahrt.** Liefert das Fahrzeug Ziel und
+  Restzeit (`active_route_destination`, `active_route_minutes_to_arrival`),
+  steht in der Kachel Ziel, **Ankunftszeit** und Restminuten. Mit
+  `home=<text>` in `vizCar` heißt die Zeile „🏠 Zuhause" und wird farbig
+  hervorgehoben, sobald das Ziel diesen Text enthält.
+- Die Zeile erscheint **nur bei frischen Werten** (Default 15 Minuten,
+  `routeAge=` ändert das). Die Route-Readings bleiben nach der Fahrt stehen —
+  im Bestand lagen „7 Minuten" zwei Tage lang im Gerät, eine Ankunftszeit
+  daraus wäre frei erfunden gewesen.
+
 ## v0.36.0 — 21.08.2026
 
 **Geändert**

@@ -139,10 +139,29 @@ Aufnahmen der Oberfläche:
 |---|---|
 | **`flow`** — Energiefluss. PV, Haus, Netz und Batterie mit laufenden Punkten in Flussrichtung; minus = entladen. Zuordnung über `attr <dev> vizFlow`.<br>![flow](docs/img/widget-flow.png) | **`watertank`** — Regenwasseranlage als Schema. Füllhöhen in Litern, gestrichelt die Schwimmerhöhe, Rohre leuchten nur bei echtem Transport. Behälterzahl aus `ibcUsableVolume`.<br>![watertank](docs/img/widget-watertank.png) |
 | **`mealplan`** — Wochenplan: heute groß mit Foto, die übrigen Tage als Streifen. Würfeln, bewerten und Einkauf direkt aus der Kachel — Knöpfe nur für set-Befehle, die es wirklich gibt.<br>![mealplan](docs/img/widget-mealplan.png) | **`solvis`** — Heizung: Schichtung im Speicher als Zylinder (S01/S04/S09/S03 von oben nach unten), dazu Solarkreis, Kollektor und Brenner.<br>![solvis](docs/img/widget-solvis.png) |
-| **`car`** — Fahrzeug mit Ladestand, Reichweite und Wunschlimit; die Wallbox kommt über `attr <dev> vizCar wallbox=<gerät>` dazu. Regler-Spannen aus den `PossibleSets`.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
+| **`car`** — Fahrzeug mit Ladestand, Reichweite und Wunschlimit; die Wallbox kommt über `attr <dev> vizCar wallbox=<gerät>` dazu. Liefert das Auto ein Fahrtziel, steht die **Ankunftszeit** dabei — geht die Fahrt nach Hause, farbig hervorgehoben.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
 | **`weather`** — Wetterstation (Ecowitt/GW3000): Außen und Innen, Wind, Regen, UV, Druck.<br>![weather](docs/img/widget-weather.png) | **`shuttergroup`** — Rollläden aus einem `structure`: Master-Zeile „Alle" plus je Rollade Position und ▲■▼. Der gemeinsame Namensanfang fällt weg.<br>![shuttergroup](docs/img/widget-shuttergroup.png) |
 
 Dazu `watering` (Bewässerungs-Steuerung ohne Schema).
+
+**Kommt das Auto nach Hause?** Liefert das Fahrzeug Fahrtziel und Restzeit
+(Tesla über ioBroker: `active_route_destination` und
+`active_route_minutes_to_arrival`), zeigt die `car`-Kachel eine Zeile mit Ziel,
+Ankunftszeit und Restminuten:
+
+```
+attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,home=Bahnhofstrasse
+```
+
+Enthält das Ziel den `home=`-Text, heißt die Zeile **„🏠 Zuhause"** und wird
+farbig hervorgehoben — man sieht auf einen Blick, dass es heimkommt und wann.
+
+> **Die Frische entscheidet.** Die Route-Readings bleiben nach der Fahrt
+> stehen; im Bestand lagen „7 Minuten bis Dülmen" zwei Tage lang im Gerät. Die
+> Zeile erscheint deshalb nur, wenn der Zeitstempel der Restzeit jünger als
+> 15 Minuten ist (`routeAge=<minuten>` ändert das, `routeAge=0` schaltet die
+> Prüfung ab). Ohne Zeitstempel wird nichts gezeigt — eine erfundene
+> Ankunftszeit ist schlimmer als keine.
 
 **Gruppen-Kacheln** — EINE Kachel für ein `structure`-Gerät, mit einer Zeile
 je Mitglied (die Mitglieder müssen im `devspec` liegen, dürfen aber per

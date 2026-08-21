@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.36.0
+# Version:  v0.37.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.36.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -344,7 +344,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.36.0"),
+            FHEMVIZ_jsonStr("v0.37.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1176,6 +1176,22 @@ sub FHEMVIZ_Attr {
         &uuml;berschreiben die gesuchten <b>Reading-Namen</b> (siehe
         <code>vizWidget car</code>); <code>wallbox=&lt;ger&auml;t&gt;</code>
         h&auml;ngt die <b>Wallbox</b> an die Kachel.<br>
+        <b>Navigation</b> (ab v0.37.0): liefert das Fahrzeug ein Fahrtziel und
+        die Restzeit (Tesla/ioBroker: <code>active_route_destination</code> und
+        <code>active_route_minutes_to_arrival</code>; eigene Namen &uuml;ber
+        <code>dest=</code> / <code>eta=</code>), zeigt die Kachel eine Zeile
+        <i>Ziel &middot; Ankunftszeit &middot; Restminuten</i>. Mit
+        <code>home=&lt;text&gt;</code> hei&szlig;t sie
+        &bdquo;&#127968; Zuhause&ldquo; in Akzentfarbe, sobald das Ziel diesen
+        Text enth&auml;lt &ndash; man sieht also auf einen Blick, dass das Auto
+        heimkommt und wann.<br>
+        <b>Wichtig, die Frische:</b> die Route-Readings bleiben nach der Fahrt
+        stehen (im Bestand lagen &bdquo;7 Minuten&ldquo; zwei Tage im Ger&auml;t).
+        Die Zeile erscheint deshalb nur, wenn der Zeitstempel der Restzeit
+        j&uuml;nger als 15 Minuten ist. Anders einstellen mit
+        <code>routeAge=&lt;minuten&gt;</code>, <code>routeAge=0</code> schaltet
+        die Pr&uuml;fung ab (dann kann eine alte Ankunftszeit stehen bleiben).
+        Ohne Zeitstempel wird nichts gezeigt.<br>
         Hintergrund: das Wunschlimit l&auml;dt nicht selbst &ndash; es ist die
         Schwelle, unter der geladen werden soll. Geladen wird &uuml;ber die
         Wallbox, und genau die zeigt und bedient die Kachel dann mit: Zustand
