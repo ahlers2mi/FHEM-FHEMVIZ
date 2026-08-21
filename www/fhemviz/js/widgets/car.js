@@ -40,21 +40,14 @@
  */
 
 import { FhemvizWidget, vizStatesInfo } from "./base-widget.js";
-import { carArt, CAR_ART_CSS } from "./car-art.js";
 
 const CAR_CSS = `
-  ${CAR_ART_CSS}
   /* Fahrzeugbild (attr vizCar image=<url>): oben, mittig, hoehenbegrenzt -
    * ein zu grosses Bild darf die Kachel nicht aufziehen. */
   .cimg {
     width: 100%; max-height: 132px; object-fit: contain;
     margin: 2px 0 4px; border-radius: 8px;
   }
-  /* Das gezeichnete Fahrzeug steckt in demselben Kasten - als div, damit die
-   * Hoehenbegrenzung auch fuer das SVG gilt. */
-  div.cimg { display: flex; justify-content: center; overflow: hidden; }
-  div.cimg > svg { max-height: 132px; }
-  :host([data-tv]) div.cimg > svg { max-height: 200px; }
   :host([data-tv]) .cimg { max-height: 200px; }
 
   /* Ladestand wie in der Tesla-App: EIN Balken. Die Fuellung ist der
@@ -384,6 +377,31 @@ export class FhemvizCar extends FhemvizWidget {
     return "frei";
   }
 
+  /**
+   * Bildadresse aus attr vizCar. Zwei Schreibweisen:
+   *   image=<url>
+   *       ein Bild, immer dasselbe.
+   *   image=laedt:<url>|steckt:<url>|frei:<url>
+   *       je Ladezustand ein eigenes Bild. Fehlt einer der drei, wird der
+   *       erste angegebene genommen - so reicht auch ein Paar aus zwei.
+   * Zustaende: laedt = es laeuft Leistung, steckt = Kabel dran ohne Leistung,
+   * frei = nichts angesteckt (siehe _ladeZustand).
+   */
+  _bildUrl() {
+    const spec = String(this._cfg().image || "").trim();
+    if (!spec) return "";
+    if (!spec.includes("|") && !/^(laedt|steckt|frei)\s*:/i.test(spec)) return spec;
+    const map = {};
+    const reihe = [];
+    for (const teil of spec.split("|")) {
+      const m = teil.trim().match(/^(laedt|steckt|frei)\s*:\s*(.+)$/i);
+      if (!m) continue;
+      map[m[1].toLowerCase()] = m[2].trim();
+      reihe.push(m[2].trim());
+    }
+    return map[this._ladeZustand()] || reihe[0] || "";
+  }
+
   /** Alias/Name eines fremden Geraets. */
   displayNameOf(dev) {
     return (dev.attr && dev.attr.alias) || dev.name;
@@ -529,16 +547,12 @@ export class FhemvizCar extends FhemvizWidget {
         ? `<div class="cwarn">⚠ Ladeklappe offen</div>`
         : "";
 
-    // Fahrzeug oben in der Kachel: gezeichnet (car-art.js), mit dem
-    // Ladezustand als Bild. "image=<url>" bleibt als Ausweg fuer wen ein
-    // eigenes Bild lieber ist. "car=0" laesst den Platz frei.
-    const eigenesBild = this._cfg().image;
-    const zeichnen = !/^(0|off|nein|no)$/i.test(this._cfg().car || "");
-    const bild = eigenesBild
-      ? `<img class="cimg" src="${this.escape(eigenesBild)}" alt="">`
-      : zeichnen
-        ? `<div class="cimg">${carArt(this._ladeZustand(), this._cfg().color || "")}</div>`
-        : "";
+    // Fahrzeugbild aus attr vizCar image=... - eine Adresse fuer immer, oder
+    // je Ladezustand eine eigene (siehe _bildUrl).
+    const bildUrl = this._bildUrl();
+    const bild = bildUrl
+      ? `<img class="cimg" src="${this.escape(bildUrl)}" alt="">`
+      : "";
 
     // Fahrt nach Hause faellt ins Auge (Akzentfarbe), ein fremdes Ziel nicht.
     const route = this._route();

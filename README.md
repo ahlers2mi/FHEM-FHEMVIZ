@@ -139,10 +139,27 @@ Aufnahmen der Oberfläche:
 |---|---|
 | **`flow`** — Energiefluss. PV, Haus, Netz und Batterie mit laufenden Punkten in Flussrichtung; minus = entladen. Zuordnung über `attr <dev> vizFlow`.<br>![flow](docs/img/widget-flow.png) | **`watertank`** — Regenwasseranlage als Schema. Füllhöhen in Litern, gestrichelt die Schwimmerhöhe, Rohre leuchten nur bei echtem Transport. Behälterzahl aus `ibcUsableVolume`.<br>![watertank](docs/img/widget-watertank.png) |
 | **`mealplan`** — Wochenplan: heute groß mit Foto, die übrigen Tage als Streifen. Würfeln, bewerten und Einkauf direkt aus der Kachel — Knöpfe nur für set-Befehle, die es wirklich gibt.<br>![mealplan](docs/img/widget-mealplan.png) | **`solvis`** — Heizung: Schichtung im Speicher als Zylinder (S01/S04/S09/S03 von oben nach unten), dazu Solarkreis, Kollektor und Brenner.<br>![solvis](docs/img/widget-solvis.png) |
-| **`car`** — gezeichnetes Fahrzeug, das den Ladezustand zeigt (lädt / angesteckt / frei), darunter der Ladestand als Balken, dessen **Griff das Wunschlimit ist** (Vorbild: die Tesla-App). Wallbox über `vizCar wallbox=<gerät>`, Lackfarbe über `color=`. Liefert das Auto ein Fahrtziel, steht die **Ankunftszeit** dabei — nach Hause farbig hervorgehoben.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
+| **`car`** — Ladestand als Balken, dessen **Griff das Wunschlimit ist** (Vorbild: die Tesla-App). Optional ein Fahrzeugbild oben, auf Wunsch je Ladezustand ein eigenes. Wallbox über `vizCar wallbox=<gerät>`. Liefert das Auto ein Fahrtziel, steht die **Ankunftszeit** dabei — nach Hause farbig hervorgehoben.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
 | **`weather`** — Wetterstation (Ecowitt/GW3000): Außen und Innen, Wind, Regen, UV, Druck.<br>![weather](docs/img/widget-weather.png) | **`shuttergroup`** — Rollläden aus einem `structure`: Master-Zeile „Alle" plus je Rollade Position und ▲■▼. Der gemeinsame Namensanfang fällt weg.<br>![shuttergroup](docs/img/widget-shuttergroup.png) |
 
 Dazu `watering` (Bewässerungs-Steuerung ohne Schema).
+
+**Fahrzeugbild, auf Wunsch je Ladezustand.** Ein Bild für alle Fälle:
+
+```
+attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,image=/fhem/www/tesla.png
+```
+
+Oder drei, dann wechselt das Bild mit dem Zustand:
+
+```
+attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,\
+  image=laedt:/fhem/www/tesla-laedt.png|steckt:/fhem/www/tesla-kabel.png|frei:/fhem/www/tesla.png
+```
+
+`laedt` = es läuft Leistung, `steckt` = Kabel dran ohne Leistung, `frei` =
+nichts angesteckt. Fehlt einer der drei, gilt der erste angegebene — zwei
+Bilder reichen also auch.
 
 **Das Wunschlimit ist ein Minimum, keine Obergrenze.** Es ist der Ladestand,
 der **immer** erreicht wird — unabhängig davon, wie die

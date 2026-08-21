@@ -1176,15 +1176,16 @@ sub FHEMVIZ_Attr {
         &uuml;berschreiben die gesuchten <b>Reading-Namen</b> (siehe
         <code>vizWidget car</code>); <code>wallbox=&lt;ger&auml;t&gt;</code>
         h&auml;ngt die <b>Wallbox</b> an die Kachel,
-        <code>color=&lt;farbe&gt;</code> f&auml;rbt das <b>gezeichnete
-        Fahrzeug</b> oben in der Kachel (Standard ein dunkles Blau). Es ist ein
-        stilisiertes SVG, keine Bilddatei: es skaliert, l&auml;dt nichts nach
-        und zeigt den Ladezustand &ndash; <i>l&auml;dt</i> (Kabel wandert,
-        Blitz), <i>angesteckt</i> (Kabel gedeckt) oder <i>nicht angesteckt</i>
-        (kein Kabel). <code>car=0</code> l&auml;sst den Platz frei,
-        <code>image=&lt;url&gt;</code> setzt stattdessen ein eigenes Bild
-        (H&ouml;he begrenzt; Datei z. B. unter <code>www/</code>).
-        Der Zustand kommt aus der Leistung, dem Zustandstext der Wallbox und
+        <code>image=&lt;url&gt;</code> zeigt ein <b>Fahrzeugbild</b> oben in der
+        Kachel (H&ouml;he begrenzt, damit ein grosses Bild die Kachel nicht
+        aufzieht &ndash; Datei z. B. unter <code>www/</code> ablegen).<br>
+        <b>Ein Bild je Ladezustand</b> geht auch:<br>
+        <code>image=laedt:&lt;url&gt;|steckt:&lt;url&gt;|frei:&lt;url&gt;</code><br>
+        <i>laedt</i> = es l&auml;uft Leistung, <i>steckt</i> = Kabel dran ohne
+        Leistung, <i>frei</i> = nichts angesteckt. Fehlt einer der drei, wird
+        der erste angegebene genommen &ndash; zwei Bilder reichen also auch.
+        Den Zustand ermittelt die Kachel aus der Leistung (Fahrzeug oder
+        Wallbox), dem Zustandstext der Wallbox und
         <code>charge_port_door_open</code>; ein besseres eigenes Reading
         f&uuml;r &bdquo;angesteckt&ldquo; geht per
         <code>plug=&lt;reading&gt;</code>.<br>

@@ -45,14 +45,12 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
   Darüber die Zeile „Ladelimit: X % · lädt 7,6 kW".
 - **Warnzeile aus dem Fahrzeug**: eine offene Ladeklappe
   (`charge_port_door_open`) steht bernsteinfarben in der Kachel.
-- **Gezeichnetes Fahrzeug** oben in der Kachel (`widgets/car-art.js`), das
-  den Ladezustand zeigt: **lädt** (Kabel wandert, Blitz), **angesteckt**
-  (Kabel gedeckt) oder **nicht angesteckt** (kein Kabel). Stilisiertes SVG,
-  keine Bilddatei — es skaliert, lädt nichts nach und passt sich dem Thema an;
-  ein Foto sieht neben den flachen Kacheln fremd aus. Lackfarbe über
-  `vizCar color=`, `car=0` schaltet ab, `image=<url>` setzt ein eigenes Bild.
-  Der Zustand kommt aus Leistung, Wallbox-Zustandstext und
-  `charge_port_door_open`; ein eigenes Reading geht per `plug=`.
+- **Fahrzeugbild** über `attr <dev> vizCar image=<url>` — Höhe begrenzt, damit
+  ein großes Bild die Kachel nicht aufzieht. Auf Wunsch **je Ladezustand ein
+  eigenes Bild**: `image=laedt:<url>|steckt:<url>|frei:<url>`. Den Zustand
+  ermittelt die Kachel aus der Leistung (Fahrzeug oder Wallbox), dem
+  Zustandstext der Wallbox und `charge_port_door_open`; ein eigenes Reading
+  geht per `plug=`.
 
 ## v0.36.0 — 21.08.2026
 

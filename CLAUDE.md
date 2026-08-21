@@ -44,6 +44,30 @@ zieht die mit hoch und behauptet dann etwas Falsches. Gezielt die vier Zeilen
 `controls_FHEMVIZ.txt` **nie** von Hand anfassen – das pflegt ein Workflow auf
 `main`.
 
+## Aussehen erst zeigen, dann einbauen
+
+Bei allem, was **gestaltet** ist – gezeichnete Grafik, Symbole, ein neues
+Bedienelement, eine andere Anordnung – gilt: **erst ein Bild schicken, Freigabe
+abwarten, dann in die Kachel einbauen.** Nicht umgekehrt.
+
+Wie es schiefging: ein selbst gezeichnetes Auto (drei Ladezustände als SVG)
+wurde gebaut, dokumentiert, das README-Bild neu aufgenommen und gepusht – und
+war dann schlicht hässlich. Der Nutzer hatte ausdrücklich um Bilder gebeten,
+nicht um eine Umsetzung. Alles wieder auszubauen kostete mehr als das
+Vorzeigen gekostet hätte, und die Commit-Geschichte trägt den Umweg dauerhaft.
+
+Daraus abgeleitet:
+
+- **Gezeichnetes von Hand ist der Verdachtsfall.** Ein Auto, ein Tier, ein
+  Gerät: eine ansprechende Illustration lässt sich nicht in SVG-Koordinaten
+  hinschreiben. Für so etwas Bilder von außen nehmen (`image=<url>`) und die
+  Beschaffung dem Nutzer lassen.
+- **Schemazeichnungen sind etwas anderes.** `watertank` und `flow` zeigen eine
+  *Anlage* – Behälter, Rohre, Flussrichtung. Das ist Technik, keine Illustration,
+  und funktioniert gut.
+- Der Unterschied liegt in der Frage: zeichnet es einen **Zusammenhang** oder
+  soll es **schön aussehen**? Das Erste ja, das Zweite nicht ohne Vorlage.
+
 ## Änderungen wirklich prüfen: FHEMWEB-Attrappe + Playwright
 
 Layout-Fehler lassen sich nicht am Code erraten – zweimal ist genau das
