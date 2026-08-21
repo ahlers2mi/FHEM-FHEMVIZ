@@ -11,6 +11,23 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.1 — 21.08.2026
+
+**Neu**
+
+- **`home=` in `vizCar` nimmt mehrere Schreibweisen**, mit `|` getrennt:
+  `home=Im Nott|Zuhause|Home`. Nötig, weil das Auto je nach Eingabe etwas
+  anderes meldet — die **Adresse** („Im Nott 35, 48301 Nottuln"), einen
+  **POI-Namen** („Moubis Dülmen") oder den **Namen eines gespeicherten Ortes**
+  („Zuhause"). Mit einer einzigen Zeichenkette trifft man nicht alle drei.
+
+**Geändert**
+
+- **Die drei Beispiel-Fahrzeugbilder sind freigestellt** (PNG mit Alpha statt
+  JPG). Vorher war der dunkle Studio-Hintergrund des Renderings als Rechteck
+  auf der Kachel zu sehen; mit Hintergrundbild oder hellem Skin wäre er
+  unbrauchbar gewesen.
+
 ## v0.37.0 — 21.08.2026
 
 **Behoben**
@@ -47,8 +64,10 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
   Ladezustand ein eigenes**: `image=laedt:<url>|steckt:<url>|frei:<url>`. Den
   Zustand ermittelt die Kachel aus der Leistung (Fahrzeug oder Wallbox), dem
   Zustandstext der Wallbox und `charge_port_door_open`; ein eigenes Reading
-  geht per `plug=`. Drei zugeschnittene Beispielbilder liegen unter
-  `www/fhemviz/img/car/` und kommen mit dem `update` mit.
+  geht per `plug=`. Drei zugeschnittene und **freigestellte** Beispielbilder
+  liegen unter `www/fhemviz/img/car/` und kommen mit dem `update` mit — ohne
+  Hintergrund steht das Fahrzeug direkt auf der Kachel, unabhängig von Skin
+  und Hintergrundbild.
 
 ## v0.36.0 — 21.08.2026
 

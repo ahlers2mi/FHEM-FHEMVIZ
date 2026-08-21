@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.0
+# Version:  v0.37.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -344,7 +344,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.0"),
+            FHEMVIZ_jsonStr("v0.37.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1184,6 +1184,10 @@ sub FHEMVIZ_Attr {
         <i>laedt</i> = es l&auml;uft Leistung, <i>steckt</i> = Kabel dran ohne
         Leistung, <i>frei</i> = nichts angesteckt. Fehlt einer der drei, wird
         der erste angegebene genommen &ndash; zwei Bilder reichen also auch.
+        Drei <b>freigestellte Beispielbilder</b> (Model 3, blau) liegen unter
+        <code>www/fhemviz/img/car/tesla-{frei,steckt,laedt}.png</code> und
+        kommen mit dem <code>update</code> mit &ndash; sie haben keinen
+        Hintergrund, das Fahrzeug steht also direkt auf der Kachel.<br>
         Den Zustand ermittelt die Kachel aus der Leistung (Fahrzeug oder
         Wallbox), dem Zustandstext der Wallbox und
         <code>charge_port_door_open</code>; ein besseres eigenes Reading
@@ -1207,7 +1211,10 @@ sub FHEMVIZ_Attr {
         <code>home=&lt;text&gt;</code> hei&szlig;t sie
         &bdquo;&#127968; Zuhause&ldquo; in Akzentfarbe, sobald das Ziel diesen
         Text enth&auml;lt &ndash; man sieht also auf einen Blick, dass das Auto
-        heimkommt und wann.<br>
+        heimkommt und wann. <b>Mehrere Schreibweisen mit <code>|</code>
+        trennen</b> (<code>home=Im Nott|Zuhause|Home</code>): das Auto meldet
+        je nach Eingabe die Adresse, einen POI-Namen oder den Namen eines
+        gespeicherten Ortes.<br>
         <b>Wichtig, die Frische:</b> die Route-Readings bleiben nach der Fahrt
         stehen (im Bestand lagen &bdquo;7 Minuten&ldquo; zwei Tage im Ger&auml;t).
         Die Zeile erscheint deshalb nur, wenn der Zeitstempel der Restzeit
