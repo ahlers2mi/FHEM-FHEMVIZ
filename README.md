@@ -320,6 +320,13 @@ Bild-URLs (`.jpg`/`.png`/…) werden als Bild gerendert, alles andere als
 iframe. Hinweis: Fremdseiten können das Einbetten per `X-Frame-Options`
 verbieten — Bilder und FHEM-eigene Seiten funktionieren immer.
 
+> **Kamerabilder und der Browser-Cache.** Ein Schnappschuss liegt meist unter
+> einer festen Adresse (`.../pic.jpg`): der Inhalt wechselt, die Adresse nicht.
+> Damit der zweite Alarm nicht das erste Bild zeigt, hängt FHEMVIZ an
+> **Bild**adressen einen wechselnden Parameter (`_viz=…`) an. Webseiten im
+> iframe bleiben unangetastet, dort könnte ein zusätzlicher Parameter einen
+> Token stören.
+
 ### Seite dauerhaft umschalten: `set myViz page`
 
 Während `set myViz scene <Raum> [Sek]` den Schirm nur **vorübergehend** kapert,

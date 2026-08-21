@@ -13,6 +13,19 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ## v0.37.0 — 21.08.2026
 
+**Behoben**
+
+- **`set <viz> show` zeigte beim zweiten Alarm das erste Bild.** Ein
+  Kamerabild liegt unter einer festen Adresse (`.../pic.jpg`) — der Inhalt
+  wechselt, die Adresse nicht. Der Browser lieferte deshalb sein
+  zwischengespeichertes Bild: gemessen führten drei Ereignisse zu **einem**
+  einzigen Abruf am Server. Bildadressen bekommen jetzt einen wechselnden
+  Parameter, damit jeder Alarm den aktuellen Schnappschuss holt (drei
+  Ereignisse → drei Abrufe). Webseiten im iframe bleiben unangetastet, dort
+  könnte ein zusätzlicher Parameter einen Token stören.
+- Steht schon ein Bild-Overlay, wird nur die Quelle getauscht statt alles neu
+  aufzubauen — beim mehrfachen Klingeln blitzte es sonst kurz leer auf.
+
 **Neu**
 
 - **Die `car`-Kachel zeigt die laufende Fahrt.** Liefert das Fahrzeug Ziel und

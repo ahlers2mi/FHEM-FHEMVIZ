@@ -1306,18 +1306,45 @@ function playSound() {
   }
 }
 
+/**
+ * Ein Kamerabild liegt fast immer unter einer FESTEN Adresse (.../pic.jpg):
+ * der Inhalt wechselt, die Adresse nicht. Ohne einen wechselnden Parameter
+ * holt der Browser sein zwischengespeichertes Bild - der zweite Alarm zeigt
+ * dann den ersten Schnappschuss, und es sieht aus, als taete sich nichts.
+ *
+ * Nur fuer BILDER. Bei einer Webseite im iframe koennte ein zusaetzlicher
+ * Parameter einen Token oder eine Route stoeren (z. B. die Wochenplan-App,
+ * die ihren Token als ?token= erwartet).
+ */
+function frischeUrl(url) {
+  return url + (url.includes("?") ? "&" : "?") + "_viz=" + Date.now();
+}
+
 function showOverlay(url, sec) {
-  hideOverlay();
   if (!/^https?:\/\/|^\//i.test(url)) {
     // eslint-disable-next-line no-console
     console.warn(`FHEMVIZ: show "${url}" ist keine URL - ignoriert`);
     return;
   }
+  const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)([?#].*)?$/i.test(url);
+
+  // Steht schon ein Bild-Overlay, nur die Quelle tauschen und die Zeit neu
+  // aufziehen. Ein kompletter Neuaufbau blitzt kurz leer auf - und genau das
+  // passiert beim Klingeln mehrmals hintereinander.
+  const alt = el("viz-overlay");
+  const kind = alt && alt.firstElementChild;
+  if (isImg && kind && kind.tagName === "IMG") {
+    clearTimeout(overlayTimer);
+    kind.src = frischeUrl(url);
+    overlayTimer = setTimeout(hideOverlay, Math.max(3, sec) * 1000);
+    return;
+  }
+
+  hideOverlay();
   const o = document.createElement("div");
   o.id = "viz-overlay";
-  const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)([?#].*)?$/i.test(url);
   const child = document.createElement(isImg ? "img" : "iframe");
-  child.src = url;
+  child.src = isImg ? frischeUrl(url) : url;
   o.appendChild(child);
   const hint = document.createElement("div");
   hint.className = "viz-overlay-hint";
