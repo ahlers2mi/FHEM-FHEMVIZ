@@ -1,9 +1,11 @@
 /*
  * FHEMVIZ - Fahrzeug-Widget (vizWidget car, v0.34.27).
- * Ladestand gross, darunter ein Akkubalken: gefuellt = aktueller Stand,
- * blass daneben = die Strecke bis zum WUNSCHLIMIT, der weisse Strich ist
- * das Limit selbst. Der Regler darunter setzt das Wunschlimit, damit der
- * Akku mindestens auf dieses Niveau geladen wird.
+ * Ladestand gross, darunter EIN Balken (Vorbild: die Tesla-App): gefuellt =
+ * aktueller Stand, blass daneben die Strecke bis zum WUNSCHLIMIT, und der
+ * Griff auf dem Balken IST das Wunschlimit - er wird direkt gezogen. Damit
+ * sitzt die Bedienung dort, wo der Wert steht, statt in einer eigenen Zeile.
+ * Dazu die Zeile "Wunschlimit: X % - laedt Y kW" und - wenn das Fahrzeug ein
+ * Fahrtziel liefert - Ziel mit Ankunftszeit.
  *
  * Auswahl: automatisch, wenn es Readings fuer Ladestand UND Reichweite
  * gibt (z. B. MQTT2_DEVICE mit battery_level + battery_range_km),
@@ -39,21 +41,65 @@
 import { FhemvizWidget, vizStatesInfo } from "./base-widget.js";
 
 const CAR_CSS = `
-  .cbar {
-    position: relative; height: 10px; margin: 3px 0 1px;
-    border-radius: 999px; background: var(--viz-raised, #1c212a);
-    overflow: hidden;
+  /* Fahrzeugbild (attr vizCar image=<url>): oben, mittig, hoehenbegrenzt -
+   * ein zu grosses Bild darf die Kachel nicht aufziehen. */
+  .cimg {
+    width: 100%; max-height: 164px; object-fit: contain;
+    margin: 2px 0 4px; border-radius: 8px;
   }
-  .cbar > div { position: absolute; top: 0; bottom: 0; left: 0; }
-  /* Blasse Strecke bis zum Wunschlimit = was noch geladen werden soll.
-   * rgba-Zeile = Rueckfall fuer WebViews ohne color-mix. */
-  .cbar .gap { background: rgba(255, 176, 32, 0.25);
-               background: color-mix(in srgb, var(--viz-accent, #ffb020) 25%, transparent); }
-  .cbar .fill { background: var(--viz-accent, #ffb020); border-radius: 999px; }
-  .card.ok .cbar .fill  { background: var(--viz-ok, #34c77b); }
-  .card.bad .cbar .fill { background: var(--viz-error, #ff5d5d); }
-  .cbar .mark { width: 2px; background: var(--viz-text, #e8eaed); }
-  :host([data-tv]) .cbar { height: 14px; }
+  :host([data-tv]) .cimg { max-height: 230px; }
+
+  /* Ladestand wie in der Tesla-App: EIN Balken. Die Fuellung ist der
+   * Ladestand, der Griff darauf ist das Wunschlimit und wird direkt gezogen -
+   * damit sitzt die Bedienung dort, wo der Wert steht, und die eigene
+   * Reglerzeile darunter entfaellt.
+   *
+   * Aufbau: Bahn und Fuellung sind Divs, darueber liegt ein durchsichtiger
+   * range-Regler, von dem nur der Griff sichtbar ist. Ein einzelnes
+   * input-Element kann keine zwei Werte zeigen (Stand UND Limit), deshalb
+   * diese Schichtung.
+   */
+  .clim { position: relative; height: 26px; margin: 4px 0 2px; }
+  .clim .bahn, .clim .fill, .clim .rest {
+    position: absolute; top: 8px; height: 10px; border-radius: 999px;
+  }
+  .clim .bahn { left: 0; right: 0; background: var(--viz-raised, #1c212a); }
+  .clim .fill { left: 0; background: var(--viz-accent, #ffb020); }
+  .card.ok  .clim .fill { background: var(--viz-ok, #34c77b); }
+  .card.bad .clim .fill { background: var(--viz-error, #ff5d5d); }
+  /* Blasse Strecke zwischen Stand und Limit: was noch geladen werden soll. */
+  .clim .rest { background: rgba(255, 176, 32, 0.22);
+                background: color-mix(in srgb, var(--viz-accent, #ffb020) 22%, transparent); }
+  .clim input[type=range] {
+    position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+    -webkit-appearance: none; appearance: none;
+    background: transparent; accent-color: auto;
+  }
+  .clim input[type=range]::-webkit-slider-runnable-track { background: transparent; height: 26px; }
+  .clim input[type=range]::-moz-range-track { background: transparent; height: 26px; }
+  .clim input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; margin-top: 3px;
+    border-radius: 50%; background: var(--viz-text, #e8eaed);
+    border: 2px solid var(--viz-surface, #151920); cursor: pointer;
+  }
+  .clim input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--viz-text, #e8eaed);
+    border: 2px solid var(--viz-surface, #151920); cursor: pointer;
+  }
+  .clim input[type=range]:focus-visible { outline: 2px solid var(--viz-action); outline-offset: 2px; }
+  /* Ohne Bedienung (TV/readonly) bleibt eine Marke statt des Griffs. */
+  .clim .marke { position: absolute; top: 5px; width: 2px; height: 16px;
+                 background: var(--viz-text, #e8eaed); }
+
+  /* Navigationszeile: etwas Luft nach oben, Fahrt nach Hause in Akzentfarbe.
+   * Ein langer Zielname darf die Zeile nicht sprengen. */
+  .crow { margin-top: 4px; gap: 10px; }
+  .crow .sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Die Ankunftszeit darf NICHT gekuerzt werden - sie ist die Aussage der
+   * Zeile. Gekuerzt wird der Zielname, der kann lang sein. */
+  .crow .sub + .sub { flex: 0 0 auto; }
+  .crow .sub.heim { color: var(--viz-accent, #ffb020); font-weight: 600; }
 
   /* Wallbox-Abschnitt: eigene Zeile mit Trennlinie darueber. */
   .wb {
@@ -293,9 +339,119 @@ export class FhemvizCar extends FhemvizWidget {
       </div>`;
   }
 
+  /**
+   * Ladezustand fuer das gezeichnete Fahrzeug: "laedt", "steckt" oder "frei".
+   *
+   * Es gibt kein einzelnes Reading dafuer, also aus mehreren zusammengesetzt -
+   * und in dieser Reihenfolge, weil Leistung die einzige Angabe ist, die
+   * beweist, dass wirklich geladen wird:
+   *   1. Leistung am Fahrzeug oder an der Wallbox  -> laedt
+   *   2. Zustandstext der Wallbox                  -> laedt/steckt/frei
+   *      (go-e: "waiting for car" = nichts dran, "Ready"/"Charging finished"
+   *      = Auto haengt dran, laedt aber nicht)
+   *   3. offene Ladeklappe am Fahrzeug             -> steckt
+   * Wer ein besseres Reading hat, setzt es per "plug=<reading>" in vizCar:
+   * ein wahrer Wert dort bedeutet "angesteckt".
+   */
+  _ladeZustand() {
+    const kw = this._role("power", ["charge_power", "charger_power", "charging_power"]);
+    if (kw !== null && kw > 0.05) return "laedt";
+
+    const wb = this._wb();
+    if (wb) {
+      const w = this._wbInfo(wb).watt;
+      if (w !== null && w > 50) return "laedt";
+      const st = this.plain(this._wbInfo(wb).text || "");
+      if (/charg(ing|e)\b(?!.*finish)/i.test(st) || /l[äa]dt/i.test(st)) return "laedt";
+      if (/(wait|kein auto|no car)/i.test(st)) return "frei";
+      if (/(ready|finish|fertig|bereit|connect|verbunden)/i.test(st)) return "steckt";
+    }
+
+    const eigen = this._cfg().plug ? this._read([this._cfg().plug]) : null;
+    const klappe = eigen || this._read(["charge_port_door_open"]);
+    if (klappe && /^(true|1|open|yes|on|offen)$/i.test(this.plain(klappe.value))) return "steckt";
+    return "frei";
+  }
+
+  /**
+   * Bildadresse aus attr vizCar. Zwei Schreibweisen:
+   *   image=<url>
+   *       ein Bild, immer dasselbe.
+   *   image=laedt:<url>|steckt:<url>|frei:<url>
+   *       je Ladezustand ein eigenes Bild. Fehlt einer der drei, wird der
+   *       erste angegebene genommen - so reicht auch ein Paar aus zwei.
+   * Zustaende: laedt = es laeuft Leistung, steckt = Kabel dran ohne Leistung,
+   * frei = nichts angesteckt (siehe _ladeZustand).
+   */
+  _bildUrl() {
+    const spec = String(this._cfg().image || "").trim();
+    if (!spec) return "";
+    if (!spec.includes("|") && !/^(laedt|steckt|frei)\s*:/i.test(spec)) return spec;
+    const map = {};
+    const reihe = [];
+    for (const teil of spec.split("|")) {
+      const m = teil.trim().match(/^(laedt|steckt|frei)\s*:\s*(.+)$/i);
+      if (!m) continue;
+      map[m[1].toLowerCase()] = m[2].trim();
+      reihe.push(m[2].trim());
+    }
+    return map[this._ladeZustand()] || reihe[0] || "";
+  }
+
   /** Alias/Name eines fremden Geraets. */
   displayNameOf(dev) {
     return (dev.attr && dev.attr.alias) || dev.name;
+  }
+
+  /**
+   * Laufende Navigation: Ziel und Restzeit (Tesla/ioBroker liefert
+   * active_route_destination + active_route_minutes_to_arrival).
+   *
+   * ENTSCHEIDEND ist die FRISCHE. Die Route-Readings bleiben nach der Fahrt
+   * stehen - im Bestand lag "7 Minuten bis Moubis Dülmen" zwei Tage lang im
+   * Gerät. Eine Ankunftszeit daraus zu rechnen waere frei erfunden. Darum:
+   * nur zeigen, wenn der Zeitstempel der Restzeit jung ist (Default 15 min,
+   * per "routeAge=<minuten>" in vizCar aenderbar, 0 = Pruefung aus).
+   *
+   * Ist ein Zuhause-Name gesetzt ("home=<text>" in vizCar) und das Ziel
+   * enthaelt ihn, heisst die Zeile "Zuhause" statt des Ortsnamens.
+   */
+  _route() {
+    const zielHit = this._read(
+      [this._cfg().dest, "active_route_destination", "destination_name"].filter(Boolean)
+    );
+    const minHit = this._read(
+      [this._cfg().eta, "active_route_minutes_to_arrival", "minutes_to_arrival"].filter(Boolean)
+    );
+    if (!minHit) return null;
+    const min = parseFloat(this.plain(minHit.value).replace(",", "."));
+    if (isNaN(min) || min < 0) return null;
+
+    const maxAlter = this._cfg().routeage === undefined ? 15 : parseInt(this._cfg().routeage, 10);
+    if (maxAlter > 0) {
+      const t = ((this.device || {}).times || {})[minHit.name];
+      if (!t) return null; // ohne Zeitstempel lieber nichts behaupten
+      // FHEM-Format "2026-08-19 15:16:40" - fuer Date() mit T verbinden,
+      // sonst legen manche Engines es als UTC aus.
+      const alterMin = (Date.now() - new Date(String(t).replace(" ", "T")).getTime()) / 60000;
+      if (!(alterMin >= 0) || alterMin > maxAlter) return null;
+    }
+
+    // Ohne Ziel keine Zeile. Beim Fahrtende raeumt der Adapter das Ziel weg -
+    // dann ist die Fahrt vorbei, und "unterwegs" zu raten waere geraten.
+    const ziel = zielHit ? this.plain(zielHit.value).trim() : "";
+    if (!ziel) return null;
+    const heim = (this._cfg().home || "").trim();
+    const nachHause =
+      !!heim && !!ziel && ziel.toLowerCase().includes(heim.toLowerCase());
+
+    const an = new Date(Date.now() + min * 60000);
+    const p = (n) => String(n).padStart(2, "0");
+    return {
+      label: nachHause ? "🏠 Zuhause" : `→ ${ziel}`,
+      wert: `${p(an.getHours())}:${p(an.getMinutes())} · ${Math.round(min)} Min`,
+      nachHause,
+    };
   }
 
   render() {
@@ -332,36 +488,69 @@ export class FhemvizCar extends FhemvizWidget {
     else if (soc !== null) cls = " on";
 
     const pct = (v) => Math.max(0, Math.min(100, v));
-    const bar =
-      soc === null
-        ? ""
-        : `<div class="cbar">
-             ${limit !== null && limit > soc ? `<div class="gap" style="width:${pct(limit)}%"></div>` : ""}
-             <div class="fill" style="width:${pct(soc)}%"></div>
-             ${limit !== null ? `<div class="mark" style="left:calc(${pct(limit)}% - 1px)"></div>` : ""}
-           </div>`;
+    const laedt = !!power && power > 0.05;
 
-    // Kopfzeile rechts: Reichweite und - wenn geliefert - die Ladeleistung.
-    const info = [
-      range !== null ? `${this.fmtNum(range, 0)} km` : "",
-      power ? `lädt ${this.fmtNum(power, 1)} kW` : "",
+    // Rechts neben dem Ladestand: Reichweite (die Ladeleistung steht in der
+    // Zeile darunter, sonst stuende sie zweimal im Bild).
+    const info = range !== null ? `${this.fmtNum(range, 0)} km` : "";
+
+    // Kopfzeile wie in der Tesla-App: Limit vorn, dahinter der Zustand.
+    // ABER als "Wunschlimit" benannt: Tesla meint mit "Ladelimit" das Limit
+    // IM FAHRZEUG, und das steht hier als eigene Zeile mit einem anderen Wert
+    // darunter. "Ladelimit: 25 %" ueber "Limit im Fahrzeug: 60 %" waere ein
+    // Widerspruch im Bild.
+    // "Laden gestoppt" wird nicht erfunden - steht kein Zustand im Gerät und
+    // laeuft nichts, bleibt der Platz leer.
+    const zustandTxt = laedt
+      ? `lädt ${this.fmtNum(power, 1)} kW`
+      : this.plain(this._read(["charging_state", "charge_state", "charger_state"])?.value || "");
+    const kopf = [
+      limit !== null ? `Wunschlimit: ${this.fmtNum(limit, 0)} %` : "",
+      zustandTxt,
     ]
       .filter(Boolean)
       .join(" · ");
 
-    const wishRow =
-      limit === null
+    // Der Balken: Fuellung = Ladestand, Griff = Wunschlimit (ziehbar).
+    // Ohne Bedienung bleibt eine Marke an der Limit-Position.
+    const climb =
+      soc === null && limit === null
         ? ""
-        : `<div class="row">
-             <span class="sub">Wunschlimit</span>
-             <span class="sub" id="wv">${this.fmtNum(limit, 0)} %</span>
+        : `<div class="clim">
+             <div class="bahn"></div>
+             ${
+               limit !== null && soc !== null && limit > soc
+                 ? `<div class="rest" style="left:${pct(soc)}%;right:${100 - pct(limit)}%"></div>`
+                 : ""
+             }
+             ${soc !== null ? `<div class="fill" style="width:${pct(soc)}%"></div>` : ""}
+             ${
+               spec && !this.readonly && limit !== null
+                 ? `<input id="wish" type="range" step="${spec.step}"
+                      min="${Math.min(spec.min, limit)}" max="${spec.max}" value="${limit}"
+                      aria-label="Wunschlimit ${this.escape(this.displayName())}">`
+                 : limit !== null
+                   ? `<div class="marke" style="left:calc(${pct(limit)}% - 1px)"></div>`
+                   : ""
+             }
            </div>`;
-    const slider =
-      spec && !this.readonly && limit !== null
-        ? `<input id="wish" type="range" step="${spec.step}"
-             min="${Math.min(spec.min, limit)}" max="${spec.max}" value="${limit}"
-             aria-label="Wunschlimit ${this.escape(this.displayName())}">`
-        : "";
+
+    // Fahrzeugbild aus attr vizCar image=... - eine Adresse fuer immer, oder
+    // je Ladezustand eine eigene (siehe _bildUrl).
+    const bildUrl = this._bildUrl();
+    const bild = bildUrl
+      ? `<img class="cimg" src="${this.escape(bildUrl)}" alt="">`
+      : "";
+
+    // Fahrt nach Hause faellt ins Auge (Akzentfarbe), ein fremdes Ziel nicht.
+    const route = this._route();
+    const routeRow = !route
+      ? ""
+      : `<div class="row crow">
+           <span class="sub${route.nachHause ? " heim" : ""}">${this.escape(route.label)}</span>
+           <span class="sub${route.nachHause ? " heim" : ""}">${this.escape(route.wert)}</span>
+         </div>`;
+
     // Zusatzzeilen zeigen, solange sie aus einem ANDEREN Reading kommen als
     // das Wunschlimit. Nur wenn es dasselbe Reading ist (etwa weil ohne
     // wish_charge_limit auf charge_limit_soc zurueckgefallen wurde), waere es
@@ -385,15 +574,16 @@ export class FhemvizCar extends FhemvizWidget {
     return `<style>${CAR_CSS}</style>
       <div class="card${cls}">
         <span class="label">${this.escape(this.displayName())}</span>
+        ${bild}
         <div class="row">
           <span class="value">${soc === null ? "–" : this.fmtNum(soc, 0)}${
             soc === null ? "" : `<span class="unit">%</span>`
           }</span>
           <span class="sub">${this.escape(info)}</span>
         </div>
-        ${bar}
-        ${wishRow}
-        ${slider}
+        ${kopf ? `<div class="row"><span class="sub">${this.escape(kopf)}</span></div>` : ""}
+        ${climb}
+        ${routeRow}
         ${extra}
         ${this._extraRows()}
         ${this._wbHtml()}

@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.35.6";
+const SPA_VERSION = "v0.37.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -751,17 +751,41 @@ class TvController {
       return;
     }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const step = (sec * 1000) / pages.length;
     el("viz-scene").textContent = `${labelBase} · 1/${pages.length}`;
+
+    // Dauer je Seite. Normalerweise gleichmaessig - eine Vollbild-Kachel
+    // (vizHero full) belegt aber Seite 1 allein, und die soll man laenger
+    // sehen als die Kachelseiten danach. attr tvHeroSec legt fest, wie viele
+    // Sekunden der Szenenzeit auf sie fallen; der Rest teilt sich den Rest.
+    // Ohne das Attribut bleibt es bei der Gleichverteilung wie bisher.
+    const heroSec = this._heroSec(sec, pages.length);
+    const dauer = heroSec
+      ? [heroSec, ...Array(pages.length - 1).fill((sec - heroSec) / (pages.length - 1))]
+      : Array(pages.length).fill(sec / pages.length);
+
+    let t = 0;
     pages.slice(1).forEach((top, i) => {
+      t += dauer[i] * 1000;
       this.pageTimers.push(
         setTimeout(() => {
           if (reduce) this.root.scrollTop = top;
           else this._smoothScroll(top, 1600); // sanft ueber 1,6 s blaettern
           el("viz-scene").textContent = `${labelBase} · ${i + 2}/${pages.length}`;
-        }, step * (i + 1))
+        }, t)
       );
     });
+  }
+
+  /**
+   * Sekunden fuer die Hero-Seite, oder 0 fuer "gleichmaessig verteilen".
+   * Nur wenn der Raum wirklich eine Vollbild-Kachel zeigt und noch mindestens
+   * eine Sekunde fuer die uebrigen Seiten bleibt.
+   */
+  _heroSec(sec, seiten) {
+    const n = parseInt((this.cfg || {}).tvHeroSec, 10);
+    if (isNaN(n) || n <= 0 || seiten < 2) return 0;
+    if (!this.root.querySelector(".viz-hero.full")) return 0;
+    return Math.min(n, sec - (seiten - 1));
   }
 
   /**
@@ -1282,18 +1306,45 @@ function playSound() {
   }
 }
 
+/**
+ * Ein Kamerabild liegt fast immer unter einer FESTEN Adresse (.../pic.jpg):
+ * der Inhalt wechselt, die Adresse nicht. Ohne einen wechselnden Parameter
+ * holt der Browser sein zwischengespeichertes Bild - der zweite Alarm zeigt
+ * dann den ersten Schnappschuss, und es sieht aus, als taete sich nichts.
+ *
+ * Nur fuer BILDER. Bei einer Webseite im iframe koennte ein zusaetzlicher
+ * Parameter einen Token oder eine Route stoeren (z. B. die Wochenplan-App,
+ * die ihren Token als ?token= erwartet).
+ */
+function frischeUrl(url) {
+  return url + (url.includes("?") ? "&" : "?") + "_viz=" + Date.now();
+}
+
 function showOverlay(url, sec) {
-  hideOverlay();
   if (!/^https?:\/\/|^\//i.test(url)) {
     // eslint-disable-next-line no-console
     console.warn(`FHEMVIZ: show "${url}" ist keine URL - ignoriert`);
     return;
   }
+  const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)([?#].*)?$/i.test(url);
+
+  // Steht schon ein Bild-Overlay, nur die Quelle tauschen und die Zeit neu
+  // aufziehen. Ein kompletter Neuaufbau blitzt kurz leer auf - und genau das
+  // passiert beim Klingeln mehrmals hintereinander.
+  const alt = el("viz-overlay");
+  const kind = alt && alt.firstElementChild;
+  if (isImg && kind && kind.tagName === "IMG") {
+    clearTimeout(overlayTimer);
+    kind.src = frischeUrl(url);
+    overlayTimer = setTimeout(hideOverlay, Math.max(3, sec) * 1000);
+    return;
+  }
+
+  hideOverlay();
   const o = document.createElement("div");
   o.id = "viz-overlay";
-  const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)([?#].*)?$/i.test(url);
   const child = document.createElement(isImg ? "img" : "iframe");
-  child.src = url;
+  child.src = isImg ? frischeUrl(url) : url;
   o.appendChild(child);
   const hint = document.createElement("div");
   hint.className = "viz-overlay-hint";

@@ -5,11 +5,21 @@ FHEM-Standard („FHEM-Standard-first"). Ein System, zwei Betriebsarten:
 **Tablet** (Touch, Raum-Tabs unten) und **TV/Kiosk** (bedienlos,
 Szenen-Rotation, steuerbar per FHEM-Event).
 
-Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) · Stand: **v0.34.49**
+![FHEMVIZ-Dashboard](docs/img/dashboard.png)
+
+Architektur & Konzept: [`CONCEPT.md`](./CONCEPT.md) ·
+Änderungen: [`CHANGELOG.md`](./CHANGELOG.md) ·
+Arbeitsweise am Repo: [`CLAUDE.md`](./CLAUDE.md)
 
 > Vollständige Referenz aller Attribute mit Beispielen: die **FHEM-Hilfe** des
 > Moduls (`commandref` → FHEMVIZ bzw. das `?` am Gerät). Dieses README ist der
 > Überblick.
+
+**Was FHEMVIZ nicht tut:** es kennt keine Geräte. Es liest, was FHEM über sich
+erzählt — `PossibleSets`, `webCmd`, `genericDeviceType`, `eventMap`, `room`,
+`group`, `sortby` — und macht daraus Kacheln. Kein Build, kein Node, kein npm:
+die Oberfläche sind Web Components, die der Browser direkt lädt. Aktualisiert
+wird über den FHEMWEB-Longpoll, es gibt kein Polling.
 
 ---
 
@@ -44,6 +54,7 @@ ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet
 | `devspec` | FHEM-devspec | **Pflicht.** Welche Geräte in der Sicht sind, z. B. `room=Dashboard.*` oder `d_garage_neu,mySolar.*` |
 | `mode` | `tablet` (Default) / `tv` | Betriebsart; per URL übersteuerbar (`?mode=tv`) |
 | `tvScenes` | `Raum:Sek,Raum:Sek` | Szenen-Rotation im TV-Modus, z. B. `Solar:30,Wohnzimmer:20,Garage:15`. Ohne Angabe: alle sichtbaren Räume à 20 s |
+| `tvHeroSec` | Sekunden | Eigene Standzeit der Vollbild-Kachel (`vizHero full`) innerhalb der Szenenzeit; ohne Angabe teilen sich alle Seiten die Zeit gleichmäßig |
 | `tvTouch` | Sekunden (Default 30, `0` = aus) | Touch-Übernahme im TV-Modus: Tipp auf den Schirm → bedienbare Tablet-Ansicht; nach `tvTouch` s ohne Aktion läuft die Rotation weiter (TV-Modus als Tablet-Bildschirmschoner) |
 | `theme` | `auto` (Default) / `light` / `dark` | Farbschema; `auto` folgt dem System |
 | `zoom` | `0.5`–`3` oder Prozent (`130`) | Standard-Skalierung für alle Browser dieses Geräts; `?zoom=` in der URL geht vor. Praktisch für Kiosk-Browser (Fully), die URL-Parameter verschlucken. Aktiver Zoom steht in der Statuszeile |
@@ -113,9 +124,69 @@ Dazu drei **viz-Attribute** (global registriert, mit Dropdown an jedem Gerät):
 
 ### Widgets
 
-`switch` · `sensor` · `dimmer` · `shutter` · `actions` · `text` · `agenda` ·
-`contact` · `vent` · `flow` · `forecast` · `weather` · `chart` · `watering` ·
-`watertank` · `image` · `solvis` · `car` · `mealplan`
+Der Typ wird aus `genericDeviceType`, `webCmd` und den `PossibleSets` erraten;
+`attr <dev> vizWidget <typ>` erzwingt ihn.
+
+**Grundtypen** — reichen für die meisten Geräte, meist ohne jede Angabe:
+
+`switch` · `sensor` · `dimmer` · `shutter` · `contact` · `vent` · `actions` ·
+`text` · `agenda` · `image` · `chart`
+
+**Spezialkacheln** — für einen bestimmten Zweck gebaut. Die Bilder sind echte
+Aufnahmen der Oberfläche:
+
+| | |
+|---|---|
+| **`flow`** — Energiefluss. PV, Haus, Netz und Batterie mit laufenden Punkten in Flussrichtung; minus = entladen. Zuordnung über `attr <dev> vizFlow`.<br>![flow](docs/img/widget-flow.png) | **`watertank`** — Regenwasseranlage als Schema. Füllhöhen in Litern, gestrichelt die Schwimmerhöhe, Rohre leuchten nur bei echtem Transport. Behälterzahl aus `ibcUsableVolume`.<br>![watertank](docs/img/widget-watertank.png) |
+| **`mealplan`** — Wochenplan: heute groß mit Foto, die übrigen Tage als Streifen. Würfeln, bewerten und Einkauf direkt aus der Kachel — Knöpfe nur für set-Befehle, die es wirklich gibt.<br>![mealplan](docs/img/widget-mealplan.png) | **`solvis`** — Heizung: Schichtung im Speicher als Zylinder (S01/S04/S09/S03 von oben nach unten), dazu Solarkreis, Kollektor und Brenner.<br>![solvis](docs/img/widget-solvis.png) |
+| **`car`** — Ladestand als Balken, dessen **Griff das Wunschlimit ist** (Vorbild: die Tesla-App). Optional ein Fahrzeugbild oben, auf Wunsch je Ladezustand ein eigenes. Wallbox über `vizCar wallbox=<gerät>`. Liefert das Auto ein Fahrtziel, steht die **Ankunftszeit** dabei — nach Hause farbig hervorgehoben.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
+| **`weather`** — Wetterstation (Ecowitt/GW3000): Außen und Innen, Wind, Regen, UV, Druck.<br>![weather](docs/img/widget-weather.png) | **`shuttergroup`** — Rollläden aus einem `structure`: Master-Zeile „Alle" plus je Rollade Position und ▲■▼. Der gemeinsame Namensanfang fällt weg.<br>![shuttergroup](docs/img/widget-shuttergroup.png) |
+
+Dazu `watering` (Bewässerungs-Steuerung ohne Schema).
+
+**Fahrzeugbild, auf Wunsch je Ladezustand.** Ein Bild für alle Fälle:
+
+```
+attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,image=/fhem/www/tesla.png
+```
+
+Oder drei, dann wechselt das Bild mit dem Zustand — drei zugeschnittene
+Beispielbilder liegen im Repo und kommen mit dem `update` mit:
+
+```
+attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,\
+  image=laedt:/fhem/fhemviz/img/car/tesla-laedt.jpg|steckt:/fhem/fhemviz/img/car/tesla-steckt.jpg|frei:/fhem/fhemviz/img/car/tesla-frei.jpg
+```
+
+`laedt` = es läuft Leistung, `steckt` = Kabel dran ohne Leistung, `frei` =
+nichts angesteckt. Fehlt einer der drei, gilt der erste angegebene — zwei
+Bilder reichen also auch.
+
+**Das Wunschlimit ist ein Minimum, keine Obergrenze.** Es ist der Ladestand,
+der **immer** erreicht wird — unabhängig davon, wie die
+Solarüberschuss-Regelung gerade entscheidet. Die blasse Strecke zwischen
+Füllung und Griff ist deshalb nicht „vielleicht", sondern was auf jeden Fall
+noch kommt; darüber wird der Balken grün. Nicht zu verwechseln mit „Limit im
+Fahrzeug" — das ist die Obergrenze, bis zu der das Auto selbst lädt.
+
+**Kommt das Auto nach Hause?** Liefert das Fahrzeug Fahrtziel und Restzeit
+(Tesla über ioBroker: `active_route_destination` und
+`active_route_minutes_to_arrival`), zeigt die `car`-Kachel eine Zeile mit Ziel,
+Ankunftszeit und Restminuten:
+
+```
+attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,home=Bahnhofstrasse
+```
+
+Enthält das Ziel den `home=`-Text, heißt die Zeile **„🏠 Zuhause"** und wird
+farbig hervorgehoben — man sieht auf einen Blick, dass es heimkommt und wann.
+
+> **Die Frische entscheidet.** Die Route-Readings bleiben nach der Fahrt
+> stehen; im Bestand lagen „7 Minuten bis Dülmen" zwei Tage lang im Gerät. Die
+> Zeile erscheint deshalb nur, wenn der Zeitstempel der Restzeit jünger als
+> 15 Minuten ist (`routeAge=<minuten>` ändert das, `routeAge=0` schaltet die
+> Prüfung ab). Ohne Zeitstempel wird nichts gezeigt — eine erfundene
+> Ankunftszeit ist schlimmer als keine.
 
 **Gruppen-Kacheln** — EINE Kachel für ein `structure`-Gerät, mit einer Zeile
 je Mitglied (die Mitglieder müssen im `devspec` liegen, dürfen aber per
@@ -218,14 +289,24 @@ attr bewaesserung vizHero full
 attr myViz tvScenes #uhr:20,Solar:30,Wasser:25
 ```
 
-Auf dem Fernseher ist die Kachel damit die Seite: die Gruppen darunter fallen
-weg, weil sie ohnehin nur angeschnitten würden (dort wird nie gescrollt). Auf
-Tablet/Handy füllt sie den ersten Schirm, der Rest des Raums steht darunter
-und bleibt erreichbar.
+**Die anderen Kacheln des Raums bleiben.** Die Vollbild-Kachel belegt auf dem
+Fernseher die **erste Seite** der Szene, danach blättert das vorhandene
+Auto-Paging zu den übrigen weiter — die Kopfzeile zählt mit (`Draußen · 1/2`).
+Auf Tablet/Handy füllt sie den ersten Schirm, der Rest steht darunter.
 
-Am besten in einem eigenen Raum mit genau einem Gerät, der als TV-Szene
-rotiert. Mehrere `full`-Geräte eines Raums teilen sich die Höhe. Zurück geht
-es mit `vizHero 1` (normales Band) oder `deleteattr <gerät> vizHero`.
+Ohne weitere Angabe teilt sich die Szenenzeit gleichmäßig auf die Seiten.
+`tvHeroSec` am FHEMVIZ-Gerät gibt der großen Kachel eine **eigene Standzeit**:
+
+```
+attr myViz tvScenes Draußen:40,Küche:40
+attr myViz tvHeroSec 25          # 25 s die große Kachel, 15 s der Rest
+```
+
+Je Seite bleibt mindestens eine Sekunde; ein zu großer Wert wird gekappt. Ohne
+Vollbild-Kachel im Raum wirkt das Attribut nicht.
+
+Mehrere `full`-Geräte eines Raums bekommen je eine Seite. Zurück geht es mit
+`vizHero 1` (normales Band) oder `deleteattr <gerät> vizHero`.
 
 ### Uhr-Seite `#uhr` als Szene
 
@@ -263,6 +344,13 @@ define n_klingel_tv notify MQTT2_DOORBELL:motion:.* set myViz show http://kamera
 Bild-URLs (`.jpg`/`.png`/…) werden als Bild gerendert, alles andere als
 iframe. Hinweis: Fremdseiten können das Einbetten per `X-Frame-Options`
 verbieten — Bilder und FHEM-eigene Seiten funktionieren immer.
+
+> **Kamerabilder und der Browser-Cache.** Ein Schnappschuss liegt meist unter
+> einer festen Adresse (`.../pic.jpg`): der Inhalt wechselt, die Adresse nicht.
+> Damit der zweite Alarm nicht das erste Bild zeigt, hängt FHEMVIZ an
+> **Bild**adressen einen wechselnden Parameter (`_viz=…`) an. Webseiten im
+> iframe bleiben unangetastet, dort könnte ein zusätzlicher Parameter einen
+> Token stören.
 
 ### Seite dauerhaft umschalten: `set myViz page`
 
@@ -454,11 +542,33 @@ Ebenfalls ab v0.34.52: Wird der Tablet-Bildschirm wieder wach oder kommt das
 WLAN zurück (`visibilitychange` / `online`), werden Longpoll und Daten sofort
 erneuert, statt bis zu 2,5 Minuten auf den Watchdog zu warten.
 
-## Roadmap
+## Was noch offen ist
 
-Energiefluss (`flow`), Diagramme (`chart`, FileLog/DbLog) und die
-Gruppen-Kacheln sind umgesetzt. Offen: weitere Skins, Widget-Vorschau im
-Editiermodus.
+Kein Fahrplan mit Terminen — eine Liste dessen, was bekannt fehlt oder klemmt.
+Was fertig ist, steht im [`CHANGELOG.md`](./CHANGELOG.md).
+
+**Bekannte Grenzen**
+
+- **Die Ladekette trägt keine Versionskennung.** `index.html` → `app.js` → die
+  rund 30 Module dahinter werden vom Browser normal gecacht; nach einem
+  `update` hilft nur Nachladen (siehe Abschnitt oben). Ein Versionsanhang an
+  den Imports würde das dauerhaft erledigen.
+- **`eventMap` in Perl-Notation** (`eventMap {…}`) kann der Browser nicht
+  auswerten — dort bleibt der Rohwert stehen. Die Listenform funktioniert.
+- **`vizHero full` ist auf einen Schirm zugeschnitten.** Die Kachel selbst
+  bekommt genau eine Seite; passt ihr *Inhalt* nicht hinein (viele feste
+  Zeilen bei geringer Bildschirmhöhe), schneidet die Karte unten ab statt zu
+  blättern. Der Rest des Raums ist davon nicht betroffen, der wird geblättert.
+- **Kein Service Worker**, also kein Offline-Betrieb. Bewusst so — ein
+  hängender PWA-Cache wäre schwerer loszuwerden als der HTTP-Cache.
+
+**Ideen**
+
+- Weitere Skins; `zeilen` und `bento` sind da.
+- Widget-Vorschau im Editiermodus (`?edit=1`), damit ein Typwechsel nicht
+  blind passiert.
+- Der Editiermodus kennt für `vizHero` nur an/aus — `full` muss per `attr`
+  gesetzt werden, weil ein Knopf mit drei Zuständen unklar wäre.
 
 ## Lizenz
 

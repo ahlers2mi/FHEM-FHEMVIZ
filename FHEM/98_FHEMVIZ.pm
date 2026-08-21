@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.35.6
+# Version:  v0.37.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.35.6";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -138,6 +138,7 @@ sub FHEMVIZ_Initialize {
           "width " .
           "tvScenes " .
           "tvTouch " .
+          "tvHeroSec " .
           "statusBar:textField-long " .
           "headerInfo:textField-long " .
           "background " .
@@ -310,6 +311,7 @@ sub FHEMVIZ_Get {
         my $mode       = AttrVal($name, "mode", "tablet");
         my $tvScenes   = AttrVal($name, "tvScenes", "");
         my $tvTouch    = AttrVal($name, "tvTouch", "");
+        my $tvHeroSec  = AttrVal($name, "tvHeroSec", "");
         my $zoomAttr   = AttrVal($name, "zoom", "");
         my $widthAttr  = AttrVal($name, "width", "");
         my $statusBar  = AttrVal($name, "statusBar", "");
@@ -338,11 +340,11 @@ sub FHEMVIZ_Get {
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"statusBar":%s,"headerInfo":%s,'
+              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"tvHeroSec":%s,"statusBar":%s,"headerInfo":%s,'
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.35.6"),
+            FHEMVIZ_jsonStr("v0.37.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -351,6 +353,7 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($widthAttr),
             FHEMVIZ_jsonStr($tvScenes),
             FHEMVIZ_jsonStr($tvTouch),
+            FHEMVIZ_jsonStr($tvHeroSec),
             FHEMVIZ_jsonStr($statusBar),
             FHEMVIZ_jsonStr($headerInfo),
             FHEMVIZ_jsonStr($background),
@@ -595,6 +598,19 @@ sub FHEMVIZ_Attr {
         <code>tvTouch</code> Sekunden ohne Aktion läuft die Szenen-Rotation
         weiter (Default 30, <code>0</code> = aus). Damit taugt der TV-Modus
         als Bildschirmschoner für Wand-Tablets.</li>
+    <li><a id="FHEMVIZ-attr-tvHeroSec"></a><b>tvHeroSec</b><br>
+        Typ: textField (Sekunden, ab v0.36.0). Eine Vollbild-Kachel
+        (<code>vizHero full</code>) belegt die <b>erste Seite</b> einer Szene
+        allein, die übrigen Kacheln des Raums stehen darunter und werden vom
+        Auto-Paging nachgeblättert. Ohne dieses Attribut teilt sich die
+        Szenenzeit gleichmäßig auf alle Seiten auf.<br>
+        <code>tvHeroSec</code> gibt der Vollbild-Kachel eine <b>eigene
+        Standzeit</b>; was von der Szenenzeit übrig bleibt, teilen sich die
+        Kachelseiten. Beispiel: <code>tvScenes Draußen:40</code> plus
+        <code>tvHeroSec 25</code> &rarr; 25 s die große Kachel, 15 s für die
+        Seiten danach. Je Seite bleibt mindestens eine Sekunde; ein zu großer
+        Wert wird entsprechend gekappt. Ohne Vollbild-Kachel im Raum wirkt
+        das Attribut nicht.</li>
     <li><a id="FHEMVIZ-attr-statusBar"></a><b>statusBar</b><br>
         Typ: textField-long. Immer sichtbare Status-Chips im Kopf:
         kommaseparierte Liste <code>gerät[:reading[:einheit[:farbe]]]</code>.
@@ -973,13 +989,13 @@ sub FHEMVIZ_Attr {
         <b><code>full</code></b> (ab v0.35.3): der
         Blickfang nimmt die <b>ganze sichtbare Fläche</b> ein statt nur eine
         Zeile — größte Schrift (wie <code>vizSize 2x2</code>), Kachel auf
-        volle Höhe gestreckt. Auf dem Fernseher ist die Kachel damit die
-        Seite: die Gruppen darunter fallen weg, weil sie ohnehin nur
-        angeschnitten würden (dort wird nie gescrollt). Auf Tablet/Handy
-        füllt sie den ersten Schirm, der Rest des Raums steht darunter und
-        bleibt erreichbar. Gedacht für einen eigenen Raum mit genau einem
-        Gerät, der als TV-Szene rotiert; mehrere <code>full</code>-Geräte
-        eines Raums teilen sich die Höhe. Beispiel:<br>
+        volle Höhe gestreckt. Die übrigen Kacheln des Raums bleiben erhalten:
+        auf dem Fernseher belegt die Vollbild-Kachel die <b>erste Seite</b>
+        der Szene, danach blättert das Auto-Paging zu den anderen weiter
+        (eigene Standzeit über <code>tvHeroSec</code> am FHEMVIZ-Gerät). Auf
+        Tablet/Handy füllt sie den ersten Schirm, der Rest steht darunter.
+        Mehrere <code>full</code>-Geräte eines Raums bekommen je eine Seite.
+        Beispiel:<br>
         <code>attr bewaesserung vizHero full</code></li>
     <li><a id="FHEMVIZ-attr-vizHide"></a><b>vizHide</b> 1|0<br>
         Gerät aus der Sicht ausblenden.</li>
@@ -1159,7 +1175,46 @@ sub FHEMVIZ_Attr {
         <code>auto</code>, <code>carlimit</code>, <code>power</code>
         &uuml;berschreiben die gesuchten <b>Reading-Namen</b> (siehe
         <code>vizWidget car</code>); <code>wallbox=&lt;ger&auml;t&gt;</code>
-        h&auml;ngt die <b>Wallbox</b> an die Kachel.<br>
+        h&auml;ngt die <b>Wallbox</b> an die Kachel,
+        <code>image=&lt;url&gt;</code> zeigt ein <b>Fahrzeugbild</b> oben in der
+        Kachel (H&ouml;he begrenzt, damit ein grosses Bild die Kachel nicht
+        aufzieht &ndash; Datei z. B. unter <code>www/</code> ablegen).<br>
+        <b>Ein Bild je Ladezustand</b> geht auch:<br>
+        <code>image=laedt:&lt;url&gt;|steckt:&lt;url&gt;|frei:&lt;url&gt;</code><br>
+        <i>laedt</i> = es l&auml;uft Leistung, <i>steckt</i> = Kabel dran ohne
+        Leistung, <i>frei</i> = nichts angesteckt. Fehlt einer der drei, wird
+        der erste angegebene genommen &ndash; zwei Bilder reichen also auch.
+        Den Zustand ermittelt die Kachel aus der Leistung (Fahrzeug oder
+        Wallbox), dem Zustandstext der Wallbox und
+        <code>charge_port_door_open</code>; ein besseres eigenes Reading
+        f&uuml;r &bdquo;angesteckt&ldquo; geht per
+        <code>plug=&lt;reading&gt;</code>.<br>
+        Der Ladestand wird als <b>Balken</b> gezeigt, dessen <b>Griff das
+        Wunschlimit ist</b> und direkt gezogen wird.<br>
+        <b>Was das Wunschlimit bedeutet:</b> es ist das <b>Minimum, das immer
+        geladen wird</b> &ndash; unabh&auml;ngig davon, wie die
+        Solar&uuml;berschuss-Regelung gerade entscheidet. Die blasse Strecke
+        zwischen Ladestand und Griff ist also nicht &bdquo;vielleicht&ldquo;,
+        sondern was auf jeden Fall noch kommt. Ist der Stand darüber, ist die
+        Zusage erf&uuml;llt und der Balken wird gr&uuml;n. Nicht zu verwechseln
+        mit &bdquo;Limit im Fahrzeug&ldquo;: das ist die Obergrenze, bis zu der
+        das Auto selbst l&auml;dt.<br>
+        <b>Navigation</b> (ab v0.37.0): liefert das Fahrzeug ein Fahrtziel und
+        die Restzeit (Tesla/ioBroker: <code>active_route_destination</code> und
+        <code>active_route_minutes_to_arrival</code>; eigene Namen &uuml;ber
+        <code>dest=</code> / <code>eta=</code>), zeigt die Kachel eine Zeile
+        <i>Ziel &middot; Ankunftszeit &middot; Restminuten</i>. Mit
+        <code>home=&lt;text&gt;</code> hei&szlig;t sie
+        &bdquo;&#127968; Zuhause&ldquo; in Akzentfarbe, sobald das Ziel diesen
+        Text enth&auml;lt &ndash; man sieht also auf einen Blick, dass das Auto
+        heimkommt und wann.<br>
+        <b>Wichtig, die Frische:</b> die Route-Readings bleiben nach der Fahrt
+        stehen (im Bestand lagen &bdquo;7 Minuten&ldquo; zwei Tage im Ger&auml;t).
+        Die Zeile erscheint deshalb nur, wenn der Zeitstempel der Restzeit
+        j&uuml;nger als 15 Minuten ist. Anders einstellen mit
+        <code>routeAge=&lt;minuten&gt;</code>, <code>routeAge=0</code> schaltet
+        die Pr&uuml;fung ab (dann kann eine alte Ankunftszeit stehen bleiben).
+        Ohne Zeitstempel wird nichts gezeigt.<br>
         Hintergrund: das Wunschlimit l&auml;dt nicht selbst &ndash; es ist die
         Schwelle, unter der geladen werden soll. Geladen wird &uuml;ber die
         Wallbox, und genau die zeigt und bedient die Kachel dann mit: Zustand
