@@ -414,7 +414,8 @@ export class FhemvizCar extends FhemvizWidget {
    * per "routeAge=<minuten>" in vizCar aenderbar, 0 = Pruefung aus).
    *
    * Ist ein Zuhause-Name gesetzt ("home=<text>" in vizCar) und das Ziel
-   * enthaelt ihn, heisst die Zeile "Zuhause" statt des Ortsnamens.
+   * enthaelt ihn, heisst die Zeile "Zuhause" statt des Ortsnamens. Mehrere
+   * Schreibweisen mit "|" trennen: "home=Im Nott|Zuhause|Home".
    */
   _route() {
     const zielHit = this._read(
@@ -441,9 +442,16 @@ export class FhemvizCar extends FhemvizWidget {
     // dann ist die Fahrt vorbei, und "unterwegs" zu raten waere geraten.
     const ziel = zielHit ? this.plain(zielHit.value).trim() : "";
     if (!ziel) return null;
-    const heim = (this._cfg().home || "").trim();
-    const nachHause =
-      !!heim && !!ziel && ziel.toLowerCase().includes(heim.toLowerCase());
+    // "home=" darf MEHRERE Schreibweisen mit "|" trennen. Das Auto meldet je
+    // nach Eingabe die Adresse ("Im Nott 35, 48301 Nottuln"), einen
+    // POI-Namen ("Moubis Duelmen") oder den Namen eines gespeicherten Ortes
+    // ("Zuhause") - eine einzelne Zeichenkette trifft nicht alle Faelle.
+    const heim = String(this._cfg().home || "")
+      .split("|")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+    const zl = ziel.toLowerCase();
+    const nachHause = heim.some((h) => zl.includes(h));
 
     const an = new Date(Date.now() + min * 60000);
     const p = (n) => String(n).padStart(2, "0");

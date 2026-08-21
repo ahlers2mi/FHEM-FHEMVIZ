@@ -11,6 +11,23 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.1 — 21.08.2026
+
+**Neu**
+
+- **`home=` in `vizCar` nimmt mehrere Schreibweisen**, mit `|` getrennt:
+  `home=Im Nott|Zuhause|Home`. Nötig, weil das Auto je nach Eingabe etwas
+  anderes meldet — die **Adresse** („Im Nott 35, 48301 Nottuln"), einen
+  **POI-Namen** („Moubis Dülmen") oder den **Namen eines gespeicherten Ortes**
+  („Zuhause"). Mit einer einzigen Zeichenkette trifft man nicht alle drei.
+
+**Geändert**
+
+- **Die drei Beispiel-Fahrzeugbilder sind freigestellt** (PNG mit Alpha statt
+  JPG). Vorher war der dunkle Studio-Hintergrund des Renderings als Rechteck
+  auf der Kachel zu sehen; mit Hintergrundbild oder hellem Skin wäre er
+  unbrauchbar gewesen.
+
 ## v0.37.0 — 21.08.2026
 
 **Behoben**

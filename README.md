@@ -177,11 +177,16 @@ Fahrzeug" — das ist die Obergrenze, bis zu der das Auto selbst lädt.
 Ankunftszeit und Restminuten:
 
 ```
-attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,home=Bahnhofstrasse
+attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,home=Im Nott|Zuhause|Home
 ```
 
-Enthält das Ziel den `home=`-Text, heißt die Zeile **„🏠 Zuhause"** und wird
-farbig hervorgehoben — man sieht auf einen Blick, dass es heimkommt und wann.
+Enthält das Ziel einen der `home=`-Texte, heißt die Zeile **„🏠 Zuhause"** und
+wird farbig hervorgehoben — man sieht auf einen Blick, dass es heimkommt und
+wann. Mehrere Schreibweisen mit `|` trennen ist sinnvoll, weil das Auto je nach
+Eingabe die **Adresse** („Im Nott 35, 48301 Nottuln"), einen **POI-Namen**
+(„Moubis Dülmen") oder den **Namen eines gespeicherten Ortes** („Zuhause")
+meldet. Der Text sollte lang genug sein, um nicht danebenzugreifen: `Nott`
+allein trifft auch jedes Ziel in *Nottuln*.
 
 > **Die Frische entscheidet.** Die Route-Readings bleiben nach der Fahrt
 > stehen; im Bestand lagen „7 Minuten bis Dülmen" zwei Tage lang im Gerät. Die
