@@ -45,10 +45,10 @@ const CAR_CSS = `
   /* Fahrzeugbild (attr vizCar image=<url>): oben, mittig, hoehenbegrenzt -
    * ein zu grosses Bild darf die Kachel nicht aufziehen. */
   .cimg {
-    width: 100%; max-height: 132px; object-fit: contain;
+    width: 100%; max-height: 164px; object-fit: contain;
     margin: 2px 0 4px; border-radius: 8px;
   }
-  :host([data-tv]) .cimg { max-height: 200px; }
+  :host([data-tv]) .cimg { max-height: 230px; }
 
   /* Ladestand wie in der Tesla-App: EIN Balken. Die Fuellung ist der
    * Ladestand, der Griff darauf ist das Wunschlimit und wird direkt gezogen -
@@ -541,9 +541,15 @@ export class FhemvizCar extends FhemvizWidget {
 
     // Warnzeile aus dem Fahrzeug. Nur Readings, die es wirklich gibt:
     // eine offene Ladeklappe meldet Tesla als charge_port_door_open.
+    //
+    // ABER nur meldenswert, wenn NICHTS steckt: beim Laden und bei
+    // eingestecktem Kabel ist die Klappe zu Recht offen, dann waere die Zeile
+    // Dauerrauschen. Offen ohne Kabel heisst dagegen: vergessen.
     const klappe = this._read(["charge_port_door_open"]);
     const warn =
-      klappe && /^(true|1|open|yes|on)$/i.test(this.plain(klappe.value))
+      klappe &&
+      /^(true|1|open|yes|on)$/i.test(this.plain(klappe.value)) &&
+      this._ladeZustand() === "frei"
         ? `<div class="cwarn">⚠ Ladeklappe offen</div>`
         : "";
 
