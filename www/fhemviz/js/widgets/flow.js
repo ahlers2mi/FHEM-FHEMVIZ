@@ -97,12 +97,26 @@ const FLOW_CSS = `
    * ablesbar bleibt. Kompakt, damit sie den Ladestand nicht verdraengt. */
   .fchainrow { display: flex; justify-content: center; }
   .fchainrow .chain.v { gap: 5px; }
+  /* Rahmen und Koerper heben sich BEWUSST vom Kartenhintergrund ab: mit
+   * --viz-border (dunkel #262c35 auf der Karte #151920) war die Batterie im
+   * dunklen Theme kaum zu sehen - die Form entstand erst durch die Fuellung,
+   * bei niedrigem Ladestand also fast gar nicht. Auf dem Wandtablet, aus
+   * einigen Metern Abstand, verschwand sie ganz.
+   *
+   * Der Rahmen traegt darum die LADEFARBE (--bcol, wie Fuellung und Zahl),
+   * gemischt mit der Rahmenfarbe. Ein neutraler grauer Rahmen war getestet
+   * und aus der Entfernung immer noch zu leise. Der dunkle Innenschatten
+   * trennt den farbigen Rahmen vom aufgehellten Koerper, sonst laufen sie
+   * bei hohem Ladestand ineinander. */
   .bwrap {
     position: relative;
     height: 78px;
     margin: 2px 13px 0 0;
-    border: 3px solid var(--viz-border, #262c35);
+    border: 3px solid
+      color-mix(in srgb, var(--bcol, var(--viz-accent)) 55%, var(--viz-border, #262c35));
     border-radius: 13px;
+    background: var(--viz-raised, #1c212a);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
     min-width: 0;
   }
   /* Pol-Kappe rechts - macht die Form auf den ersten Blick zur Batterie. */
@@ -114,7 +128,8 @@ const FLOW_CSS = `
     left: 100%; margin-left: 3px;
     width: 9px; height: 30px;
     transform: translateY(-50%);
-    background: var(--viz-border, #262c35);
+    background:
+      color-mix(in srgb, var(--bcol, var(--viz-accent)) 55%, var(--viz-border, #262c35));
     border-radius: 0 4px 4px 0;
   }
   .bclip { position: absolute; inset: 0; border-radius: 10px; overflow: hidden; }
@@ -365,7 +380,7 @@ export class FhemvizFlow extends FhemvizWidget {
           aria-label="Ladestand ${this.escape(this._fmt(soc))} Prozent">
           <div class="bclip">
             <div class="bfill" style="width:${clamped}%;
-              background:color-mix(in srgb, ${color} 26%, transparent)"></div>
+              background:color-mix(in srgb, ${color} 34%, transparent)"></div>
             ${res !== null ? `<div class="bmark" style="left:${res}%"></div>` : ""}
           </div>
           <div class="binner">

@@ -11,6 +11,21 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.3 — 21.08.2026
+
+**Geändert**
+
+- **Die Batterie der `flow`-Kachel setzt sich vom Hintergrund ab.** Rahmen und
+  Pol-Kappe hatten `--viz-border` — im dunklen Theme `#262c35` auf der Karte
+  `#151920`, also kaum sichtbar. Die Form entstand praktisch nur durch die
+  Füllung; bei niedrigem Ladestand war fast nichts zu sehen, und auf dem
+  Wandtablet aus einigen Metern verschwand das Symbol.
+  Jetzt tragen Rahmen und Kappe die **Ladefarbe** (wie Füllung und Zahl),
+  gemischt mit der Rahmenfarbe, der Körper ist auf `--viz-raised` aufgehellt
+  und ein dunkler Innenschatten trennt beides. Füllung von 26 auf 34 %.
+  Ein neutraler grauer Rahmen war ebenfalls gebaut und verworfen: auf dem
+  Wandtablet immer noch zu leise.
+
 ## v0.37.2 — 21.08.2026
 
 **Behoben**
