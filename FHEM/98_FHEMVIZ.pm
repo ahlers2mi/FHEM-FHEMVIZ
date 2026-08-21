@@ -1184,6 +1184,10 @@ sub FHEMVIZ_Attr {
         <i>laedt</i> = es l&auml;uft Leistung, <i>steckt</i> = Kabel dran ohne
         Leistung, <i>frei</i> = nichts angesteckt. Fehlt einer der drei, wird
         der erste angegebene genommen &ndash; zwei Bilder reichen also auch.
+        Drei <b>freigestellte Beispielbilder</b> (Model 3, blau) liegen unter
+        <code>www/fhemviz/img/car/tesla-{frei,steckt,laedt}.png</code> und
+        kommen mit dem <code>update</code> mit &ndash; sie haben keinen
+        Hintergrund, das Fahrzeug steht also direkt auf der Kachel.<br>
         Den Zustand ermittelt die Kachel aus der Leistung (Fahrzeug oder
         Wallbox), dem Zustandstext der Wallbox und
         <code>charge_port_door_open</code>; ein besseres eigenes Reading

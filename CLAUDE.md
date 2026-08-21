@@ -68,6 +68,42 @@ Daraus abgeleitet:
 - Der Unterschied liegt in der Frage: zeichnet es einen **Zusammenhang** oder
   soll es **schön aussehen**? Das Erste ja, das Zweite nicht ohne Vorlage.
 
+## Bilder freistellen (Fahrzeugbilder, KI-Renderings)
+
+Vier Versuche, drei davon falsch – die Reihenfolge lohnt sich zu merken:
+
+1. **Fluten vom Rand über die Farbähnlichkeit** frisst die Reifen. Sie sind
+   genauso dunkel und farblos wie der Hintergrund; jede Maske, die den
+   Hintergrund trifft, trifft sie mit.
+2. **Hintergrund auf die Kachelfarbe ziehen** lässt einen Hof stehen: die
+   Vignette dicht am Auto ist heller als die Kachel.
+3. **Rand zusätzlich weich ausblenden** versteckt die Kante, aber der Hof
+   bleibt, und die Kachelfarbe muss stimmen – gemessen war die Karte
+   `rgb(17,21,27)`, nicht `--viz-surface: #151920`.
+4. **Was funktioniert: über die Kante freistellen, nicht über die Helligkeit.**
+   Der Hintergrund eines Renderings ist eine weiche Vignette (fast kein
+   Gradient), die Karosserie hat eine harte Silhouette. Also vom Bildrand her
+   fluten, aber **nur durch Pixel mit kleinem Gradienten** (`< 2,5` auf der
+   um σ 1,4 geglätteten Helligkeit, dazu `Helligkeit < 110` und
+   `Sättigung < 22`). Das läuft über den ganzen Hof und bleibt an der
+   Silhouette stehen; die Reifen schützt ihre eigene Kante.
+   Danach kriecht das Fluten noch durch die Reifen in flache dunkle
+   Karosserieflächen – Gegenmittel: **je Zeile/Spalte kurze Lücken zwischen
+   zwei Auto-Pixeln zuschütten** (Zeile 22 %, Spalte 10 % der Bildkante).
+   „Kurz" ist wichtig, sonst wird auch der echte Freiraum unter dem Wagen und
+   zwischen Auto und Ladekabel zugeschüttet.
+
+Skript: `frei3.py` im Sitzungs-Scratchpad. Kein `scipy` installiert, Flutfüllung
+und Zusammenhangskomponenten daher selbst als BFS.
+
+**Immer auf hellem UND dunklem Grund gegenprüfen.** Auf der dunklen Kachel
+sieht ein weggefressener Reifen aus wie ein Reifen – auf hellem Grund fällt es
+sofort auf. Beide Proben in ein Bild, dann einmal hinsehen.
+
+**Format bleibt PNG.** WebP wäre kleiner (36 statt 350 kB), aber FHEMWEB kennt
+die Endung in seiner MIME-Tabelle nicht. Auf 256 Farben quantisieren spart
+genauso viel, macht aber sichtbare Streifen im blauen Lack – nachgesehen.
+
 ## Änderungen wirklich prüfen: FHEMWEB-Attrappe + Playwright
 
 Layout-Fehler lassen sich nicht am Code erraten – zweimal ist genau das

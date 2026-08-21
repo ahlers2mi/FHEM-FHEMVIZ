@@ -47,8 +47,10 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
   Ladezustand ein eigenes**: `image=laedt:<url>|steckt:<url>|frei:<url>`. Den
   Zustand ermittelt die Kachel aus der Leistung (Fahrzeug oder Wallbox), dem
   Zustandstext der Wallbox und `charge_port_door_open`; ein eigenes Reading
-  geht per `plug=`. Drei zugeschnittene Beispielbilder liegen unter
-  `www/fhemviz/img/car/` und kommen mit dem `update` mit.
+  geht per `plug=`. Drei zugeschnittene und **freigestellte** Beispielbilder
+  liegen unter `www/fhemviz/img/car/` und kommen mit dem `update` mit — ohne
+  Hintergrund steht das Fahrzeug direkt auf der Kachel, unabhängig von Skin
+  und Hintergrundbild.
 
 ## v0.36.0 — 21.08.2026
 

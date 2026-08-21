@@ -150,12 +150,14 @@ Dazu `watering` (Bewässerungs-Steuerung ohne Schema).
 attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,image=/fhem/www/tesla.png
 ```
 
-Oder drei, dann wechselt das Bild mit dem Zustand — drei zugeschnittene
-Beispielbilder liegen im Repo und kommen mit dem `update` mit:
+Oder drei, dann wechselt das Bild mit dem Zustand — drei zugeschnittene und
+**freigestellte** Beispielbilder liegen im Repo und kommen mit dem `update`
+mit; ohne Hintergrund steht das Fahrzeug direkt auf der Kachel, egal welcher
+Skin:
 
 ```
 attr MQTT2_Tesla_Model3 vizCar wallbox=MQTT2_GOE,\
-  image=laedt:/fhem/fhemviz/img/car/tesla-laedt.jpg|steckt:/fhem/fhemviz/img/car/tesla-steckt.jpg|frei:/fhem/fhemviz/img/car/tesla-frei.jpg
+  image=laedt:/fhem/fhemviz/img/car/tesla-laedt.png|steckt:/fhem/fhemviz/img/car/tesla-steckt.png|frei:/fhem/fhemviz/img/car/tesla-frei.png
 ```
 
 `laedt` = es läuft Leistung, `steckt` = Kabel dran ohne Leistung, `frei` =
