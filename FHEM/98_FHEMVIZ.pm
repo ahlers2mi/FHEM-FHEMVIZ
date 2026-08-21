@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.1
+# Version:  v0.37.3
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.1";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.3";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -344,7 +344,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.1"),
+            FHEMVIZ_jsonStr("v0.37.3"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -994,7 +994,13 @@ sub FHEMVIZ_Attr {
         der Szene, danach blättert das Auto-Paging zu den anderen weiter
         (eigene Standzeit über <code>tvHeroSec</code> am FHEMVIZ-Gerät). Auf
         Tablet/Handy füllt sie den ersten Schirm, der Rest steht darunter.
-        Mehrere <code>full</code>-Geräte eines Raums bekommen je eine Seite.
+        Mehrere <code>full</code>-Geräte eines Raums bekommen je eine Seite.<br>
+        Die Größe folgt <b>Breite und Höhe</b>, es gilt das Kleinere von
+        beidem (ab v0.37.2). Kacheln mit festem Seitenverhältnis
+        (<code>watertank</code> leitet die Höhe der Zeichnung aus der Breite
+        ab) wuchsen in einem breiten <b>Browserfenster</b> sonst über den
+        Schirm hinaus; jetzt wird die Zeichnung kleiner und mittig gestellt
+        statt die Seite zu verlängern.
         Beispiel:<br>
         <code>attr bewaesserung vizHero full</code></li>
     <li><a id="FHEMVIZ-attr-vizHide"></a><b>vizHide</b> 1|0<br>

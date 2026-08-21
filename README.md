@@ -301,6 +301,13 @@ Fernseher die **erste Seite** der Szene, danach blättert das vorhandene
 Auto-Paging zu den übrigen weiter — die Kopfzeile zählt mit (`Draußen · 1/2`).
 Auf Tablet/Handy füllt sie den ersten Schirm, der Rest steht darunter.
 
+**Die Größe folgt Breite *und* Höhe** (ab v0.37.2), es gilt das Kleinere von
+beidem. Wichtig für Kacheln mit festem Seitenverhältnis: `watertank` leitet die
+Höhe seiner Zeichnung aus der Breite ab, und in einem breiten Browserfenster
+wurde die Kachel dadurch höher als der Schirm (gemessen bei 1850×820: 926 px
+Kachel in 780 px sichtbarer Fläche, die Seite scrollte 424 px). Jetzt wird die
+Zeichnung kleiner und mittig gestellt, statt die Seite zu verlängern.
+
 Ohne weitere Angabe teilt sich die Szenenzeit gleichmäßig auf die Seiten.
 `tvHeroSec` am FHEMVIZ-Gerät gibt der großen Kachel eine **eigene Standzeit**:
 

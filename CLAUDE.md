@@ -149,6 +149,23 @@ Raum zum Flex-Container machen, dann `flex` + `min-height: 0` nach unten
 durchreichen. `min-height: 0` ist Pflicht, sonst verweigert Flexbox das
 Schrumpfen unter die Inhaltshöhe.
 
+**Im Browser gilt dasselbe, nur ohne TV-Regeln.** `vizHero full` hatte lange
+nur eine `min-height` – damit bestimmte allein die **Breite** die Höhe, und in
+einem breiten Fenster (1850×820) wurde die `watertank`-Kachel 926 px hoch bei
+780 px sichtbarer Fläche. Zwei Lehren:
+
+- **`max-height` allein schrumpft nichts.** Die Grid-Zeile ist implizit `auto`
+  und richtet sich nach dem Inhalt; die Obergrenze schneidet dann nur ab
+  (gemessen: Band 690, SVG weiter 813). Erst
+  `grid-template-rows: minmax(0, 1fr)` erlaubt der Zeile, unter die
+  Inhaltshöhe zu gehen – dann wird die Zeichnung kleiner (690/577).
+- **Regeln für Tablet/Browser nach `html:not([data-vizmode="tv"])` sperren.**
+  Die Obergrenze rechnet mit −90 px, der TV mit `--viz-tv-pad-y` (56 px). In
+  der gemeinsamen Regel gewinnt die kleinere Zahl und kürzt das TV-Band von
+  660 auf 617 – genau der Fehler, den die TV-Regel verhindern soll. Im Test
+  aufgefallen, weil die A/B-Messung (Änderung stashen, erneut messen) beide
+  Modi mitnimmt.
+
 Kacheln, die ihre Höhe selbst ausrechnen, überlaufen sonst:
 `watertank` leitet die SVG-Höhe aus der Breite ab (viewBox 220:108),
 `mealplan` hat sieben feste Zeilen. Widgets erkennen den Vollbild-Fall am
