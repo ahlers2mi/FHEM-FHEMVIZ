@@ -139,10 +139,17 @@ Aufnahmen der Oberfläche:
 |---|---|
 | **`flow`** — Energiefluss. PV, Haus, Netz und Batterie mit laufenden Punkten in Flussrichtung; minus = entladen. Zuordnung über `attr <dev> vizFlow`.<br>![flow](docs/img/widget-flow.png) | **`watertank`** — Regenwasseranlage als Schema. Füllhöhen in Litern, gestrichelt die Schwimmerhöhe, Rohre leuchten nur bei echtem Transport. Behälterzahl aus `ibcUsableVolume`.<br>![watertank](docs/img/widget-watertank.png) |
 | **`mealplan`** — Wochenplan: heute groß mit Foto, die übrigen Tage als Streifen. Würfeln, bewerten und Einkauf direkt aus der Kachel — Knöpfe nur für set-Befehle, die es wirklich gibt.<br>![mealplan](docs/img/widget-mealplan.png) | **`solvis`** — Heizung: Schichtung im Speicher als Zylinder (S01/S04/S09/S03 von oben nach unten), dazu Solarkreis, Kollektor und Brenner.<br>![solvis](docs/img/widget-solvis.png) |
-| **`car`** — Ladestand als Balken, und der **Griff darauf ist das Wunschlimit** (Vorbild: die Tesla-App). Die blasse Strecke dazwischen ist, was noch geladen werden soll. Wallbox über `vizCar wallbox=<gerät>`, Bild über `image=<url>`. Liefert das Auto ein Fahrtziel, steht die **Ankunftszeit** dabei — nach Hause farbig hervorgehoben.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
+| **`car`** — gezeichnetes Fahrzeug, das den Ladezustand zeigt (lädt / angesteckt / frei), darunter der Ladestand als Balken, dessen **Griff das Wunschlimit ist** (Vorbild: die Tesla-App). Wallbox über `vizCar wallbox=<gerät>`, Lackfarbe über `color=`. Liefert das Auto ein Fahrtziel, steht die **Ankunftszeit** dabei — nach Hause farbig hervorgehoben.<br>![car](docs/img/widget-car.png) | **`forecast`** — PV-Prognose als Stunden-Balken: IST-Ertrag kräftig vor der blassen Prognose, Marker unter der laufenden Stunde. `TYPE=SolarForecast` wird automatisch erkannt.<br>![forecast](docs/img/widget-forecast.png) |
 | **`weather`** — Wetterstation (Ecowitt/GW3000): Außen und Innen, Wind, Regen, UV, Druck.<br>![weather](docs/img/widget-weather.png) | **`shuttergroup`** — Rollläden aus einem `structure`: Master-Zeile „Alle" plus je Rollade Position und ▲■▼. Der gemeinsame Namensanfang fällt weg.<br>![shuttergroup](docs/img/widget-shuttergroup.png) |
 
 Dazu `watering` (Bewässerungs-Steuerung ohne Schema).
+
+**Das Wunschlimit ist ein Minimum, keine Obergrenze.** Es ist der Ladestand,
+der **immer** erreicht wird — unabhängig davon, wie die
+Solarüberschuss-Regelung gerade entscheidet. Die blasse Strecke zwischen
+Füllung und Griff ist deshalb nicht „vielleicht", sondern was auf jeden Fall
+noch kommt; darüber wird der Balken grün. Nicht zu verwechseln mit „Limit im
+Fahrzeug" — das ist die Obergrenze, bis zu der das Auto selbst lädt.
 
 **Kommt das Auto nach Hause?** Liefert das Fahrzeug Fahrtziel und Restzeit
 (Tesla über ioBroker: `active_route_destination` und

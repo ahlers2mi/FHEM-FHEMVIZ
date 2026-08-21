@@ -1176,12 +1176,29 @@ sub FHEMVIZ_Attr {
         &uuml;berschreiben die gesuchten <b>Reading-Namen</b> (siehe
         <code>vizWidget car</code>); <code>wallbox=&lt;ger&auml;t&gt;</code>
         h&auml;ngt die <b>Wallbox</b> an die Kachel,
-        <code>image=&lt;url&gt;</code> zeigt ein <b>Fahrzeugbild</b> oben in der
-        Kachel (H&ouml;he begrenzt, damit ein grosses Bild die Kachel nicht
-        aufzieht &ndash; Datei z. B. unter <code>www/</code> ablegen).<br>
+        <code>color=&lt;farbe&gt;</code> f&auml;rbt das <b>gezeichnete
+        Fahrzeug</b> oben in der Kachel (Standard ein dunkles Blau). Es ist ein
+        stilisiertes SVG, keine Bilddatei: es skaliert, l&auml;dt nichts nach
+        und zeigt den Ladezustand &ndash; <i>l&auml;dt</i> (Kabel wandert,
+        Blitz), <i>angesteckt</i> (Kabel gedeckt) oder <i>nicht angesteckt</i>
+        (kein Kabel). <code>car=0</code> l&auml;sst den Platz frei,
+        <code>image=&lt;url&gt;</code> setzt stattdessen ein eigenes Bild
+        (H&ouml;he begrenzt; Datei z. B. unter <code>www/</code>).
+        Der Zustand kommt aus der Leistung, dem Zustandstext der Wallbox und
+        <code>charge_port_door_open</code>; ein besseres eigenes Reading
+        f&uuml;r &bdquo;angesteckt&ldquo; geht per
+        <code>plug=&lt;reading&gt;</code>.<br>
         Der Ladestand wird als <b>Balken</b> gezeigt, dessen <b>Griff das
         Wunschlimit ist</b> und direkt gezogen wird; eine offene Ladeklappe
-        (<code>charge_port_door_open</code>) erscheint als Hinweiszeile.<br>
+        erscheint als Hinweiszeile.<br>
+        <b>Was das Wunschlimit bedeutet:</b> es ist das <b>Minimum, das immer
+        geladen wird</b> &ndash; unabh&auml;ngig davon, wie die
+        Solar&uuml;berschuss-Regelung gerade entscheidet. Die blasse Strecke
+        zwischen Ladestand und Griff ist also nicht &bdquo;vielleicht&ldquo;,
+        sondern was auf jeden Fall noch kommt. Ist der Stand darüber, ist die
+        Zusage erf&uuml;llt und der Balken wird gr&uuml;n. Nicht zu verwechseln
+        mit &bdquo;Limit im Fahrzeug&ldquo;: das ist die Obergrenze, bis zu der
+        das Auto selbst l&auml;dt.<br>
         <b>Navigation</b> (ab v0.37.0): liefert das Fahrzeug ein Fahrtziel und
         die Restzeit (Tesla/ioBroker: <code>active_route_destination</code> und
         <code>active_route_minutes_to_arrival</code>; eigene Namen &uuml;ber

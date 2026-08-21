@@ -40,14 +40,21 @@
  */
 
 import { FhemvizWidget, vizStatesInfo } from "./base-widget.js";
+import { carArt, CAR_ART_CSS } from "./car-art.js";
 
 const CAR_CSS = `
+  ${CAR_ART_CSS}
   /* Fahrzeugbild (attr vizCar image=<url>): oben, mittig, hoehenbegrenzt -
    * ein zu grosses Bild darf die Kachel nicht aufziehen. */
   .cimg {
     width: 100%; max-height: 132px; object-fit: contain;
     margin: 2px 0 4px; border-radius: 8px;
   }
+  /* Das gezeichnete Fahrzeug steckt in demselben Kasten - als div, damit die
+   * Hoehenbegrenzung auch fuer das SVG gilt. */
+  div.cimg { display: flex; justify-content: center; overflow: hidden; }
+  div.cimg > svg { max-height: 132px; }
+  :host([data-tv]) div.cimg > svg { max-height: 200px; }
   :host([data-tv]) .cimg { max-height: 200px; }
 
   /* Ladestand wie in der Tesla-App: EIN Balken. Die Fuellung ist der
@@ -343,6 +350,40 @@ export class FhemvizCar extends FhemvizWidget {
       </div>`;
   }
 
+  /**
+   * Ladezustand fuer das gezeichnete Fahrzeug: "laedt", "steckt" oder "frei".
+   *
+   * Es gibt kein einzelnes Reading dafuer, also aus mehreren zusammengesetzt -
+   * und in dieser Reihenfolge, weil Leistung die einzige Angabe ist, die
+   * beweist, dass wirklich geladen wird:
+   *   1. Leistung am Fahrzeug oder an der Wallbox  -> laedt
+   *   2. Zustandstext der Wallbox                  -> laedt/steckt/frei
+   *      (go-e: "waiting for car" = nichts dran, "Ready"/"Charging finished"
+   *      = Auto haengt dran, laedt aber nicht)
+   *   3. offene Ladeklappe am Fahrzeug             -> steckt
+   * Wer ein besseres Reading hat, setzt es per "plug=<reading>" in vizCar:
+   * ein wahrer Wert dort bedeutet "angesteckt".
+   */
+  _ladeZustand() {
+    const kw = this._role("power", ["charge_power", "charger_power", "charging_power"]);
+    if (kw !== null && kw > 0.05) return "laedt";
+
+    const wb = this._wb();
+    if (wb) {
+      const w = this._wbInfo(wb).watt;
+      if (w !== null && w > 50) return "laedt";
+      const st = this.plain(this._wbInfo(wb).text || "");
+      if (/charg(ing|e)\b(?!.*finish)/i.test(st) || /l[äa]dt/i.test(st)) return "laedt";
+      if (/(wait|kein auto|no car)/i.test(st)) return "frei";
+      if (/(ready|finish|fertig|bereit|connect|verbunden)/i.test(st)) return "steckt";
+    }
+
+    const eigen = this._cfg().plug ? this._read([this._cfg().plug]) : null;
+    const klappe = eigen || this._read(["charge_port_door_open"]);
+    if (klappe && /^(true|1|open|yes|on|offen)$/i.test(this.plain(klappe.value))) return "steckt";
+    return "frei";
+  }
+
   /** Alias/Name eines fremden Geraets. */
   displayNameOf(dev) {
     return (dev.attr && dev.attr.alias) || dev.name;
@@ -488,10 +529,16 @@ export class FhemvizCar extends FhemvizWidget {
         ? `<div class="cwarn">⚠ Ladeklappe offen</div>`
         : "";
 
-    // Fahrzeugbild (attr vizCar image=<url>) - rein optional.
-    const bild = this._cfg().image
-      ? `<img class="cimg" src="${this.escape(this._cfg().image)}" alt="">`
-      : "";
+    // Fahrzeug oben in der Kachel: gezeichnet (car-art.js), mit dem
+    // Ladezustand als Bild. "image=<url>" bleibt als Ausweg fuer wen ein
+    // eigenes Bild lieber ist. "car=0" laesst den Platz frei.
+    const eigenesBild = this._cfg().image;
+    const zeichnen = !/^(0|off|nein|no)$/i.test(this._cfg().car || "");
+    const bild = eigenesBild
+      ? `<img class="cimg" src="${this.escape(eigenesBild)}" alt="">`
+      : zeichnen
+        ? `<div class="cimg">${carArt(this._ladeZustand(), this._cfg().color || "")}</div>`
+        : "";
 
     // Fahrt nach Hause faellt ins Auge (Akzentfarbe), ein fremdes Ziel nicht.
     const route = this._route();
