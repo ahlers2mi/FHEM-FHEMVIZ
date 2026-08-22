@@ -11,6 +11,34 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.5 — 22.08.2026
+
+**Behoben**
+
+- **Der Wunschlimit-Balken der `car`-Kachel rechnete mit zwei Skalen.** Die
+  Farbflächen (Ladestand, blasse Strecke bis zum Limit) lagen auf 0–100, der
+  **Griff** dagegen auf der Spanne aus dem `setList`. Bei
+  `wish_charge_limit:slider,20,5,100` saß ein Limit von 25 % deshalb bei
+  (25−20)/(100−20) = **6 %** der Schiene, während die Farbfläche daneben bei
+  25 % endete — der Griff stand mitten in der Ladestands-Füllung.
+  Gemessen: Griff 6,3 % gegen Farbfläche 25,1 %, danach 25,0 gegen 25,1 %.
+  Der Regler läuft jetzt über 0–100; Anfang und Schrittweite aus dem `setList`
+  begrenzen weiterhin, wie weit sich der Griff ziehen lässt und welcher Wert
+  gesendet wird — der Griff rastet auf erlaubte Werte und bleibt oberhalb des
+  Anfangs stehen.
+
+## v0.37.4 — 22.08.2026
+
+**Behoben**
+
+- **`watertank`: das Leitungsrohr floss weiter, obwohl der Schwimmer zu war.**
+  Animiert wurde, solange `mainsSupply` auf `on` stand — der Hahn ist dann
+  offen, aber ab `barrelFloatLevel` macht das Schwimmerventil dicht. Jetzt
+  fließt das Rohr nur unterhalb der Schwimmerhöhe und ist sonst abgeblendet
+  sichtbar (die Zufuhr *ist* offen, sie fördert nur nicht). Dazu rechnet der
+  Leitungswasser-Anteil im Fass gegen den gezeichneten Stand statt gegen den
+  gebuchten.
+
 ## v0.37.3 — 21.08.2026
 
 **Geändert**

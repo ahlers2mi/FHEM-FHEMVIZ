@@ -534,8 +534,8 @@ export class FhemvizCar extends FhemvizWidget {
              ${soc !== null ? `<div class="fill" style="width:${pct(soc)}%"></div>` : ""}
              ${
                spec && !this.readonly && limit !== null
-                 ? `<input id="wish" type="range" step="${spec.step}"
-                      min="${Math.min(spec.min, limit)}" max="${spec.max}" value="${limit}"
+                 ? `<input id="wish" type="range" step="1"
+                      min="0" max="100" value="${limit}"
                       aria-label="Wunschlimit ${this.escape(this.displayName())}">`
                  : limit !== null
                    ? `<div class="marke" style="left:calc(${pct(limit)}% - 1px)"></div>`
@@ -635,15 +635,34 @@ export class FhemvizCar extends FhemvizWidget {
     const s = this.shadowRoot.getElementById("wish");
     if (!s) return;
     const out = this.shadowRoot.getElementById("wv");
-    // Mitlaufende Anzeige - auch beim Zurueckspringen nach einem Antippen
-    // (bindSlider schickt dafuer ein input-Event).
-    s.addEventListener("input", () => {
-      if (out) out.textContent = `${s.value} %`;
-    });
     const spec = this._limitSpec();
+    /* Der Balken zeichnet Ladestand UND Limit auf 0..100 - der Griff MUSS auf
+     * derselben Skala sitzen. Vorher uebernahm der Regler die Spanne aus dem
+     * setList, und bei "wish_charge_limit:slider,20,5,100" sass der Griff um
+     * die Anfangsgrenze nach links versetzt: 25 % landete bei
+     * (25-20)/(100-20) = 6 % der Schiene, waehrend die Farbflaeche daneben
+     * bei 25 % endete. Zwei Skalen in einem Balken - genau der Fehler, den
+     * der Balken sichtbar machen sollte.
+     * Der Regler laeuft deshalb ueber 0..100, und was das GERAET annimmt
+     * (Anfang und Schrittweite aus dem setList) begrenzt diese Funktion. */
+    const klemmen = (v) => {
+      const stufe = Math.max(1, Number(spec.step) || 1);
+      const min = Number(spec.min);
+      const max = Number(spec.max);
+      const g = Math.min(max, Math.max(min, Number(v)));
+      return Math.min(max, min + Math.round((g - min) / stufe) * stufe);
+    };
+    // Mitlaufende Anzeige - auch beim Zurueckspringen nach einem Antippen
+    // (bindSlider schickt dafuer ein input-Event). Der Griff wird dabei in den
+    // erlaubten Bereich gezogen, laesst sich also gar nicht darunter schieben.
+    s.addEventListener("input", () => {
+      const v = klemmen(s.value);
+      if (String(v) !== s.value) s.value = String(v);
+      if (out) out.textContent = `${v} %`;
+    });
     // Ziehen/Tastatur zaehlt, ein Antippen der Schiene nicht: ein Fehlgriff
     // wuerde sonst das Ladeziel verstellen.
-    this.bindSlider(s, (v) => this.sendCommand(`${spec.cmd} ${v}`));
+    this.bindSlider(s, (v) => this.sendCommand(`${spec.cmd} ${klemmen(v)}`));
   }
 
   _bindWallbox() {

@@ -171,6 +171,14 @@ Füllung und Griff ist deshalb nicht „vielleicht", sondern was auf jeden Fall
 noch kommt; darüber wird der Balken grün. Nicht zu verwechseln mit „Limit im
 Fahrzeug" — das ist die Obergrenze, bis zu der das Auto selbst lädt.
 
+> **Der Balken rechnet durchgehend von 0 bis 100** (ab v0.37.5). Vorher
+> übernahm der Griff die Spanne aus dem `setList`: bei
+> `wish_charge_limit:slider,20,5,100` saß ein Limit von 25 % bei
+> (25−20)/(100−20) = **6 %** der Schiene, während die Farbfläche daneben bei
+> 25 % endete — zwei Skalen in einem Balken. Was das Gerät annimmt (Anfang und
+> Schrittweite aus dem `setList`) begrenzt jetzt nur noch, wie weit sich der
+> Griff ziehen lässt und welcher Wert gesendet wird.
+
 **Kommt das Auto nach Hause?** Liefert das Fahrzeug Fahrtziel und Restzeit
 (Tesla über ioBroker: `active_route_destination` und
 `active_route_minutes_to_arrival`), zeigt die `car`-Kachel eine Zeile mit Ziel,

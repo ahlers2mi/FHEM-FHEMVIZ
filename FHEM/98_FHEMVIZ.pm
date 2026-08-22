@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.4
+# Version:  v0.37.5
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.4";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.5";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -344,7 +344,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.4"),
+            FHEMVIZ_jsonStr("v0.37.5"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1200,7 +1200,13 @@ sub FHEMVIZ_Attr {
         f&uuml;r &bdquo;angesteckt&ldquo; geht per
         <code>plug=&lt;reading&gt;</code>.<br>
         Der Ladestand wird als <b>Balken</b> gezeigt, dessen <b>Griff das
-        Wunschlimit ist</b> und direkt gezogen wird.<br>
+        Wunschlimit ist</b> und direkt gezogen wird. Der Balken rechnet
+        durchgehend von <b>0 bis 100</b> (ab v0.37.5); die Spanne aus dem
+        <code>setList</code> (z. B. <code>slider,20,5,100</code>) begrenzt nur,
+        wie weit sich der Griff ziehen l&auml;sst und welcher Wert gesendet
+        wird. Vorher bestimmte sie auch die Position &ndash; ein Limit von
+        25&nbsp;% sass dann bei 6&nbsp;% der Schiene, w&auml;hrend die
+        Farbfl&auml;che daneben bei 25&nbsp;% endete.<br>
         <b>Was das Wunschlimit bedeutet:</b> es ist das <b>Minimum, das immer
         geladen wird</b> &ndash; unabh&auml;ngig davon, wie die
         Solar&uuml;berschuss-Regelung gerade entscheidet. Die blasse Strecke
