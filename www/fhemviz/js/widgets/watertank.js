@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Wasservorrat-Widget (v0.35.2).
+ * FHEMVIZ - Wasservorrat-Widget (v0.37.4).
  *
  * Zeichnet die Regenwasseranlage als lebendiges Schema: Dach und Fallrohr,
  * Regenfass mit Schwimmerhoehe, gestapelte IBC, dazwischen Pumpen- und
@@ -168,12 +168,7 @@ export class FhemvizWatertank extends FhemvizWidget {
       ibcMainsFrac = mainsTot / (rainTot + mainsTot);
     }
 
-    // Im Fass steht unterhalb der Schwimmerhoehe Leitungswasser - aber nur,
-    // solange die Zufuhr offen ist. Bei zugedrehtem Hahn ist alles Regen.
     let barrelMainsFrac = 0;
-    if (mainsOn && floatL !== null && barrelL !== null && barrelL > 0) {
-      barrelMainsFrac = Math.min(1, floatL / barrelL);
-    }
 
 
     // Das Modul bucht das bewegte Volumen erst am ENDE eines Laufs. Ohne
@@ -197,6 +192,23 @@ export class FhemvizWatertank extends FhemvizWidget {
       v === null ? null : Math.max(0, cap ? Math.min(cap, v) : v);
     const barrelShown = clamp(barrelL === null ? null : barrelL - moved, barrelCap);
     const ibcShown = clamp(ibcL === null ? null : ibcL + moved, ibcCap);
+
+    // Im Fass steht unterhalb der Schwimmerhoehe Leitungswasser - aber nur,
+    // solange die Zufuhr offen ist. Bei zugedrehtem Hahn ist alles Regen.
+    // Gerechnet wird mit barrelShown statt mit dem gebuchten Stand: waehrend
+    // einer Foerderung sinkt der Pegel, das Leitungswasser unten bleibt liegen -
+    // sein Anteil steigt also.
+    if (mainsOn && floatL !== null && barrelShown !== null && barrelShown > 0) {
+      barrelMainsFrac = Math.min(1, floatL / barrelShown);
+    }
+
+    // Der Hahn ist offen - aber sobald das Fass die Schwimmerhoehe erreicht hat,
+    // macht das Schwimmerventil dicht und es fliesst nichts mehr. Das Rohr bleibt
+    // sichtbar, die Zufuhr IST ja offen; es hoert nur auf zu laufen. Ohne
+    // barrelFloatLevel laesst sich das nicht sagen - dann bleibt es beim Fliessen.
+    const mainsFlowing =
+      mainsOn &&
+      !(floatL !== null && barrelShown !== null && barrelShown >= floatL - 0.5);
 
     const barrelFrac = barrelCap ? (barrelShown ?? 0) / barrelCap : 0;
     const ibcFrac = ibcCap ? (ibcShown ?? 0) / ibcCap : 0;
@@ -264,7 +276,8 @@ export class FhemvizWatertank extends FhemvizWidget {
         : "";
 
     const mainsPipe = mainsOn
-      ? `<path class="wt-pipe mains flow" d="M22 84 L48 84"/><text class="wt-t" x="22" y="79">Leitung</text>`
+      ? `<path class="wt-pipe mains${mainsFlowing ? " flow" : " shut"}" d="M22 84 L48 84"/>` +
+        `<text class="wt-t" x="22" y="79">Leitung</text>`
       : "";
 
     const barrelTxt =
@@ -398,6 +411,8 @@ export class FhemvizWatertank extends FhemvizWidget {
         }
         .wt-pipe.live { stroke: var(--viz-water-rain); stroke-width: 2.2; }
         .wt-pipe.mains { stroke: var(--viz-water-mains); stroke-width: 2.2; }
+        /* Zufuhr offen, Schwimmer zu: sichtbar, aber sichtbar untaetig. */
+        .wt-pipe.mains.shut { opacity: 0.4; }
         .wt-pump {
           fill: color-mix(in srgb, var(--viz-muted) 28%, transparent);
           stroke: color-mix(in srgb, var(--viz-muted) 75%, transparent); stroke-width: 1.2;
