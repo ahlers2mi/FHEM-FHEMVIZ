@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Wasservorrat-Widget (v0.37.4).
+ * FHEMVIZ - Wasservorrat-Widget (v0.37.6).
  *
  * Zeichnet die Regenwasseranlage als lebendiges Schema: Dach und Fallrohr,
  * Regenfass mit Schwimmerhoehe, gestapelte IBC, dazwischen Pumpen- und
@@ -70,6 +70,20 @@ export class FhemvizWatertank extends FhemvizWidget {
     return isNaN(v) ? null : v;
   }
 
+  /**
+   * Foerderrate: gelerntes Reading zuerst, dann das gleichnamige Attribut.
+   * Das Modul haelt es seit v1.0.69 genauso. Ohne den Rueckfall steht die Kachel
+   * still, sobald das Reading fehlt - gelernt wird nur aus vollstaendigen
+   * Laeufen, und ein harter Abschuss kann es wieder kosten. Genau so war
+   * ibcToBarrelFlow_lpm am 23.08.2026 verschwunden: das Rohr leuchtete, die
+   * Fuellstaende bewegten sich nicht.
+   */
+  _rate(map, role) {
+    const r = this._n(map, role);
+    if (r !== null && r > 0) return r;
+    const a = this._attrNum(map[role]);
+    return a !== null && a > 0 ? a : null;
+  }
   _attrNum(name) {
     const v = parseFloat(String((this.device.attr || {})[name] ?? "").replace(",", "."));
     return isNaN(v) ? null : v;
@@ -178,11 +192,11 @@ export class FhemvizWatertank extends FhemvizWidget {
     // Positiv = vom Fass in den IBC.
     let moved = 0;
     if (filling) {
-      const rate = this._n(map, "fillRate");
+      const rate = this._rate(map, "fillRate");
       const secs = this._since(this._r(map, "fillStarted"));
       if (rate > 0 && secs !== null) moved = Math.min((rate * secs) / 60, barrelL ?? 0);
     } else if (returning) {
-      const rate = this._n(map, "returnRate");
+      const rate = this._rate(map, "returnRate");
       const secs = this._since((this.device.times || {})[map.returning] || "");
       if (rate > 0 && secs !== null) moved = -Math.min((rate * secs) / 60, ibcL ?? 0);
     }
@@ -223,11 +237,16 @@ export class FhemvizWatertank extends FhemvizWidget {
     let head = { t: "Bereit", c: "muted" };
     if (alert) head = { t: "Prüfen", c: "err" };
     else if (filling) {
-      const rate = this._n(map, "fillRate");
+      const rate = this._rate(map, "fillRate");
       let txt = "Fass → IBC";
       if (rate) txt += ` · ${this._fmt(rate, 1)} l/min`;
       head = { t: txt, c: "run" };
-    } else if (returning) head = { t: "IBC → Fass", c: "run" };
+    } else if (returning) {
+      const rate = this._rate(map, "returnRate");
+      let txt = "IBC → Fass";
+      if (rate) txt += ` · ${this._fmt(rate, 1)} l/min`;
+      head = { t: txt, c: "run" };
+    }
     else {
       const valve = this._r(map, "valve");
       if (valve && !/^(none|-|)$/i.test(valve.trim())) head = { t: "Gießt · " + valve, c: "run" };
@@ -297,7 +316,7 @@ export class FhemvizWatertank extends FhemvizWidget {
     // Restzeit bis voll - nur waehrend einer Befuellung und nur mit gelernter Rate.
     let hint = "";
     if (filling && ibcCap && ibcShown !== null) {
-      const rate = this._n(map, "fillRate");
+      const rate = this._rate(map, "fillRate");
       if (rate && rate > 0 && ibcCap > ibcShown) {
         hint = `<text class="wt-t" x="176" y="${IBC_TOP - 5}" text-anchor="middle">voll in ${this._fmt(
           (ibcCap - ibcShown) / rate
