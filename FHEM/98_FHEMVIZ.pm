@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.6
+# Version:  v0.37.7
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.6";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.7";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -145,6 +145,7 @@ sub FHEMVIZ_Initialize {
           "backgroundDim " .
           "skin " .
           "skinBlur:1,0 " .
+          "snap:kachel,gruppe,off " .
           "pwa:1,0 " .
           "sound " .
           "flash:1,0,values " .
@@ -320,6 +321,8 @@ sub FHEMVIZ_Get {
         my $backgroundDim = AttrVal($name, "backgroundDim", "");
         my $skin          = AttrVal($name, "skin", "");
         my $skinBlur      = AttrVal($name, "skinBlur", "");
+        # Rastendes Scrollen auf Tablet/Handy (kachel|gruppe|off).
+        my $snap          = AttrVal($name, "snap", "");
         my $flash         = AttrVal($name, "flash", "");
         # Ton bei "set show"/"set msg" (leer = stumm, "beep" = eingebauter
         # Zweiklang, sonst URL einer Tondatei).
@@ -341,10 +344,10 @@ sub FHEMVIZ_Get {
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
               . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"tvHeroSec":%s,"statusBar":%s,"headerInfo":%s,'
-              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
+              . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.6"),
+            FHEMVIZ_jsonStr("v0.37.7"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -360,6 +363,7 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($backgroundDim),
             FHEMVIZ_jsonStr($skin),
             FHEMVIZ_jsonStr($skinBlur),
+            FHEMVIZ_jsonStr($snap),
             FHEMVIZ_jsonStr($flash),
             FHEMVIZ_jsonStr($sound),
             FHEMVIZ_jsonStr($pwa),
@@ -672,6 +676,24 @@ sub FHEMVIZ_Attr {
         <code>0</code> schaltet sie ab &ndash; die Kacheln bleiben
         halbtransparent, kosten aber keine Compositing-Ebene. Fuer schwache
         Panels (z. B. Yicty T510) empfohlen, wenn das Scrollen ruckelt.</li>
+    <li><a id="FHEMVIZ-attr-snap"></a><b>snap</b> kachel|gruppe|off<br>
+        <b>Rastendes Scrollen</b> auf Tablet/Handy (ab v0.37.7). Ohne das endet
+        ein Wisch irgendwo, und oben steckt eine halbe Kachel unter der
+        klebenden Kopfzeile.<br>
+        <code>kachel</code> (Default) &ndash; ein Wisch endet auf einer
+        <b>Kachelzeile</b>. Gemessen in einem langen Raum bei 1280x800 (vier
+        Wische): vorher 6 oben angeschnittene Kacheln, danach 0; im Hochformat
+        16 statt 4.<br>
+        <code>gruppe</code> &ndash; ein Wisch endet auf einer
+        <b>Gruppen&uuml;berschrift</b>. Ruhiger, wirkt aber nur an
+        Gruppenanf&auml;ngen: in einer Gruppe, die h&ouml;her als der Schirm
+        ist, gibt es keinen Rastpunkt.<br>
+        <code>off</code> &ndash; frei scrollen wie vorher.<br>
+        Gerastet wird weich (<code>proximity</code>): ein langer Wisch bleibt
+        lang, es rastet nur beim Ausrollen ein. Im <b>TV-Modus wirkungslos</b>
+        &ndash; der scrollt nicht, er bl&auml;ttert. Je Ger&auml;t
+        uebersteuerbar per URL: <code>?snap=gruppe</code>. Beispiel:<br>
+        <code>attr myViz snap kachel</code></li>
     <li><a id="FHEMVIZ-attr-flash"></a><b>flash</b> 1|0|values<br>
         Kurzes Aufleuchten einer Kachel, wenn sich ihr Inhalt aendert.
         Default <code>1</code>: das Wertfeld blinkt, Kacheln ohne Wertfeld

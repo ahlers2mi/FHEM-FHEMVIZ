@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.37.6";
+const SPA_VERSION = "v0.37.7";
 
 const el = (id) => document.getElementById(id);
 
@@ -153,6 +153,36 @@ function applyFlash(urlFlash, cfg) {
   }
   document.documentElement.dataset.vizflash = mode;
   setFlashMode(mode);
+  return mode;
+}
+
+/**
+ * Rastendes Scrollen auf Tablet/Handy (attr snap, URL ?snap= geht vor).
+ *   kachel (Default) - ein Wisch endet auf einer KACHELZEILE. Damit steckt
+ *                      oben keine halbe Kachel mehr unter der Kopfzeile.
+ *   gruppe           - ein Wisch endet auf einer GRUPPEN-Ueberschrift. Sieht
+ *                      ruhiger aus, wirkt aber nur an Gruppenanfaengen: in
+ *                      einer Gruppe, die hoeher als der Schirm ist, gibt es
+ *                      keinen Rastpunkt.
+ *   off              - wie vorher, frei scrollen.
+ * Die CSS-Regeln haengen an html[data-vizsnap=...] und gelten NICHT im
+ * TV-Modus - der scrollt nicht, er blaettert.
+ */
+function applySnap(urlSnap, cfg) {
+  const raw = String(urlSnap || (cfg && cfg.snap) || "")
+    .replace(/#.*$/, "")
+    .trim()
+    .toLowerCase();
+  let mode = "kachel";
+  if (!raw || /^(1|on|kachel|kacheln|tile|tiles)$/.test(raw)) mode = "kachel";
+  else if (/^(gruppe|gruppen|group|groups)$/.test(raw)) mode = "gruppe";
+  else if (/^(0|off|no|false|none|aus)$/.test(raw)) mode = "off";
+  else {
+    configWarn = [configWarn, `snap: "${raw}" unbekannt (kachel | gruppe | off)`]
+      .filter(Boolean)
+      .join(" · ");
+  }
+  document.documentElement.dataset.vizsnap = mode;
   return mode;
 }
 
@@ -1472,6 +1502,7 @@ async function main() {
     // Skin VOR dem ersten Rendern setzen (URL ?skin= geht vor attr skin).
     await applySkin(params.get("skin"), cfg);
     applyFlash(params.get("flash"), cfg);
+    applySnap(params.get("snap"), cfg);
 
     // Modus VOR der Breiten-/Zoom-Skalierung bestimmen: width verhaelt sich
     // je Modus unterschiedlich (TV = transform, Tablet = Meta-Viewport).

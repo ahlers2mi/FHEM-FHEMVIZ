@@ -66,6 +66,7 @@ ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet
 | `width` | 320–3840 | Feste Layout-Breite in CSS-Pixeln; die Seite wird in dieser Breite gerendert und bildschirmfüllend skaliert. Setzt `zoom` außer Kraft. Kleinere Breite = größere Darstellung |
 | `skin` | `bento` / `zeilen` / … | Optik: `bento` = Kacheln (Wandtablet/TV), `zeilen` = Listenzeilen (Handy). Per URL übersteuerbar (`?skin=zeilen`) |
 | `skinBlur` | `0` / `1` | Weichzeichnen hinter den Kacheln (nur mit Hintergrundbild sinnvoll) |
+| `snap` | `kachel` (Default) / `gruppe` / `off` | **Rastendes Scrollen** auf Tablet/Handy: ein Wisch endet auf einer Kachelzeile bzw. auf einer Gruppenüberschrift, statt eine halbe Kachel unter der Kopfzeile stehen zu lassen. Im TV-Modus wirkungslos (der blättert). Per URL übersteuerbar (`?snap=gruppe`) |
 | `background` / `backgroundDim` | URL / 0–100 | Hintergrundbild und wie stark es abgedunkelt wird |
 | `statusBar` | `gerät[:reading[:einheit[:label[:farben]]]]`, kommasepariert | Dauer-Chips unter der Kopfzeile (Fenster, Batterie, Pool …); Tippen springt in den Raum des Geräts |
 | `headerInfo` | wie `statusBar`, plus `icon=gerät:größe` | Werte groß in der Kopfzeile (Außentemperatur, Wetter-Icon) |
