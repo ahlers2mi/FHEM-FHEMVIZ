@@ -68,6 +68,26 @@ Daraus abgeleitet:
 - Der Unterschied liegt in der Frage: zeichnet es einen **Zusammenhang** oder
   soll es **schön aussehen**? Das Erste ja, das Zweite nicht ohne Vorlage.
 
+## Ein Balken, EINE Skala
+
+Liegt ein `input[type=range]` über gezeichneten Farbflächen, müssen beide
+dieselbe Skala haben. In der `car`-Kachel taten sie es nicht: Füllung und
+blasse Strecke rechneten auf 0–100, der Regler übernahm seine Spanne aus dem
+`setList` (`wish_charge_limit:slider,20,5,100`). Ein Limit von 25 % saß damit
+bei (25−20)/(100−20) = **6 %** der Schiene, während die Farbfläche daneben bei
+25 % endete – der Griff stand mitten in der Ladestands-Füllung.
+
+Peinlich daran: in `FHEM-Instanz/CLAUDE.md` stand dazu monatelang „sieht falsch
+aus, ist es nicht". Für den *Regler allein* stimmte das; sobald daneben eine
+Fläche auf 0–100 gezeichnet wird, ist es schlicht falsch. **Wer eine Erklärung
+für „sieht falsch aus" gefunden hat, sollte prüfen, ob sie noch gilt** – hier
+hatte sich der Balken danach geändert und der Nutzer musste es finden.
+
+Richtig: der Regler läuft über 0–100 (Positionierung), und was das Gerät
+annimmt – Anfang und Schrittweite aus dem `setList` – wird beim *Ziehen und
+Senden* geklemmt. Messrezept: `getBoundingClientRect()` der Farbflächen gegen
+`(value−min)/(max−min)` des Reglers, beides in Prozent der Bahn.
+
 ## Bilder freistellen (Fahrzeugbilder, KI-Renderings)
 
 Vier Versuche, drei davon falsch – die Reihenfolge lohnt sich zu merken:
