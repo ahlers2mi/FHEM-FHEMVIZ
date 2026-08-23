@@ -11,6 +11,48 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.7 — 23.08.2026
+
+**Neu**
+
+- **`attr <viz> snap kachel|gruppe|off`** — rastendes Scrollen auf
+  Tablet/Handy. Ohne das endete ein Wisch irgendwo, und oben steckte eine
+  halbe Kachel unter der klebenden Kopfzeile. Gemessen in einem langen Raum,
+  vier Wische, angeschnittene Kacheln an der **Oberkante**:
+
+  | Fenster | `off` | `kachel` |
+  |---|---|---|
+  | 1280×800 | 6 (96 px) | **0** |
+  | 800×1280 | 16 (1264 px) | **4** (236 px) |
+  | 420×900 mit `zoom 0.9` | 6 (488 px) | 8, aber nur **160 px** (Schlieren) |
+
+  `kachel` ist Default und rastet auf Kachelzeilen, `gruppe` auf
+  Gruppenüberschriften (ruhiger, wirkt aber nur an Gruppenanfängen — in einer
+  Gruppe, die höher als der Schirm ist, gibt es keinen Rastpunkt), `off` ist
+  das alte Verhalten. Per URL übersteuerbar: `?snap=gruppe`.
+  Gerastet wird weich (`proximity`): ein langer Wisch bleibt lang, es rastet
+  nur beim Ausrollen ein. Im **TV-Modus wirkungslos** — der scrollt nicht, er
+  blättert.
+  Zwei Fallen: ohne `scroll-padding-top` in Kopfzeilenhöhe rastet es sauber,
+  die Kachel steht aber *unter* der Kopfzeile; und unter `?zoom=` ist nicht
+  `html` der Scroller, sondern `body` — ohne die zweite Regel rastete genau
+  das Handy nie.
+  Die **Unterkante** wird davon nicht besser: sitzt oben eine Kante, guckt
+  unten der Rest einer Reihe herein. Dafür müsste die Kachelzeilenhöhe je
+  Schirm nachgerechnet werden.
+
+## v0.37.6 — 22.08.2026
+
+**Behoben**
+
+- **`watertank`: die Füllstände standen still, obwohl das Rohr leuchtete.**
+  Nicht das Widget, sondern eine fehlende Zahl — `ibcToBarrelFlow_lpm` gab es
+  als Reading nicht mehr (das Modul lernt die Rate nur aus vollständigen
+  Läufen, ein Statefile-Rückfall hatte sie gekostet). Die Kachel nimmt jetzt
+  Reading zuerst, dann das gleichnamige **Attribut** — dieselbe Reihenfolge
+  wie das Modul. Dabei aufgefallen: die Kopfzeile zeigte die Rate nur für
+  Fass → IBC, jetzt für beide Richtungen.
+
 ## v0.37.5 — 22.08.2026
 
 **Behoben**

@@ -254,6 +254,41 @@ button.viz-alert-chip { cursor: pointer; }
   letter-spacing: -0.01em;
 }
 
+/* Rastendes Scrollen (attr snap, URL ?snap=) -------------------------------
+ * Ohne das endet ein Wisch irgendwo, und oben steckt eine halbe Kachel unter
+ * der klebenden Kopfzeile. Gemessen bei 1280x800 in einem langen Raum: 6
+ * angeschnittene Kacheln oben (96 px) bei vier Wischen, im Hochformat 16
+ * (1264 px). Mit dem Rasten sind es 0 bzw. 4.
+ *
+ * "proximity" statt "mandatory": ein langer Wisch bleibt lang, es rastet nur
+ * beim Ausrollen ein. scroll-padding-top ist Pflicht - sonst rastet es sauber,
+ * die Kachel steht aber unter der Kopfzeile.
+ *
+ * Nur Tablet/Browser: der TV-Modus scrollt nicht, er blaettert. */
+html[data-vizsnap="kachel"]:not([data-vizmode="tv"]),
+html[data-vizsnap="gruppe"]:not([data-vizmode="tv"]) {
+  scroll-snap-type: y proximity;
+  scroll-padding-top: calc(var(--viz-header-h, 58px) + 8px);
+}
+html[data-vizsnap="kachel"]:not([data-vizmode="tv"]) .viz-grid > * {
+  scroll-snap-align: start;
+}
+/* Gruppen-Rasten wirkt nur an Gruppenanfaengen. In einer Gruppe, die hoeher
+ * als der Schirm ist (30 Lampen), gibt es keinen Rastpunkt - dann ist es wie
+ * ohne. Bewusst so: die Ueberschrift ist der Ankerpunkt, den man sucht. */
+html[data-vizsnap="gruppe"]:not([data-vizmode="tv"]) .viz-group {
+  scroll-snap-align: start;
+}
+/* Unter ?zoom= ist NICHT html der Scroller, sondern body (Regel weiter oben:
+ * html overflow hidden, body overflow-y auto - damit die Tab-Leiste am
+ * sichtbaren Rand haengt). Ohne diese Wiederholung raste das Handy nie, und
+ * genau dort wischt man. */
+html[data-vizsnap="kachel"][data-vizzoom]:not([data-vizmode="tv"]) body,
+html[data-vizsnap="gruppe"][data-vizzoom]:not([data-vizmode="tv"]) body {
+  scroll-snap-type: y proximity;
+  scroll-padding-top: calc(var(--viz-header-h, 58px) + 8px);
+}
+
 /* Hero-Band (attr vizHero): breiter Blickfang ganz oben, ueber dem Raster.
  * Eine Zeile, die die volle Breite fuellt; mehrere Heroes teilen sie sich.
  * Grosse Kachel(n) mit dezentem Akzentrahmen (Ring liegt aussen um die

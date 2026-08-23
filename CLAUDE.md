@@ -68,6 +68,27 @@ Daraus abgeleitet:
 - Der Unterschied liegt in der Frage: zeichnet es einen **Zusammenhang** oder
   soll es **schön aussehen**? Das Erste ja, das Zweite nicht ohne Vorlage.
 
+## Wer scrollt hier eigentlich?
+
+Für alles, was am Scroll-Container hängt (`scroll-snap-type`,
+`scroll-padding-top`, `overscroll-behavior`), muss man wissen, **welches
+Element** der Scroller ist – und das wechselt:
+
+- normal (Tablet/Browser) scrollt das Dokument, die Regel gehört an `html`;
+- mit `?zoom=`/`attr zoom` gilt `html { overflow: hidden }` und
+  `body { overflow-y: auto }` – dann ist **`body`** der Scroller;
+- im TV-Modus scrollt gar nichts, dort blättert das Auto-Paging.
+
+Beim `snap`-Attribut war genau das der Fehler: die Regel stand nur an `html`,
+also rastete das Handy (`zoom 0.9`) nie – das Gerät, auf dem am meisten
+gewischt wird. Zweite Falle: ohne `scroll-padding-top` in Kopfhöhe rastet es
+sauber und die Kachel steckt trotzdem unter der klebenden Kopfzeile.
+
+Messrezept: nach `mouse.wheel` 900 ms warten (Snap ausrollen lassen), dann je
+Kachel `getBoundingClientRect()` gegen die Unterkante der Kopfzeile und
+`window.innerHeight` prüfen – Anzahl **und** fehlende Pixel zählen. Nur die
+Anzahl täuscht: eine 20-px-Schliere zählt wie eine halbe Kachel.
+
 ## Ein Balken, EINE Skala
 
 Liegt ein `input[type=range]` über gezeichneten Farbflächen, müssen beide
