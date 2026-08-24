@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.37.8";
+const SPA_VERSION = "v0.37.9";
 
 const el = (id) => document.getElementById(id);
 
@@ -1866,6 +1866,16 @@ async function main() {
             const r = resolveRoom(collectRooms(store, baseOpts), v);
             if (r) renderLayout(root, store, client, { ...baseOpts, activeRoom: r });
           }
+          return;
+        }
+        // set <viz> reload: nach einem FHEM-"update" laufen die Browser noch
+        // mit den alten JS-/CSS-Dateien (Statuszeile: Versionskonflikt). Das
+        // spart den Gang zu jedem Geraet.
+        // Gestaffelt, damit nicht alle Clients gleichzeitig anklopfen - das
+        // Wandtablet, das Handy und jeder offene Browser haengen am selben
+        // FHEMWEB.
+        if (id === vizDevice + "-reload") {
+          setTimeout(() => location.reload(), 200 + Math.floor(Math.random() * 2500));
           return;
         }
         if (id === vizDevice || id.startsWith(vizDevice + "-")) return;

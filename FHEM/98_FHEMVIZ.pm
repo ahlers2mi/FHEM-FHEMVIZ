@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.8
+# Version:  v0.37.9
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.8";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.9";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -229,7 +229,8 @@ sub FHEMVIZ_Undef {
 # ----------------------------------------------------------------------------
 sub FHEMVIZ_Set {
     my ($hash, $name, $cmd, @args) = @_;
-    return "Unknown argument, choose one of scene page show msg" if (!defined($cmd));
+    return "Unknown argument, choose one of scene page show msg reload:noArg"
+        if (!defined($cmd));
 
     if ($cmd eq "scene") {
         my $scene = $args[0];
@@ -287,7 +288,18 @@ sub FHEMVIZ_Set {
         return undef;
     }
 
-    return "Unknown argument $cmd, choose one of scene page show msg";
+    # Alle verbundenen Browser neu laden. Nach einem "update" laufen sie sonst
+    # weiter mit den alten JS-/CSS-Dateien - die Statuszeile meldet dann einen
+    # Versionskonflikt, und man muss an jedem Geraet von Hand nachladen.
+    # Ein Zaehler statt eines Zeitstempels: das Reading aendert sich damit
+    # garantiert, auch wenn zwei Aufrufe in dieselbe Sekunde fallen.
+    if ($cmd eq "reload") {
+        readingsSingleUpdate($hash, "reload",
+            (ReadingsVal($name, "reload", 0) || 0) + 1, 1);
+        return undef;
+    }
+
+    return "Unknown argument $cmd, choose one of scene page show msg reload:noArg";
 }
 
 # ----------------------------------------------------------------------------
@@ -347,7 +359,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.8"),
+            FHEMVIZ_jsonStr("v0.37.9"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -519,6 +531,17 @@ sub FHEMVIZ_Attr {
         <code>set myViz msg X|Blumen|Verlangen nach Wasser 30</code><br>
         <code>set myViz msg Waschmaschine fertig</code><br>
         <code>set myViz msg off</code></li>
+    <li><a id="FHEMVIZ-set-reload"></a><b>reload</b> &ndash;
+        l&auml;dt <b>alle offenen Browser</b> neu (ab v0.37.9). Nach einem
+        <code>update</code> + <code>reload 98_FHEMVIZ</code> laufen Wandtablet,
+        Handy und jeder offene Browser weiter mit den <b>alten</b> JS-/CSS-
+        Dateien; die Statuszeile meldet dann einen Versionskonflikt, und man
+        muss an jedem Ger&auml;t von Hand nachladen. Der Befehl geht &uuml;ber
+        den vorhandenen Longpoll an jeden Client. Die Clients laden
+        <b>gestaffelt</b> (0,2&ndash;2,7 s zuf&auml;llig), damit sie nicht alle
+        gleichzeitig am selben FHEMWEB anklopfen. Sinnvoll als letzte Zeile
+        eines Update-Ablaufs:<br>
+        <code>set myViz reload</code></li>
   </ul><br>
 
   <a id="FHEMVIZ-get"></a>
