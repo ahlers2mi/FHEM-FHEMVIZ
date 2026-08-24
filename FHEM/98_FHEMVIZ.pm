@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.7
+# Version:  v0.37.8
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.7";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.8";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -347,7 +347,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.7"),
+            FHEMVIZ_jsonStr("v0.37.8"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1299,7 +1299,22 @@ sub FHEMVIZ_Attr {
         (Ganztagstermin) erst ab Tagesende, damit ein Geburtstag nicht schon
         um 08:00 verschwindet. Die Liste prüft das im Fünf-Minuten-Takt, also
         auch ohne neues Kalender-Ereignis. Beispiel:<br>
-        <code>attr rem_d_cal_muell vizAgenda hide=12</code></li>
+        <code>attr rem_d_cal_muell vizAgenda hide=12</code><br>
+        <b>Mehrere Kalender in EINER Kachel</b> (ab v0.37.8):
+        <code>src=&lt;ger&auml;t&gt;[:&lt;farbe&gt;],&hellip;</code> &ndash; die
+        Termine aller genannten Ger&auml;te werden zusammengelegt und
+        <b>nach Datum sortiert</b>. Beschriftung je Zeile ist der
+        <code>alias</code> des Quellger&auml;ts, die Farbe erscheint als Kante
+        links und im K&uuml;rzel rechts. Farbnamen wie bei
+        <code>vizReadings</code> (<code>ok|warn|bad|accent|blau</code>) oder
+        eine CSS-Farbe (<code>#c678dd</code>). <b>Keine Leerzeichen</b> im Wert
+        &ndash; der Rest der Zeile geh&ouml;rt <code>hide=</code>. Die
+        Quellger&auml;te blendet man mit <code>vizHide 1</code> aus, sonst
+        stehen sie doppelt da. Auf einer schmalen Kachel (unter 360&nbsp;px)
+        entf&auml;llt das K&uuml;rzel, damit es den Termin nicht abschneidet;
+        die farbige Kante bleibt. Die Hervorhebung von heute/morgen ist davon
+        unber&uuml;hrt &ndash; sie f&auml;rbt weiter die Fl&auml;che.<br>
+        <code>attr rem_d_cal_google vizAgenda src=rem_d_cal_muell:ok,rem_d_cal_google:blau,rem_d_cal_familie:#c678dd</code></li>
     <li><a id="FHEMVIZ-attr-vizWateringButtons"></a><b>vizWateringButtons</b><br>
         Typ: textField-long. Bedien-Buttons des Bewässerungs-Widgets als
         <code>Label=befehl</code>-Liste, mit <code>|</code> getrennt. Der

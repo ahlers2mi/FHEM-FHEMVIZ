@@ -235,6 +235,22 @@ attr rem_d_cal_muell alias Termine
 attr rem_d_cal_muell vizSize 2x2
 ```
 
+**Mehrere Kalender in einer Kachel** (ab v0.37.8): `src=` legt die Termine
+mehrerer Geräte zusammen und sortiert sie nach Datum. Die Beschriftung je Zeile
+ist der `alias` des Quellgeräts, die Farbe steht als Kante links und als Kürzel
+rechts:
+
+```
+attr rem_d_cal_google vizAgenda src=rem_d_cal_muell:ok,rem_d_cal_google:blau,rem_d_cal_familie:#c678dd
+attr rem_d_cal_muell vizHide 1
+attr rem_d_cal_familie vizHide 1
+```
+
+Farbnamen wie bei `vizReadings` (`ok|warn|bad|accent|blau`) oder eine CSS-Farbe.
+`accent` ist eine schlechte Wahl für eine Quelle — das ist die Farbe für
+„heute/morgen", und die färbt die **Fläche**; die Herkunft färbt nur die Kante.
+Auf einer schmalen Kachel entfällt das Kürzel, sonst frisst es den Termin.
+
 **Beispiel PV-Prognose** (`TYPE=SolarForecast` wird automatisch erkannt,
 `vizWidget forecast` ist nur für andere Gerätetypen nötig): Stunden-Balkenchart
 des Tages — IST-Ertrag kräftig vor der blassen Prognose, Marker unter der

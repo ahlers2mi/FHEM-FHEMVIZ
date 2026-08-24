@@ -11,6 +11,26 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.8 — 24.08.2026
+
+**Neu**
+
+- **Mehrere Kalender in einer `agenda`-Kachel**: `attr <dev> vizAgenda
+  src=<gerät>[:<farbe>],…` legt die Termine der genannten Geräte zusammen und
+  sortiert sie **nach Datum**. Beschriftung je Zeile ist der `alias` des
+  Quellgeräts, die Herkunft steht als farbige Kante links und als Kürzel
+  rechts. Farbnamen wie bei `vizReadings` (`ok|warn|bad|accent|blau`) oder eine
+  CSS-Farbe — fünf Namen reichen für beliebig viele Kalender nicht, und drei
+  davon sind belegt (rot = Alarm, bernstein = heute).
+  Die Herkunft färbt bewusst **nur die Kante**: die Fläche gehört weiter
+  „heute/morgen". Ein erster Versuch mit `accent` für einen Kalender war genau
+  daran unbrauchbar — die bernsteinfarbene Kante saß unsichtbar in einem
+  bernsteinfarbenen „Heute"-Rahmen.
+  Auf einer schmalen Kachel entfällt das Kürzel (Container-Query auf die
+  **Kachel**breite, nicht die des Fensters) — sonst blieb vom Termin nur
+  „6h Clau…" übrig. Zeilen ohne lesbares Datum stehen hinten statt zu
+  verschwinden; das ist meist eine Meldung des Kalenders.
+
 ## v0.37.7 — 23.08.2026
 
 **Neu**
