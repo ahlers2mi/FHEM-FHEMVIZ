@@ -83,6 +83,7 @@ set myViz scene <Raum> [Sekunden]     # Szene vorübergehend übernehmen (TV)
 set myViz page  <Raum>|auto           # Seite dauerhaft umschalten
 set myViz show  <url>|off [Sek]       # Bild/Webseite als Vollbild-Overlay
 set myViz msg   <text>|off [Sek]      # Textbanner oben einblenden
+set myViz reload                      # alle offenen Browser neu laden
 ```
 
 Mehrere Sichten sind erlaubt: ein zweites `FHEMVIZ`-Gerät mit eigenem

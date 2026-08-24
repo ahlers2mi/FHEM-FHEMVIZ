@@ -11,6 +11,25 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.9 — 24.08.2026
+
+**Neu**
+
+- **`set <viz> reload`** — lädt alle offenen Browser neu. Nach einem
+  `update` + `reload 98_FHEMVIZ` laufen Wandtablet, Handy und jeder offene
+  Browser weiter mit den **alten** JS-/CSS-Dateien; die Statuszeile meldet
+  einen Versionskonflikt, und man muss an jedem Gerät von Hand nachladen.
+  Der Befehl geht über den vorhandenen Longpoll an jeden Client — kein
+  Umweg über Fully oder eine URL-Umschaltung, und er erreicht auch die
+  Browser, an die man sonst nicht denkt.
+  Die Clients laden **gestaffelt** (0,2–2,7 s zufällig), damit nicht alle
+  gleichzeitig am selben FHEMWEB anklopfen. Als Zähler statt Zeitstempel
+  umgesetzt, sonst ändert sich das Reading bei zwei Aufrufen in derselben
+  Sekunde nicht und der zweite bliebe wirkungslos.
+  Gegengeprüft mit einer FHEMWEB-Attrappe, die die Zeile
+  `["myViz-reload","1",""]` in den offenen Longpoll schiebt: 1 → 2
+  Ladevorgänge, `index.html` zweimal geholt.
+
 ## v0.37.8 — 24.08.2026
 
 **Neu**
