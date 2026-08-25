@@ -166,6 +166,12 @@ ein echter Test:
   hinaus" ist `app.scrollHeight - app.clientHeight` (muss 0 sein) am Element
   `#fhemviz-app`; dazu die Kopfzeile: steht dort „· 1/2", blättert das
   Auto-Paging, also passt es nicht.
+- **Ohne `isMobile: true` ist der Meta-Viewport wirkungslos.** Desktop-Chromium
+  ignoriert ihn schlicht – `window.innerWidth` bleibt die Fenstergröße, und ein
+  Fehler, der am Viewport hängt, ist **nicht zu sehen**. Der TV-Zoom-Fehler
+  (v0.37.10) sah in der ersten Messung deshalb heil aus. Wer etwas prüft, das
+  mit `meta viewport`, `screen.width` oder `innerWidth` zu tun hat, braucht
+  einen Kontext mit `isMobile: true, hasTouch: true` und einem Android-UA.
 - Achtung: `getBoundingClientRect()` liefert im TV-Modus **skalierte** Werte
   (`?width=` setzt `transform: scale()`), `getComputedStyle` dagegen CSS-Pixel.
   Beim Vergleich der beiden Zahlen sonst falsche Schlüsse.
@@ -211,3 +217,31 @@ Kacheln, die ihre Höhe selbst ausrechnen, überlaufen sonst:
 `watertank` leitet die SVG-Höhe aus der Breite ab (viewBox 220:108),
 `mealplan` hat sieben feste Zeilen. Widgets erkennen den Vollbild-Fall am
 Attribut `data-hero="full"` und dürfen darauf reagieren.
+
+## Der Viewport ist Zustand, kein Startwert
+
+Der TV-Modus rechnet seinen Skalierungsfaktor aus `window.innerWidth`. Die hängt
+am Meta-Viewport – und der überlebt: die Tablet-Ansicht von `tvTouch` setzt
+`width=<Layoutbreite>`, und ein WebView (Fully) nimmt das über ein Neuladen mit.
+
+Steht dort zufällig dieselbe Zahl wie in `?width=` – beim Wandtablet **1000** –
+dann ist `innerWidth / width = 1`, die Bedingung `if (Math.abs(zoom - 1) >
+0.001)` greift nicht, und es wird **gar nicht** skaliert. Das Symptom heißt
+darum „Zoom ganz weg", nicht „Zoom falsch": ein Faktor von exakt 1 fällt
+stillschweigend durch.
+
+Daraus drei Regeln:
+
+- **Vor dem Messen zurücksetzen.** `resetMetaViewport()` erst, `innerWidth`
+  danach. Ein gemessener Wert taugt nur, wenn man weiß, wer ihn gesetzt hat.
+- **Einmal messen reicht nicht.** Ein Meta-Wechsel wirkt erst mit dem nächsten
+  Layout – also `requestAnimationFrame` hinterher und auf `resize` hören. Das
+  nimmt Drehen und Fenstergrößen gleich mit.
+- **Der Nachmesser braucht einen Moduswächter.** Sonst bekommt die
+  Tablet-Ansicht nach einem `tvTouch`-Wechsel doch noch ein `transform` am
+  `body`, und ihre `position:fixed`-Tab-Leiste verrutscht.
+
+`set <viz> reload` navigiert deshalb auch (`location.replace`) statt neu zu
+laden: ein Neuladen stellt den vorherigen Seitenzustand wieder her – Scrollstand
+und auf Mobilgeräten die Skalierung. Nach einem Versionswechsel will man einen
+sauberen Start.
