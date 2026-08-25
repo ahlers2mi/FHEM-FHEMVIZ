@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.37.9";
+const SPA_VERSION = "v0.37.10";
 
 const el = (id) => document.getElementById(id);
 
@@ -1022,6 +1022,28 @@ function setMetaWidth(w) {
   meta.setAttribute("content", `width=${w}, initial-scale=${scale.toFixed(4)}`);
 }
 
+// Meta-Viewport auf den Auslieferungszustand aus index.html zuruecksetzen.
+//
+// Warum das noetig ist: der TV-Modus rechnet seinen Skalierungsfaktor aus
+// window.innerWidth, und die haengt am Meta-Viewport. Der kann aber aus einem
+// FRUEHEREN Seitenzustand stammen - die Tablet-Ansicht (tvTouch) setzt
+// width=<Layoutbreite>, und ein WebView (Fully) nimmt das ueber ein Neuladen
+// mit. Steht dort zufaellig dieselbe Zahl wie in ?width=, ergibt sich Faktor 1
+// und es wird GAR NICHT skaliert: der Zoom ist scheinbar "weg".
+// viewport-fit=cover muss mit - sonst verliert die Seite die Notch-Freigabe.
+function resetMetaViewport() {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (meta) {
+    meta.setAttribute("content", "width=device-width, initial-scale=1, viewport-fit=cover");
+  }
+}
+
+function clearBodyScale() {
+  delete document.documentElement.dataset.vizzoom;
+  const b = document.body.style;
+  b.transform = b.transformOrigin = b.width = b.height = "";
+}
+
 function applyViewportWidth(urlValue, cfgValue, tv) {
   // attr width am Geraet ist der Default, ?width= in der URL geht vor
   // (wie bei zoom - Fully verschluckt URL-Parameter gern, darum das Attribut).
@@ -1036,9 +1058,26 @@ function applyViewportWidth(urlValue, cfgValue, tv) {
     // Breite (nicht screen.width) -> Fit-Hoehe und der Vollbild-Alarmrahmen
     // sitzen buendig. Im TV gibt es keine Tab-Leiste, die der Transform
     // stoeren koennte.
-    const vw = window.innerWidth || w;
-    const zoom = Math.min(3, Math.max(0.2, vw / w));
-    if (Math.abs(zoom - 1) > 0.001) setBodyScale(zoom);
+    //
+    // Vorher den Meta-Viewport zuruecksetzen: sonst misst innerWidth eine
+    // Layoutbreite aus einem frueheren Seitenzustand (siehe resetMetaViewport).
+    resetMetaViewport();
+    const fit = () => {
+      // Nur solange wirklich TV laeuft - nach einem tvTouch-Wechsel skaliert
+      // die Tablet-Ansicht ueber den Meta-Viewport, ein transform am body
+      // wuerde ihr die Tab-Leiste verschieben.
+      if (document.documentElement.dataset.vizmode !== "tv") return;
+      const vw = window.innerWidth || w;
+      const z = Math.min(3, Math.max(0.2, vw / w));
+      if (Math.abs(z - 1) > 0.001) setBodyScale(z);
+      else clearBodyScale();
+    };
+    fit();
+    // Das Zuruecksetzen des Meta-Viewports wirkt erst mit dem naechsten
+    // Layout - dann noch einmal messen. Und bei jeder Groessenaenderung,
+    // damit Drehen/Fenstergroesse den Faktor mitnehmen.
+    requestAnimationFrame(fit);
+    window.addEventListener("resize", fit);
   } else {
     setMetaWidth(w);
   }
@@ -1063,7 +1102,11 @@ function applyZoom(urlValue, cfgValue, tv) {
     setMetaWidth(w);
     return ` · Zoom ${zoom}`;
   }
-  // TV: transform-Pfad (keine Tab-Leiste, feste Szenenflaeche).
+  // TV: transform-Pfad (keine Tab-Leiste, feste Szenenflaeche). Auch hier
+  // erst den Meta-Viewport zuruecksetzen - der Faktor steht zwar fest, die
+  // Layoutbreite darunter soll aber die des Geraets sein und nicht die aus
+  // einem frueheren Seitenzustand.
+  resetMetaViewport();
   setBodyScale(zoom);
   // Diagnose fuer die Statuszeile: kommt der Wert an UND rendert die
   // Engine die Skalierung? Nach dem Anwenden nachmessen: mit wirksamem
@@ -1531,11 +1574,8 @@ async function main() {
       return Math.min(3, Math.max(0.5, z));
     })();
     const clearScale = () => {
-      delete document.documentElement.dataset.vizzoom;
-      const b = document.body.style;
-      b.transform = b.transformOrigin = b.width = b.height = "";
-      const meta = document.querySelector('meta[name="viewport"]');
-      if (meta) meta.setAttribute("content", "width=device-width, initial-scale=1");
+      clearBodyScale();
+      resetMetaViewport();
     };
     const rescale = (isTv) => {
       clearScale();
@@ -1874,8 +1914,13 @@ async function main() {
         // Gestaffelt, damit nicht alle Clients gleichzeitig anklopfen - das
         // Wandtablet, das Handy und jeder offene Browser haengen am selben
         // FHEMWEB.
+        // location.replace statt location.reload: ein Neuladen stellt den
+        // vorherigen Seitenzustand wieder her (Scrollstand, auf Mobilgeraeten
+        // auch die Skalierung), eine Navigation faengt sauber an. Nach einem
+        // Versionswechsel ist genau das gewollt.
         if (id === vizDevice + "-reload") {
-          setTimeout(() => location.reload(), 200 + Math.floor(Math.random() * 2500));
+          setTimeout(() => location.replace(location.href),
+                     200 + Math.floor(Math.random() * 2500));
           return;
         }
         if (id === vizDevice || id.startsWith(vizDevice + "-")) return;
