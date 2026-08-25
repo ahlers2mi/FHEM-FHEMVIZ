@@ -11,6 +11,33 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.10 — 24.08.2026
+
+**Korrektur**
+
+- **Im TV-Modus war nach `set <viz> reload` der Zoom weg.** Der TV-Pfad
+  rechnet seinen Skalierungsfaktor aus `window.innerWidth` — und die hängt am
+  Meta-Viewport. Der kann aus einem *früheren* Seitenzustand stammen: die
+  Tablet-Ansicht von `tvTouch` setzt `width=<Layoutbreite>`, und ein WebView
+  (Fully) nimmt das über ein Neuladen mit. Steht dort zufällig dieselbe Zahl
+  wie in `?width=` (beim Wandtablet 1000), ergibt sich Faktor 1 und es wird
+  **gar nicht** skaliert.
+  Der TV-Pfad setzt den Meta-Viewport jetzt erst zurück und misst dann; nach
+  dem nächsten Layout und bei jeder Größenänderung wird nachgemessen (mit
+  Moduswächter, damit ein `tvTouch`-Wechsel nicht doch noch ein `transform`
+  am body bekommt).
+  Nachgestellt mit Tablet-Emulation und vorbelegtem `meta viewport
+  width=1000`: vorher `innerWidth=1000` und **kein** Transform, jetzt
+  `innerWidth=1280` und `scale(1.28)` — gleich dem sauberen Start.
+- **`set <viz> reload` navigiert statt neu zu laden** (`location.replace`
+  statt `location.reload`). Ein Neuladen stellt den vorherigen Seitenzustand
+  wieder her — Scrollstand und auf Mobilgeräten auch die Skalierung; nach
+  einem Versionswechsel ist ein sauberer Start das Gewollte.
+- `clearScale()` hat beim Zurücksetzen `viewport-fit=cover` verschluckt, die
+  Seite verlor also nach einem `tvTouch`-Wechsel die Notch-Freigabe.
+
+---
+
 ## v0.37.9 — 24.08.2026
 
 **Neu**
