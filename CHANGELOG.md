@@ -11,6 +11,30 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.11 — 27.08.2026
+
+**Korrektur**
+
+- **Dunkler Schirm mit rotem Rahmen, bis jemand die Seite neu lädt.** Der rote
+  Rahmen ist die Event-Übernahme (`set <viz> scene`, CSS `body.viz-alert`).
+  `forceScene()` hat den Rahmen gesetzt, dann gezeichnet und **erst danach**
+  den Timer scharf gemacht, der ihn wieder abnimmt. Wirft eine der
+  Zeichenroutinen dazwischen — ein Widget, das über ein fehlendes Reading
+  stolpert, reicht — dann bleibt der Rahmen für immer stehen **und** die
+  Rotation steht still: ihr Timer war eine Zeile vorher gelöscht worden.
+  Jetzt wird die Freigabe zuerst scharf gemacht und danach gezeichnet; das
+  Zeichnen selbst liegt in einem `try`. Dieselbe Reihenfolge in `_show()`,
+  wo die Rotation an genau derselben Stelle sterben konnte.
+  Nachgestellt mit einem Widget, das beim Zeichnen wirft: vorher blieb der
+  Rahmen über den ganzen Messzeitraum stehen und die Szene wechselte nie,
+  nachher ist er nach Ablauf der Szenenzeit weg und die Rotation läuft weiter.
+- **Zeichenfehler sind jetzt sichtbar.** Sie stehen in der Statuszeile (mit
+  Angabe, welche Szene) und bleiben dort, bis die Seite neu geladen wird — auf
+  dem Wandtablet gibt es keine Browser-Konsole, in der man sonst nachsehen
+  könnte.
+
+---
+
 ## v0.37.10 — 24.08.2026
 
 **Korrektur**

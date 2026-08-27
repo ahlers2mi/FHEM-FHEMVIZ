@@ -29,17 +29,22 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.37.10";
+const SPA_VERSION = "v0.37.11";
 
 const el = (id) => document.getElementById(id);
 
 let versionWarn = "";
 let configWarn = "";
+// Zeichenfehler bleiben stehen, bis die Seite neu geladen wird. Eine einfache
+// setStatus-Meldung waere nach dem naechsten Geraete-Update wieder weg - und
+// am Wandtablet ist die Statuszeile die einzige Stelle, an der man so etwas
+// ueberhaupt sehen kann.
+let renderWarn = "";
 
 function setStatus(text, kind = "") {
   const s = el("viz-status");
   if (!s) return;
-  const warn = [versionWarn, configWarn].filter(Boolean).join(" · ");
+  const warn = [versionWarn, configWarn, renderWarn].filter(Boolean).join(" · ");
   s.textContent = warn ? `${text} · ${warn}` : text;
   s.className = "viz-status" + (warn ? " viz-error" : kind ? " viz-" + kind : "");
 }
@@ -848,22 +853,33 @@ class TvController {
     // an der Kopfhoehe.
     document.body.classList.toggle("viz-clockonly", isClockPage(scene.room));
     this._fit();
+
+    // Weiterschalten ZUERST scharf machen - aus demselben Grund wie in
+    // forceScene: wirft eine der Zeichenroutinen, bliebe die Rotation sonst
+    // fuer immer auf der kaputten Seite stehen.
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this._next(), Math.max(1, Number(scene.sec) || 1) * 1000);
+
     if (isClockPage(scene.room)) {
-      const draw = () => renderClockPage(this.root, this.store, this.cfg || {});
-      draw();
-      this._cpTimer = setInterval(draw, 1000);
-      el("viz-scene").textContent = "Übersicht";
-      this._progress(scene.sec);
-      clearTimeout(this.timer);
-      this.timer = setTimeout(() => this._next(), scene.sec * 1000);
+      try {
+        const draw = () => renderClockPage(this.root, this.store, this.cfg || {});
+        draw();
+        this._cpTimer = setInterval(draw, 1000);
+        el("viz-scene").textContent = "Übersicht";
+        this._progress(scene.sec);
+      } catch (e) {
+        this._renderFehler("Uhr-Seite", e);
+      }
       return;
     }
-    this._render(scene.room);
     const label = scene.room === ALL_ROOMS ? "Alle" : sceneLabel(scene.room);
-    this._page(scene.sec, label);
-    this._progress(scene.sec);
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => this._next(), scene.sec * 1000);
+    try {
+      this._render(scene.room);
+      this._page(scene.sec, label);
+      this._progress(scene.sec);
+    } catch (e) {
+      this._renderFehler(label, e);
+    }
   }
 
   _next() {
@@ -885,17 +901,43 @@ class TvController {
     }
     clearTimeout(this.timer);
     clearTimeout(this.eventTimer);
-    this._leaveClockPage();
-    document.body.classList.add("viz-alert");
-    this._render(resolved);
-    this._page(sec, sceneLabel(resolved) + " · Event");
-    this._progress(sec);
+
+    // Die Freigabe ZUERST scharf machen, erst danach zeichnen. Alles, was
+    // beim Zeichnen passiert, kann werfen - ein Widget, das ueber ein fehlendes
+    // Reading stolpert, reicht. Stand die Freigabe wie frueher am Ende, blieb
+    // dann der rote Rahmen stehen UND die Rotation still (this.timer ist oben
+    // geloescht): dunkler Schirm mit rotem Rahmen, bis jemand die Seite neu
+    // laedt. Genau so ist es am Wandtablet aufgetreten.
     this.eventTimer = setTimeout(() => {
       document.body.classList.remove("viz-alert");
       // Nach dem Event zurueck: zur gepinnten Seite oder in die Rotation.
       if (this.pinned) this._showPinned();
       else this._show(this.scenes[this.idx]);
-    }, sec * 1000);
+    }, Math.max(1, Number(sec) || 1) * 1000);
+
+    this._leaveClockPage();
+    document.body.classList.add("viz-alert");
+    try {
+      this._render(resolved);
+      this._page(sec, sceneLabel(resolved) + " · Event");
+      this._progress(sec);
+    } catch (e) {
+      this._renderFehler("Szene " + sceneLabel(resolved), e);
+    }
+  }
+
+  /**
+   * Ein Widget hat beim Zeichnen geworfen. Die Rotation laeuft weiter (ihr
+   * Timer haengt nicht an dieser Stelle) - gemeldet wird es trotzdem, sonst
+   * steht da nur ein leerer Schirm und niemand weiss, warum. Die Statuszeile
+   * ist auf dem Wandtablet die einzige Stelle, an der man so etwas sieht:
+   * eine Browser-Konsole gibt es dort nicht.
+   */
+  _renderFehler(wo, e) {
+    // eslint-disable-next-line no-console
+    console.error(`FHEMVIZ: ${wo} konnte nicht gezeichnet werden`, e);
+    renderWarn = `Zeichenfehler (${wo}): ${e && e.message ? e.message : e}`;
+    setStatus(renderWarn, "error");
   }
 
   /**
