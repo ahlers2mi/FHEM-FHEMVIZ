@@ -1,4 +1,4 @@
-UPD 2026-08-25_05:48:32 93712 FHEM/98_FHEMVIZ.pm
+UPD 2026-08-27_14:18:02 93712 FHEM/98_FHEMVIZ.pm
 UPD 2026-07-26_16:02:19 203778 www/fhemviz/backgrounds/cubes.png
 UPD 2026-08-23_10:58:55 30191 www/fhemviz/css/fhemviz.css
 UPD 2026-07-27_22:14:28 3735 www/fhemviz/css/skin-bento.css
@@ -14,7 +14,7 @@ UPD 2026-08-21_08:48:11 287105 www/fhemviz/img/car/tesla-frei.png
 UPD 2026-08-21_07:43:07 382788 www/fhemviz/img/car/tesla-laedt.png
 UPD 2026-08-21_07:43:07 260588 www/fhemviz/img/car/tesla-steckt.png
 UPD 2026-08-06_06:22:02 2169 www/fhemviz/index.html
-UPD 2026-08-25_05:48:32 74282 www/fhemviz/js/app.js
+UPD 2026-08-27_14:18:02 76069 www/fhemviz/js/app.js
 UPD 2026-08-16_18:23:01 8110 www/fhemviz/js/fhem-client.js
 UPD 2026-08-20_14:33:28 40608 www/fhemviz/js/layout.js
 UPD 2026-08-03_15:34:35 5715 www/fhemviz/js/store.js
