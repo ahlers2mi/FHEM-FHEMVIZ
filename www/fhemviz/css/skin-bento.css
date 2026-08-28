@@ -75,18 +75,21 @@ html[data-vizskin="bento"] {
   }
 }
 
-/* --- Ungleiches Raster ------------------------------------------------- */
-/* Die erste Kachel einer Gruppe OHNE eigenes vizSize wird breiter - damit
- * bekommt jeder Abschnitt einen Anker, ohne dass du etwas konfigurierst.
- * Ein gesetztes vizSize gewinnt weiterhin (Inline-Style aus registry.js). */
-html[data-vizskin="bento"] .viz-grid > *:not([data-size]):first-child {
-  grid-column: span 2;
-}
-@media (max-width: 720px) {
-  html[data-vizskin="bento"] .viz-grid > *:not([data-size]):first-child {
-    grid-column: auto;
-  }
-}
+/* --- Kein "Anker" mehr ------------------------------------------------- */
+/* Hier stand eine Regel, die die ERSTE Kachel jeder Gruppe doppelt breit
+ * machte ("damit bekommt jeder Abschnitt einen Anker"). Sie ist raus, und
+ * zwar nicht aus Geschmack: sie haengt an der POSITION, und die traegt keine
+ * Bedeutung - welche Kachel breit wird, entscheidet die alphabetische
+ * Reihenfolge bzw. sortby. In der Praxis traf es damit einfache Schalter
+ * ("3D Drucker", "Heute heizen"), waehrend die inhaltsreiche Kachel daneben
+ * schmal blieb.
+ *
+ * Teurer als nur schief: in einer Gruppe mit zwei Kacheln schiebt die breite
+ * erste die zweite in die naechste Zeile, und daneben bleibt eine Spalte
+ * leer. Der Raum wurde dadurch deutlich hoeher, ohne mehr zu zeigen.
+ *
+ * Wer eine Kachel hervorheben will, sagt es weiterhin ausdruecklich:
+ * attr <geraet> vizSize 2x1 (breiter) oder vizHero (Band ganz oben). */
 
 /* --- Glas: Kacheln lassen den Hintergrund durchscheinen ---------------- */
 /* Nur wenn ein Hintergrundbild gesetzt ist - sonst gaebe es nichts zu sehen.
