@@ -11,6 +11,35 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.15 — 28.08.2026
+
+**Geändert**
+
+- **Rasterschritt von 26 auf 52 px.** Auf Wunsch — die Zwischenstufe aus dem
+  Variantenvergleich. Gegenüber 26 px:
+
+  | | 26 px | 52 px |
+  |---|---|---|
+  | kleine Schalter-Kachel | 98 px (9–26 leer) | 114 px (25–42 leer) |
+  | Sileno | 242 (11 leer) | 238 (7 leer) |
+  | Lüfter Schlafzimmer | 242 (2 leer) | 300 (44 leer), wieder große Typografie |
+  | Garagentor | 134 (26 leer) | 114 (6 leer) |
+  | Höhe des Raums | 943 px | 993 px |
+
+  Drei abgeleitete Zahlen mussten mitwandern, sonst bricht das Raster:
+  die `vizSize`-Zeilenspannweite (sechs → **vier** Schritte, `registry.js`),
+  die Schwelle für die größere Typografie automatisch gewachsener Kacheln
+  (acht → **fünf**, damit sie bei denselben ~250 px Inhalt greift) und die
+  Obergrenze der Spannweite (19 → 11). Alle drei stehen mit ihrer Rechnung
+  im Kommentar; die CSS-Variable weist jetzt darauf hin.
+  TV-Rasterschritt entsprechend 35 → 70 px.
+
+  Bearbeiten-Modus, Hero-Band, `watertank`-SVG, `mealplan` und die TV-Szenen
+  messen unverändert — der Bearbeiten-Modus, weil er an
+  `--viz-tile-unit` hängt und nicht am Rasterschritt.
+
+---
+
 ## v0.37.14 — 28.08.2026
 
 **Geändert**

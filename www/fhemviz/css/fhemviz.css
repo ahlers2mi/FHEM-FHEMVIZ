@@ -29,8 +29,13 @@
   /* Rasterschritt. BEWUSST feiner als die Kachelhoehe: die Zeilenspannweite
    * wird aufgerundet, und je groeber der Schritt, desto mehr Leerraum bleibt
    * in der Kachel stehen. Mit 104 waren das bis zu 101 px (gemessen an der
-   * Sileno-Kachel: 231 px Inhalt in 332 px Kachel). */
-  --viz-tile-row: 26px;
+   * Sileno-Kachel: 231 px Inhalt in 332 px Kachel).
+   *
+   * Wer diese Zahl aendert, muss DREI abgeleitete Werte mitziehen, sonst
+   * bricht es: die vizSize-Zeilenspannweite (registry.js), die Schwelle fuer
+   * die groessere Typografie und die Obergrenze der Spannweite (beide
+   * layout.js). Alle drei sind dort mit ihrer Rechnung kommentiert. */
+  --viz-tile-row: 52px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -447,7 +452,7 @@ html[data-vizmode="tv"] {
   --viz-tv-pad-y: 56px; /* = 26px oben + 30px unten an #fhemviz-app */
   --viz-tile-min: 260px;
   --viz-tile-unit: 140px;
-  --viz-tile-row: 35px;
+  --viz-tile-row: 70px;
   --viz-gap: 16px;
 }
 html[data-vizmode="tv"] .viz-groups { justify-content: center; }

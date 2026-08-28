@@ -275,11 +275,11 @@ export function createWidget(device, store, client, opts = {}) {
   if (m) {
     el.setAttribute("data-size", size);
     if (m[1] === "2") el.style.gridColumn = "span 2";
-    // Eine "Kachelhoehe" sind sechs Rasterschritte, nicht einer: das Raster
+    // Eine "Kachelhoehe" sind vier Rasterschritte, nicht einer: das Raster
     // ist feiner als die logische Kachel (siehe --viz-tile-unit/--viz-tile-row).
-    // 2 Einheiten = 2*104 + 12 Luecke = 220 px; 6 Schritte = 6*26 + 5*12 = 216.
-    // Im TV-Modus geht dieselbe Rechnung auf (2*140+16 = 296, 6*35+5*16 = 290).
-    if (m[2] === "2") el.style.gridRow = "span 6";
+    // 2 Einheiten = 2*104 + 12 Luecke = 220 px; 4 Schritte = 4*52 + 3*12 = 244.
+    // Im TV-Modus geht dieselbe Rechnung auf (2*140+16 = 296, 4*70+3*16 = 328).
+    if (m[2] === "2") el.style.gridRow = "span 4";
   }
   return el;
 }
