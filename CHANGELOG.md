@@ -11,6 +11,38 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.14 — 28.08.2026
+
+**Geändert**
+
+- **Der „Anker" des bento-Skins ist weg.** Eine CSS-Regel machte die **erste**
+  Kachel jeder Gruppe ohne eigenes `vizSize` doppelt breit — „damit bekommt
+  jeder Abschnitt einen Anker". Die Regel hängt aber an der **Position**, und
+  die trägt keine Bedeutung: welche Kachel breit wird, entscheidet die
+  alphabetische Reihenfolge bzw. `sortby`. In der Praxis traf es damit
+  einfache Schalter („3D Drucker", „Heute heizen"), während die inhaltsreiche
+  Kachel daneben schmal blieb.
+
+  Teurer als nur schief: in einer Gruppe mit zwei Kacheln schiebt die breite
+  erste die zweite in die nächste Zeile, und daneben bleibt eine Spalte leer.
+  Gemessen an einem echten Raum mit 18 Kacheln in acht Gruppen:
+
+  | | mit Anker | ohne |
+  |---|---|---|
+  | Höhe des Raums | 1303 px | **943 px** |
+  | doppelt breite Kacheln | 7 von 18 | **1** (die mit gesetztem `vizSize 2x1`) |
+  | im Bearbeiten-Modus | 1800 px | 1226 px |
+
+  Wer eine Kachel hervorheben will, sagt es weiterhin ausdrücklich:
+  `vizSize 2x1` für breiter, `vizHero` für das Band ganz oben.
+
+  Nebenbei verschwindet damit eine schiefe Spalte: eine Gruppe mit **einer**
+  Kachel bekam durch den Anker ein Raster aus `260px 17px`.
+
+  Hero-Band, `watertank`-SVG, `mealplan` und die TV-Szenen messen unverändert.
+
+---
+
 ## v0.37.13 — 28.08.2026
 
 **Geändert**
