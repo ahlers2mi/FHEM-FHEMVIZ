@@ -45,6 +45,29 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
   damit nicht mehr in Großschrift. Ein am Gerät gesetztes `vizSize` bringt
   seine Typografie unverändert selbst mit.
 
+**Korrektur**
+
+- **`vizHero full` war im Editiermodus nicht erreichbar** — schlimmer noch: der
+  Knopf prüfte nur `1|true|yes|on`, eine Kachel mit `full` sah dort also
+  **aus** aus, und ein Klick hat das `full` stillschweigend auf `1`
+  heruntergesetzt. Der Knopf schaltet jetzt durch alle drei Zustände
+  (aus → Band → volle Fläche) und zeigt den aktuellen an; geprüft wird mit
+  denselben Funktionen wie im Layout, die auch die Altschreibweisen `2` und
+  `voll` kennen.
+- **Die Werteliste der `viz*`-Attribute veraltete in der Attributauswahl.**
+  `addToDevAttrList` vergleicht ganze Zeichenketten: ändert sich die Werteliste
+  eines Attributs, bleibt die alte Fassung daneben stehen — und FHEMWEB nimmt
+  für das Dropdown den **ersten** Treffer, also die älteste. In einer
+  gewachsenen Installation standen dort 21 Fassungen von `vizWidget` (eine je
+  Version, die ein Widget hinzugefügt hat) und zwei von `vizHero`; angeboten
+  wurde `vizHero:1,0` — ohne `full`. Beim Laden des Moduls wird eine vorhandene
+  Fassung jetzt zuerst entfernt (`delFromAttrList` trifft über den Namen) und
+  dann die aktuelle eingetragen; nach `reload 98_FHEMVIZ` + `save` ist die
+  Liste sauber.
+  Neuer Test `t/userattr.pl` — läuft ohne FHEM-Installation, ruft
+  `FHEMVIZ_Initialize` gegen eine Attrappe der beiden fhem.pl-Funktionen auf.
+  Gegengeprüft, dass er ohne die Reparatur rot wird (4 Fehler).
+
 ---
 
 ## v0.37.12 — 28.08.2026

@@ -508,10 +508,17 @@ function editWrap(widget, dev, grid, ctx, platz = {}) {
     bSize.disabled = true;
     bSize.title = "Größe wirkt im Streifen-Layout nicht (eine Spalte)";
   }
+  // Drei Zustaende, nicht zwei: aus -> Band -> volle Flaeche. Vorher pruefte
+  // der Knopf nur /^(1|true|yes|on)$/ - eine Kachel mit "vizHero full" sah
+  // damit AUS aus, und ein Klick hat das full stillschweigend auf 1
+  // heruntergesetzt. Geprueft wird jetzt mit denselben Funktionen wie im
+  // Layout, die kennen auch die Altschreibweisen "2" und "voll".
+  const heroAn = isHero(dev);
+  const heroVoll = isHeroFull(dev);
   const bHero = knopf(
-    "ve-hero" + (/^(1|true|yes|on)$/i.test(String(attr.vizHero || "")) ? " on" : ""),
-    "Hero",
-    "Blickfang oben im Raum (vizHero)"
+    "ve-hero" + (heroAn ? " on" : ""),
+    heroVoll ? "Hero voll" : "Hero",
+    "Blickfang oben im Raum (vizHero): aus \u2192 Band \u2192 volle Fl\u00e4che"
   );
   const bHide = knopf(
     "ve-hide",
@@ -612,12 +619,9 @@ function editWrap(widget, dev, grid, ctx, platz = {}) {
     editSet(ctx, dev.name, "vizSize", next || null);
   });
   bHero.addEventListener("click", () =>
-    editSet(
-      ctx,
-      dev.name,
-      "vizHero",
-      /^(1|true|yes|on)$/i.test(String(attr.vizHero || "")) ? null : "1"
-    )
+    // aus -> "1" -> "full" -> aus. Geschrieben wird immer der dokumentierte
+    // Name "full", nie "2"/"voll".
+    editSet(ctx, dev.name, "vizHero", heroVoll ? null : heroAn ? "full" : "1")
   );
   bHide.addEventListener("click", () =>
     editSet(ctx, dev.name, "vizHide", versteckt ? null : "1")

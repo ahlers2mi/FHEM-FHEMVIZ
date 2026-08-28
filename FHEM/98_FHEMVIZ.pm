@@ -160,7 +160,23 @@ sub FHEMVIZ_Initialize {
     # Dropdown + Vervollstaendigung an jedem Geraet).
     # Zweiter Parameter ordnet die Attribute dem Modul zu (sauberes
     # Aufraeumen, Zuordnung in FHEMWEB) - wie im FHEM-Gemini-Modul.
+    # ERST die alte Fassung entfernen, DANN die aktuelle eintragen.
+    #
+    # addToDevAttrList legt eine Menge ueber die GANZEN Zeichenketten an
+    # (fhem.pl: map { ($_ => 1) } split(" ", "$ua $arg")). Aendert sich die
+    # Werteliste eines Attributs, ist das eine neue Zeichenkette - die alte
+    # bleibt daneben stehen, fuer immer. FHEMWEB nimmt fuer das Dropdown den
+    # ersten Treffer, also die aelteste Liste: "vizHero" bot nur noch 1|0 an,
+    # "full" fehlte, und bei "vizWidget" hatten sich 21 Fassungen angesammelt
+    # (jede Version, die ein Widget hinzugefuegt hat, eine mehr).
+    #
+    # delFromDevAttrList trifft ueber den NAMEN (^$arg(:.+)?$) und raeumt
+    # damit alle Altfassungen weg. Es loescht ausserdem ein gleichnamiges
+    # Attribut am uebergebenen Geraet - das ist hier "global", und dort gibt
+    # es kein viz*-Attribut.
     foreach my $a (@FHEMVIZ_DEV_ATTRS) {
+        my ($name) = split(":", $a);
+        delFromAttrList($name);
         addToAttrList($a, "FHEMVIZ");
     }
 
@@ -1506,9 +1522,11 @@ sub FHEMVIZ_Attr {
         weiter (<code>1x1</code> löscht das Attribut). Im Streifen-Layout
         (<code>skin zeilen</code>) ist der Knopf gesperrt, weil es dort nur
         eine Spalte gibt.</li>
-    <li><b>Hero</b> &ndash; <code>vizHero</code> an/aus. Auch die Kacheln im
-        Blickfang-Band oben haben ihre Werkzeugleiste, lassen sich also von
-        dort wieder zurücknehmen.</li>
+    <li><b>Hero</b> / <b>Hero voll</b> &ndash; schaltet <code>vizHero</code>
+        weiter: aus &rarr; Band (<code>1</code>) &rarr; volle Fläche
+        (<code>full</code>) &rarr; aus. Der Knopf zeigt den aktuellen Zustand;
+        auch die Kacheln im Blickfang-Band oben haben ihre Werkzeugleiste,
+        lassen sich also von dort wieder zurücknehmen.</li>
     <li><b>Ausblenden / Einblenden</b> &ndash; <code>vizHide</code> an/aus.
         Ausgeblendete Geräte bleiben im Editiermodus sichtbar (blass
         dargestellt), damit man sie wieder findet.</li>
