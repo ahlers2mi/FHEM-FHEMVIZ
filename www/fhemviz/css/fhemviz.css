@@ -24,7 +24,13 @@
   --viz-radius: 14px;
   --viz-gap: 12px;
   --viz-tile-min: 180px;
-  --viz-tile-row: 104px;   /* Basiszeile des Rasters (vizSize-Spans) */
+  /* Logische Kachelhoehe: das, was "eine Kachel" bedeutet (vizSize, Bearbeiten). */
+  --viz-tile-unit: 104px;
+  /* Rasterschritt. BEWUSST feiner als die Kachelhoehe: die Zeilenspannweite
+   * wird aufgerundet, und je groeber der Schritt, desto mehr Leerraum bleibt
+   * in der Kachel stehen. Mit 104 waren das bis zu 101 px (gemessen an der
+   * Sileno-Kachel: 231 px Inhalt in 332 px Kachel). */
+  --viz-tile-row: 26px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -440,7 +446,8 @@ html[data-vizmode="tv"] #fhemviz-app {
 html[data-vizmode="tv"] {
   --viz-tv-pad-y: 56px; /* = 26px oben + 30px unten an #fhemviz-app */
   --viz-tile-min: 260px;
-  --viz-tile-row: 140px;
+  --viz-tile-unit: 140px;
+  --viz-tile-row: 35px;
   --viz-gap: 16px;
 }
 html[data-vizmode="tv"] .viz-groups { justify-content: center; }

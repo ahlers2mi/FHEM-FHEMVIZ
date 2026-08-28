@@ -11,6 +11,65 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.13 — 28.08.2026
+
+**Geändert**
+
+- **Kacheln sind nicht mehr deutlich höher als ihr Inhalt.** Die Zeilen-
+  spannweite wird aufgerundet, und die Rasterzeile war mit **104 px** so grob,
+  dass in der Kachel bis zu **101 px** leer blieben (gemessen an der
+  Sileno-Kachel: 231 px Inhalt in einer 332 px hohen Kachel; Lüfter 76 px leer,
+  Waschmaschine 55 px). Der Rasterschritt ist jetzt **26 px** (TV: 35 statt
+  140) — dieselbe Anordnung, nur feiner gerastert:
+
+  | | vorher | nachher |
+  |---|---|---|
+  | Sileno | 332 px (101 leer) | 242 px (11 leer) |
+  | Lüfter Schlafzimmer | 332 px (76 leer) | 242 px (2 leer) |
+  | Waschmaschine | 218 px (55 leer) | 170 px (23 leer) |
+  | kleine Schalter-Kachel | 104 px | 98 px |
+  | TV, Leerraum je Kachel | 190–408 px | 108–204 px |
+
+  Was „eine Kachel" bedeutet, hängt jetzt an der neuen Variable
+  `--viz-tile-unit` (104 px, TV 140) statt am Rasterschritt. Daran hängen
+  `vizSize` (`1x2`/`2x2` = sechs Rasterschritte ≈ zwei Einheiten) und der
+  Bearbeiten-Modus, in dem eine Rasterzeile weiterhin eine ganze Kachel ist —
+  dort wird die Zeilenhöhe wie bisher um die Werkzeugleiste angehoben.
+  Gegengeprüft: Bearbeiten-Modus misst Pixel für Pixel wie vorher, Hero-Band,
+  `watertank`-SVG, `mealplan` und die TV-Szenen ebenfalls; eine Kachel mit
+  gesetztem `vizSize` ist 206 statt 218 px hoch.
+
+- Die größere Typografie **automatisch** gewachsener Kacheln beginnt später
+  (acht Rasterschritte statt „mehr als eine Zeile", also rund 250 px Inhalt
+  statt 114). Kacheln, die nur knapp über eine Zeile hinauslaufen, springen
+  damit nicht mehr in Großschrift. Ein am Gerät gesetztes `vizSize` bringt
+  seine Typografie unverändert selbst mit.
+
+**Korrektur**
+
+- **`vizHero full` war im Editiermodus nicht erreichbar** — schlimmer noch: der
+  Knopf prüfte nur `1|true|yes|on`, eine Kachel mit `full` sah dort also
+  **aus** aus, und ein Klick hat das `full` stillschweigend auf `1`
+  heruntergesetzt. Der Knopf schaltet jetzt durch alle drei Zustände
+  (aus → Band → volle Fläche) und zeigt den aktuellen an; geprüft wird mit
+  denselben Funktionen wie im Layout, die auch die Altschreibweisen `2` und
+  `voll` kennen.
+- **Die Werteliste der `viz*`-Attribute veraltete in der Attributauswahl.**
+  `addToDevAttrList` vergleicht ganze Zeichenketten: ändert sich die Werteliste
+  eines Attributs, bleibt die alte Fassung daneben stehen — und FHEMWEB nimmt
+  für das Dropdown den **ersten** Treffer, also die älteste. In einer
+  gewachsenen Installation standen dort 21 Fassungen von `vizWidget` (eine je
+  Version, die ein Widget hinzugefügt hat) und zwei von `vizHero`; angeboten
+  wurde `vizHero:1,0` — ohne `full`. Beim Laden des Moduls wird eine vorhandene
+  Fassung jetzt zuerst entfernt (`delFromAttrList` trifft über den Namen) und
+  dann die aktuelle eingetragen; nach `reload 98_FHEMVIZ` + `save` ist die
+  Liste sauber.
+  Neuer Test `t/userattr.pl` — läuft ohne FHEM-Installation, ruft
+  `FHEMVIZ_Initialize` gegen eine Attrappe der beiden fhem.pl-Funktionen auf.
+  Gegengeprüft, dass er ohne die Reparatur rot wird (4 Fehler).
+
+---
+
 ## v0.37.12 — 28.08.2026
 
 **Neu**

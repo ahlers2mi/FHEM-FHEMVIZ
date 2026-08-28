@@ -508,10 +508,17 @@ function editWrap(widget, dev, grid, ctx, platz = {}) {
     bSize.disabled = true;
     bSize.title = "Größe wirkt im Streifen-Layout nicht (eine Spalte)";
   }
+  // Drei Zustaende, nicht zwei: aus -> Band -> volle Flaeche. Vorher pruefte
+  // der Knopf nur /^(1|true|yes|on)$/ - eine Kachel mit "vizHero full" sah
+  // damit AUS aus, und ein Klick hat das full stillschweigend auf 1
+  // heruntergesetzt. Geprueft wird jetzt mit denselben Funktionen wie im
+  // Layout, die kennen auch die Altschreibweisen "2" und "voll".
+  const heroAn = isHero(dev);
+  const heroVoll = isHeroFull(dev);
   const bHero = knopf(
-    "ve-hero" + (/^(1|true|yes|on)$/i.test(String(attr.vizHero || "")) ? " on" : ""),
-    "Hero",
-    "Blickfang oben im Raum (vizHero)"
+    "ve-hero" + (heroAn ? " on" : ""),
+    heroVoll ? "Hero voll" : "Hero",
+    "Blickfang oben im Raum (vizHero): aus \u2192 Band \u2192 volle Fl\u00e4che"
   );
   const bHide = knopf(
     "ve-hide",
@@ -612,12 +619,9 @@ function editWrap(widget, dev, grid, ctx, platz = {}) {
     editSet(ctx, dev.name, "vizSize", next || null);
   });
   bHero.addEventListener("click", () =>
-    editSet(
-      ctx,
-      dev.name,
-      "vizHero",
-      /^(1|true|yes|on)$/i.test(String(attr.vizHero || "")) ? null : "1"
-    )
+    // aus -> "1" -> "full" -> aus. Geschrieben wird immer der dokumentierte
+    // Name "full", nie "2"/"voll".
+    editSet(ctx, dev.name, "vizHero", heroVoll ? null : heroAn ? "full" : "1")
   );
   bHide.addEventListener("click", () =>
     editSet(ctx, dev.name, "vizHide", versteckt ? null : "1")
@@ -910,7 +914,8 @@ export function renderLayout(root, store, client, opts = {}) {
   // Hoehe jeder Kachel gemessen (align-items:start hebt das Stretching
   // kurz auf) und inhaltsreiche Kacheln spannen mehrere Rasterzeilen -
   // kompakte bleiben klein, grid-auto-flow:dense packt sie in die Luecken.
-  const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 104;
+  const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 26;
+  const unit = parseFloat(cs.getPropertyValue("--viz-tile-unit")) || 104;
 
   // Editiermodus: die Werkzeugleiste sitzt IM Rasterelement und nimmt der
   // Kachel Hoehe weg. Wie viel, haengt von der Kachelbreite ab - bei einer
@@ -935,7 +940,10 @@ export function renderLayout(root, store, client, opts = {}) {
         // Karte um diese paar Pixel unter ihrer normalen Hoehe.
         const rahmen = tools[0].parentElement;
         const chrom = rahmen.offsetHeight - rahmen.clientHeight + 4; // Rand + padding
-        grid.style.setProperty("--viz-tile-row", rowH + h + chrom + "px");
+        // Im Bearbeiten-Modus ist eine Rasterzeile eine ganze Kachel
+        // (keine Auto-Spannweiten, der Rahmen sitzt im Raster) - hier zaehlt
+        // also die logische Kachelhoehe, nicht der feine Rasterschritt.
+        grid.style.setProperty("--viz-tile-row", unit + h + chrom + "px");
       }
     }
   }
@@ -960,7 +968,7 @@ export function renderLayout(root, store, client, opts = {}) {
       const spans = tiles.map((t, i) =>
         Math.max(
           minSpan[i],
-          Math.min(6, Math.ceil((t.offsetHeight + gap) / (rowH + gap)))
+          Math.min(19, Math.ceil((t.offsetHeight + gap) / (rowH + gap)))
         )
       );
       grid.style.alignItems = "";
@@ -977,7 +985,14 @@ export function renderLayout(root, store, client, opts = {}) {
       // (grosse Ziffern/Zeilen statt kleiner Text in grosser Flaeche).
       if (!t.getAttribute("data-size")) {
         const c = /span\s*2/.test(t.style.gridColumn || "") ? 2 : 1;
-        const r = spans[i] >= 2 ? 2 : 1;
+        // Schwelle fuer die groessere Typografie AUTOMATISCH gewachsener
+        // Kacheln. Sie haengt bewusst nicht am vizSize-Span: ein am Geraet
+        // gesetztes vizSize bringt seine Typo ohnehin selbst mit (registry.js).
+        // Frueher lag die Schwelle bei "mehr als eine Rasterzeile", also rund
+        // 114 px Inhalt - im feinen Raster waeren das 4 Schritte. Bewusst
+        // hoeher gesetzt: kleine Kacheln, die nur knapp ueberlaufen, sollen
+        // nicht gleich in Grossschrift springen.
+        const r = spans[i] >= 8 ? 2 : 1;
         if (c === 2 || r === 2) t.setAttribute("data-size", `${c}x${r}`);
       }
     });
