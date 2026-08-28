@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Wasservorrat-Widget (v0.37.6).
+ * FHEMVIZ - Wasservorrat-Widget (v0.37.12).
  *
  * Zeichnet die Regenwasseranlage als lebendiges Schema: Dach und Fallrohr,
  * Regenfass mit Schwimmerhoehe, gestapelte IBC, dazwischen Pumpen- und
@@ -43,6 +43,9 @@ const DEFAULT_MAP = {
   fillStarted: "ibcFillStarted",
   returnRate: "ibcToBarrelFlow_lpm",
   valve: "currentValveName",
+  moisture: "soilMoisture",
+  lastWatering: "lastWatering",
+  lastCircuit: "lastCircuitWatering",
 };
 
 export class FhemvizWatertank extends FhemvizWidget {
@@ -68,6 +71,36 @@ export class FhemvizWatertank extends FhemvizWidget {
   _n(map, role) {
     const v = parseFloat(String(this._r(map, role)).replace(",", "."));
     return isNaN(v) ? null : v;
+  }
+
+  /**
+   * Wann wurde zuletzt gegossen? Der spaetere der beiden Zeitpunkte gilt:
+   * lastWatering ist der Nachtzyklus, lastCircuitWatering ein einzeln
+   * gestarteter Kreis (Gewaechshaus). Wer auf die Kachel schaut, will wissen,
+   * wann ueberhaupt zuletzt Wasser lief - nicht, welcher der beiden Wege es war.
+   * Format des Moduls: "2026-08-28 01:36:07".
+   */
+  _lastWater(map) {
+    let neuste = null;
+    for (const role of ["lastWatering", "lastCircuit"]) {
+      const m = String(this._r(map, role)).match(
+        /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/
+      );
+      if (!m) continue;
+      const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
+      if (isNaN(d.getTime())) continue;
+      if (!neuste || d > neuste) neuste = d;
+    }
+    return neuste;
+  }
+
+  /** Alter als kurze Angabe - Minuten, Stunden, Tage. */
+  _age(d) {
+    const min = Math.floor((Date.now() - d.getTime()) / 60000);
+    if (min < 0) return null;
+    if (min < 60) return { v: String(min), u: "Min." };
+    if (min < 48 * 60) return { v: String(Math.floor(min / 60)), u: "Std." };
+    return { v: String(Math.floor(min / 1440)), u: "Tg." };
   }
 
   /**
@@ -351,6 +384,14 @@ export class FhemvizWatertank extends FhemvizWidget {
     if (ibcCap && ibcShown !== null) {
       figs.push({ v: this._fmt((ibcShown / ibcCap) * 100), u: "%", k: "IBC" });
     }
+    // Bodenfeuchte und letzte Bewaesserung: die Kachel zeigte bisher nur den
+    // Vorrat, nicht was damit passiert ist. Ob ueberhaupt gegossen wurde, war
+    // ihr nicht zu entnehmen - man musste ins Log sehen.
+    const moist = this._n(map, "moisture");
+    if (moist !== null) figs.push({ v: this._fmt(moist), u: "%", k: "Bodenfeuchte" });
+    const last = this._lastWater(map);
+    const age = last ? this._age(last) : null;
+    if (age) figs.push({ v: age.v, u: age.u, k: "zuletzt gegossen" });
     const figHtml = figs.length
       ? `<div class="wt-figs">` +
         figs
@@ -457,8 +498,12 @@ export class FhemvizWatertank extends FhemvizWidget {
           .wt-drop { opacity: 0.85; }
         }
 
+        /* Nicht mehr fest dreispaltig: mit Bodenfeuchte und "zuletzt gegossen"
+           sind es bis zu fuenf Zahlen. auto-fill packt sie nach Platz - auf der
+           2x2-Kachel in eine Zeile, auf schmalen Sichten in zwei. */
         .wt-figs {
-          display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+          gap: 4px 6px;
           border-top: 1px solid var(--viz-border); padding-top: 8px; margin-top: auto;
         }
         .wt-fig { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
@@ -502,8 +547,13 @@ export class FhemvizWatertank extends FhemvizWidget {
     // Waehrend eines Laufs alle 5 s neu zeichnen. Die Readings aendern sich in
     // der Zeit nicht, es gaebe also sonst keinen Anlass zum Neuzeichnen - und
     // die mitgerechneten Fuellstaende stuenden trotzdem still.
+    //
+    // Im Leerlauf trotzdem ein langsamer Takt: "zuletzt gegossen" laeuft mit der
+    // Uhr, nicht mit den Ereignissen. Ohne ihn bliebe die Angabe stehen, bis das
+    // Geraet zufaellig etwas meldet - und ausgerechnet nachts, wenn die Frage
+    // "hat es gegossen?" aufkommt, ist es dort still.
     clearInterval(this._tick);
-    this._tick = this._live ? setInterval(() => this._paint(), 5000) : null;
+    this._tick = setInterval(() => this._paint(), this._live ? 5000 : 60000);
   }
 
   disconnectedCallback() {

@@ -11,6 +11,36 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.12 — 28.08.2026
+
+**Neu**
+
+- **`watertank` zeigt Bodenfeuchte und wann zuletzt gegossen wurde.** Die Kachel
+  stellte bisher nur den Vorrat dar — was damit passiert ist, war ihr nicht zu
+  entnehmen. Ob überhaupt gegossen wurde, musste man im Log nachsehen; in der
+  Nacht zum 28.08. lief der Zyklus vollständig durch und der Eindruck war
+  trotzdem, es sei nichts passiert.
+
+  Zwei Zahlen kommen dazu: `soilMoisture` als Prozentwert und das Alter der
+  letzten Bewässerung. Dafür gilt der **spätere** von `lastWatering`
+  (Nachtzyklus) und `lastCircuitWatering` (einzeln gestarteter Kreis) — wer auf
+  die Kachel schaut, will wissen, wann zuletzt Wasser lief, nicht über welchen
+  der beiden Wege.
+
+  Die Zahlenzeile ist dafür nicht mehr fest dreispaltig, sondern packt nach
+  Platz (`auto-fill`): auf der 2x2-Kachel in eine Zeile, auf schmalen Sichten in
+  zwei. Fehlende Readings werden wie bisher weggelassen, nicht geraten; alle
+  drei sind über `attr <gerät> vizTank` umhängbar
+  (`moisture=`, `lastWatering=`, `lastCircuit=`).
+
+- **Langsamer Neuzeichen-Takt im Leerlauf.** „Zuletzt gegossen" läuft mit der
+  Uhr, nicht mit den Ereignissen. Bisher zeichnete die Kachel nur während eines
+  Transports nach (alle 5 s) — die Altersangabe wäre stehengeblieben, bis das
+  Gerät zufällig etwas meldet. Ausgerechnet nachts, wenn die Frage aufkommt, ist
+  es dort still. Jetzt: 5 s während eines Laufs, sonst 60 s.
+
+---
+
 ## v0.37.11 — 27.08.2026
 
 **Korrektur**
