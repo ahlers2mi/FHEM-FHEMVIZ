@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.11
+# Version:  v0.37.12
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.11";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.12";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -359,7 +359,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.11"),
+            FHEMVIZ_jsonStr("v0.37.12"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1203,7 +1203,15 @@ sub FHEMVIZ_Attr {
         <code>filling</code> (ibcFilling), <code>returning</code>
         (ibcToBarrelActive), <code>mains</code> (mainsSupply),
         <code>fillRate</code> (ibcFillFlow_lpm), <code>valve</code>
-        (currentValveName).<br>
+        (currentValveName), <code>moisture</code> (soilMoisture),
+        <code>lastWatering</code> (lastWatering), <code>lastCircuit</code>
+        (lastCircuitWatering).<br>
+        <b>Zahlenzeile:</b> heute geerntet, Regen im Fenster, IBC-Füllgrad,
+        Bodenfeuchte und das Alter der letzten Bewässerung. Für Letzteres gilt
+        der <b>spätere</b> der beiden Zeitpunkte – <code>lastWatering</code> ist
+        der Nachtzyklus, <code>lastCircuitWatering</code> ein einzeln
+        gestarteter Kreis. Wer auf die Kachel schaut, will wissen, wann zuletzt
+        Wasser lief, nicht über welchen der beiden Wege.<br>
         Die Größen kommen aus den <b>Attributen des Geräts</b>:
         <code>barrelUsableVolume</code>, <code>barrelFloatLevel</code> (die
         gestrichelte Linie im Fass) und <code>ibcUsableVolume</code>. Ohne sie
