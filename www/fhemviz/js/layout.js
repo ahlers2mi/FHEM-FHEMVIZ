@@ -914,7 +914,7 @@ export function renderLayout(root, store, client, opts = {}) {
   // Hoehe jeder Kachel gemessen (align-items:start hebt das Stretching
   // kurz auf) und inhaltsreiche Kacheln spannen mehrere Rasterzeilen -
   // kompakte bleiben klein, grid-auto-flow:dense packt sie in die Luecken.
-  const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 26;
+  const rowH = parseFloat(cs.getPropertyValue("--viz-tile-row")) || 52;
   const unit = parseFloat(cs.getPropertyValue("--viz-tile-unit")) || 104;
 
   // Editiermodus: die Werkzeugleiste sitzt IM Rasterelement und nimmt der
@@ -968,7 +968,7 @@ export function renderLayout(root, store, client, opts = {}) {
       const spans = tiles.map((t, i) =>
         Math.max(
           minSpan[i],
-          Math.min(19, Math.ceil((t.offsetHeight + gap) / (rowH + gap)))
+          Math.min(11, Math.ceil((t.offsetHeight + gap) / (rowH + gap)))
         )
       );
       grid.style.alignItems = "";
@@ -989,10 +989,11 @@ export function renderLayout(root, store, client, opts = {}) {
         // Kacheln. Sie haengt bewusst nicht am vizSize-Span: ein am Geraet
         // gesetztes vizSize bringt seine Typo ohnehin selbst mit (registry.js).
         // Frueher lag die Schwelle bei "mehr als eine Rasterzeile", also rund
-        // 114 px Inhalt - im feinen Raster waeren das 4 Schritte. Bewusst
-        // hoeher gesetzt: kleine Kacheln, die nur knapp ueberlaufen, sollen
-        // nicht gleich in Grossschrift springen.
-        const r = spans[i] >= 8 ? 2 : 1;
+        // 114 px Inhalt. Bewusst hoeher gesetzt: kleine Kacheln, die nur knapp
+        // ueberlaufen, sollen nicht gleich in Grossschrift springen. Fuenf
+        // Schritte heisst "mehr als 4*52 + 3*12 = 244 px Inhalt" - dieselbe
+        // Grenze wie im 26-px-Raster mit acht Schritten (dort 254 px).
+        const r = spans[i] >= 5 ? 2 : 1;
         if (c === 2 || r === 2) t.setAttribute("data-size", `${c}x${r}`);
       }
     });
