@@ -245,3 +245,69 @@ Daraus drei Regeln:
 laden: ein Neuladen stellt den vorherigen Seitenzustand wieder her – Scrollstand
 und auf Mobilgeräten die Skalierung. Nach einem Versionswechsel will man einen
 sauberen Start.
+
+## Das Kachelraster: eine Zahl, drei Mitläufer
+
+Die Zeilenspannweite einer Kachel wird **aufgerundet** – je gröber der
+Rasterschritt, desto mehr Leerraum bleibt *in* der Kachel stehen. Mit den
+ursprünglichen 104 px waren das bis zu 101 px (Sileno: 231 px Inhalt in einer
+332 px hohen Kachel).
+
+Am Rasterschritt (`--viz-tile-row`) hängen **drei abgeleitete Zahlen**, die
+beim Ändern mitmüssen – sonst bricht es lautlos:
+
+| | wo | Rechnung |
+|---|---|---|
+| `vizSize`-Zeilenspannweite | `registry.js` | 2 Einheiten ≈ 220 px, also 4 Schritte à 52 |
+| Schwelle für die große Typografie | `layout.js` | soll bei denselben ~250 px Inhalt greifen |
+| Obergrenze der Spannweite | `layout.js` | gleiche Maximalhöhe wie vorher |
+
+Getrennt davon steht **`--viz-tile-unit`** (104 px, TV 140): das ist, was
+„eine Kachel" *bedeutet*. Daran hängen `vizSize` und der **Bearbeiten-Modus** –
+dort ist eine Rasterzeile weiterhin eine ganze Kachel (keine Auto-Spannweiten,
+der Rahmen sitzt im Raster) und die Zeilenhöhe wird um die Werkzeugleiste
+angehoben. Hinge das am feinen Schritt, bekäme jede der sieben Zeilen einer
+Kachel die Leistenhöhe dazu.
+
+Messrezept: je Kachel die *natürliche* Höhe (`alignItems: start`, `height:
+auto`) gegen die Endhöhe stellen – die Differenz ist der Verschnitt. Und immer
+gegen `main` messen, nicht gegen Zahlen von vorgestern: zwischen zwei Messungen
+kann eine andere Sitzung etwas geändert haben.
+
+## Was an der Position hängt, bedeutet nichts
+
+Im bento-Skin stand eine Regel, die die **erste** Kachel jeder Gruppe doppelt
+breit machte – „damit bekommt jeder Abschnitt einen Anker". Welche Kachel das
+ist, entscheidet aber die alphabetische Reihenfolge bzw. `sortby`. Beim Nutzer
+traf es einen 3D-Drucker und „Heute heizen", zwei einfache Schalter, während
+die inhaltsreiche Kachel daneben schmal blieb. Sein Urteil: „das macht keinen
+Sinn, sieht auch nicht logisch aus."
+
+Teurer als nur schief: in einer Gruppe mit zwei Kacheln schiebt die breite
+erste die zweite in die nächste Zeile, daneben bleibt eine Spalte leer. Der
+Raum war dadurch **1303 statt 943 px** hoch – der Anker fraß genau den Platz
+wieder auf, den das feinere Raster gerade gewonnen hatte. Deshalb kam auf die
+Rasteränderung zunächst „geändert hat sich aber irgendwie wenig": zwei
+Änderungen hoben sich auf, und ich hatte nur die eine gemessen.
+
+**Wer hervorheben will, sagt es ausdrücklich** – `vizSize 2x1` oder `vizHero`.
+Eine Regel, die aus der Sortierreihenfolge Bedeutung ableitet, hat keine.
+
+## Varianten zeigen, nicht beschreiben
+
+Bei den Rastergrößen hat sich derselbe Ablauf zweimal bewährt: den Raum mit
+*seinen* Geräten nachbauen, drei Varianten rendern, als **ein** Bild mit
+Beschriftung und gemessenen Zahlen schicken – und ihn wählen lassen. Beide Male
+hat er in einer Zeile geantwortet, und beide Male war es nicht die Variante,
+die ich empfohlen hatte.
+
+Zwei Fallen beim Aufnehmen der Bilder, beide selbst hineingelaufen:
+
+- **Kacheln unterhalb der Fensterkante werden nicht gezeichnet.** Der
+  Element-Screenshot liefert dann eine Fläche in voller Größe, deren unterer
+  Teil leer ist – das sah aus wie eine abgeschnittene Zeile und ich hätte es
+  fast als Fehler gemeldet. Fenster hoch genug wählen (1500 px), dann prüfen:
+  eine Bildzeile ganz ohne Kartenhintergrund ist das Erkennungszeichen.
+- **`getBoundingClientRect()` kennt kein `overflow: hidden`.** Für „wird etwas
+  abgeschnitten" taugt es nicht; `elementFromPoint` an der fraglichen Stelle
+  oder `scrollHeight` gegen `clientHeight` schon.
