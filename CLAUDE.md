@@ -137,6 +137,16 @@ Vier Versuche, drei davon falsch – die Reihenfolge lohnt sich zu merken:
 Skript: `frei3.py` im Sitzungs-Scratchpad. Kein `scipy` installiert, Flutfüllung
 und Zusammenhangskomponenten daher selbst als BFS.
 
+**Grünscreen ist der einfache Fall.** Liegt das Rendering vor grünem Grund,
+geht es nicht über die Helligkeit, sondern über die **Grünstichigkeit**
+`g − max(r,b)`: Hintergrund über ~110, Vordergrund unter ~25, dazwischen ein
+weicher Übergang (harte Schwelle franst die Silhouette aus). Danach
+**entfärben** – Grün auf `max(r,b)` klemmen, sonst leuchtet der Saum grün.
+Beim Tesla vor Grün waren 77 % der Pixel eindeutig Hintergrund, 19 % eindeutig
+Auto und nur 4 % dazwischen; Reifen und ein millimeterdünnes Ladekabel blieben
+vollständig erhalten. Der ganze Aufwand oben gilt nur für Bilder **ohne**
+Grünscreen.
+
 **Immer auf hellem UND dunklem Grund gegenprüfen.** Auf der dunklen Kachel
 sieht ein weggefressener Reifen aus wie ein Reifen – auf hellem Grund fällt es
 sofort auf. Beide Proben in ein Bild, dann einmal hinsehen.
