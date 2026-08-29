@@ -10,10 +10,9 @@ UPD 2026-08-11_19:21:37 553 www/fhemviz/icons/app-icon.svg
 UPD 2026-08-11_19:21:37 3498 www/fhemviz/icons/icon-180.png
 UPD 2026-08-11_19:21:37 3975 www/fhemviz/icons/icon-192.png
 UPD 2026-08-11_19:21:37 11425 www/fhemviz/icons/icon-512.png
-UPD 2026-08-21_08:48:11 287105 www/fhemviz/img/car/tesla-frei.png
-UPD 2026-08-29_18:05:56 394636 www/fhemviz/img/car/tesla-laedt-heck.png
-UPD 2026-08-21_07:43:07 382788 www/fhemviz/img/car/tesla-laedt.png
-UPD 2026-08-21_07:43:07 260588 www/fhemviz/img/car/tesla-steckt.png
+UPD 2026-08-29_19:13:00 359945 www/fhemviz/img/car/tesla-frei.png
+UPD 2026-08-29_19:13:00 329024 www/fhemviz/img/car/tesla-laedt.png
+UPD 2026-08-29_19:13:00 321870 www/fhemviz/img/car/tesla-steckt.png
 UPD 2026-08-06_06:22:02 2169 www/fhemviz/index.html
 UPD 2026-08-28_09:27:01 76069 www/fhemviz/js/app.js
 UPD 2026-08-16_18:23:01 8110 www/fhemviz/js/fhem-client.js
