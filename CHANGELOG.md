@@ -11,6 +11,21 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## Ohne Versionssprung — 29.08.2026
+
+**Neu**
+
+- **`img/car/tesla-laedt-heck.png`** — Fahrzeugbild für den Ladezustand, Blick
+  von schräg hinten mit steckendem Kabel. Aus einem Grünscreen-Rendering
+  freigestellt und auf die Geometrie der vorhandenen drei gebracht: 900 px
+  breit, Auto 846 × 494 px, Verhältnis Autohöhe zu Bildhöhe 0,95 wie bei
+  `tesla-frei`/`tesla-steckt`/`tesla-laedt` — damit springt die Größe beim
+  Zustandswechsel nicht.
+  Die vorhandenen Bilder bleiben unangetastet; welches genommen wird,
+  entscheidet weiterhin `attr <gerät> vizCar image=laedt:…|steckt:…|frei:…`.
+
+---
+
 ## v0.37.15 — 28.08.2026
 
 **Geändert**
