@@ -13,16 +13,44 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ## Ohne Versionssprung — 29.08.2026
 
-**Neu**
+**Geändert**
 
-- **`img/car/tesla-laedt-heck.png`** — Fahrzeugbild für den Ladezustand, Blick
-  von schräg hinten mit steckendem Kabel. Aus einem Grünscreen-Rendering
-  freigestellt und auf die Geometrie der vorhandenen drei gebracht: 900 px
-  breit, Auto 846 × 494 px, Verhältnis Autohöhe zu Bildhöhe 0,95 wie bei
-  `tesla-frei`/`tesla-steckt`/`tesla-laedt` — damit springt die Größe beim
-  Zustandswechsel nicht.
-  Die vorhandenen Bilder bleiben unangetastet; welches genommen wird,
-  entscheidet weiterhin `attr <gerät> vizCar image=laedt:…|steckt:…|frei:…`.
+- **Alle drei Fahrzeugbilder ersetzt** (`tesla-frei`, `tesla-steckt`,
+  `tesla-laedt`). Sie stammen jetzt aus **einer** Grünscreen-Vorlage, sind also
+  in Beleuchtung und Maßstab identisch; „steckt" und „lädt" zeigen dieselbe
+  Ansicht und unterscheiden sich nur durch das leuchtende Kabel — der Wagen
+  springt zwischen diesen beiden Zuständen also nicht mehr.
+
+  | | Bild | Auto | Autohöhe / Bildhöhe |
+  |---|---|---|---|
+  | `tesla-frei` | 900 × 511 | 847 × 498 | 0,97 |
+  | `tesla-steckt` | 900 × 540 | 847 × 513 | 0,95 |
+  | `tesla-laedt` | 900 × 568 | 846 × 540 | 0,95 |
+
+  Das letzte Verhältnis ist die Zahl, die zählt: die Kachel passt das Bild per
+  `object-fit: contain` auf 164 px Höhe ein, also bestimmt es die dargestellte
+  Autogröße.
+
+  Drei Dinge waren beim Freistellen zu lösen, alle drei erst durch Nachmessen
+  aufgefallen:
+
+  - **Grünstichigkeit relativ zur Helligkeit** messen, nicht absolut. Der
+    Bodenschatten hat dieselbe Farbe wie der Hintergrund, nur dunkler — absolut
+    gemessen bleibt er als freischwebender Fleck stehen. Auf dem dunklen
+    Kachelgrund unsichtbar, auf hellem sofort zu sehen.
+  - **Das türkise Ladekabel schützen** (`b > 0,40·g`): das relative Maß allein
+    fraß ein Fünftel davon (1060 → 846 Pixel).
+  - **Nach Zusammenhangskomponenten trennen**, nicht mit einem waagerechten
+    Schnitt. Das Kabel des mittleren Wagens läuft schräg nach unten links bis
+    y 904, also mitten in das untere Bild; ein gerader Schnitt ließ dort einen
+    Kabelstummel stehen.
+
+  Unten sind die Bilder mit **−30°** beschnitten: die Kante fällt nach links ab
+  und läuft damit unter dem Wagen durch (0 Pixel vom Wagen entfernt). In der
+  Gegenrichtung läge sie am linken Rand 327 px höher und kappte das Vorderrad.
+
+  Am `vizCar`-Attribut ist nichts zu ändern, die Dateinamen bleiben. Die
+  Zwischendatei `tesla-laedt-heck.png` ist damit hinfällig und wieder entfernt.
 
 ---
 
