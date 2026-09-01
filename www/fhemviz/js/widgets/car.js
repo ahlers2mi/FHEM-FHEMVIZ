@@ -47,11 +47,16 @@ const CAR_CSS = `
     width: 100%; max-height: 164px; object-fit: contain;
     margin: 2px 0 4px; border-radius: 8px;
   }
-  /* 200 statt 230: mit 230 war die Kachel im Hero-Band 534 px hoch und
-   * ueberschoss die TV-Seite (572 px Schirm, Band beginnt bei 78) um 4 px.
-   * Das Auto-Paging bricht an Kachelzeilen - vier Pixel zuviel kosten also
-   * eine ganze halbleere Seite, und die Karte wurde unten angeschnitten. */
-  :host([data-tv]) .cimg { max-height: 200px; }
+  /* Auf dem Fernseher ist das Bild das NACHGIEBIGE Stueck der Kachel: die
+   * Zahlenzeilen darunter sind der Inhalt, das Bild ist Schmuck. Deckelt die
+   * Seitenhoehe die Kachel (Regel in fhemviz.css), schrumpft also das Bild,
+   * statt dass die Wallbox-Zeile unter der Seitenkante verschwindet.
+   * min-height: 0 ist Pflicht - ohne das verweigert Flexbox einem Bild das
+   * Schrumpfen unter seine Inhaltshoehe, und die 200 px wuerden bleiben. */
+  :host([data-tv]) .cimg {
+    max-height: 200px;
+    flex: 0 1 auto; min-height: 0;
+  }
 
   /* Ladestand wie in der Tesla-App: EIN Balken. Die Fuellung ist der
    * Ladestand, der Griff darauf ist das Wunschlimit und wird direkt gezogen -

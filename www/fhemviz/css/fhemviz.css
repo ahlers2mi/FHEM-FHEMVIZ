@@ -322,6 +322,27 @@ html[data-vizsnap="gruppe"][data-vizzoom]:not([data-vizmode="tv"]) body {
  * braucht 300 - und bekam trotzdem 534, also 234 px Loch unter dem letzten
  * Wert. Nur fuer das normale Band; "full" streckt absichtlich (Regel unten). */
 .viz-hero:not(.full) > * { height: auto; align-self: start; }
+/* Fernseher: eine Hero-Kachel darf nie hoeher werden als EINE Seite. Das
+ * Auto-Paging bricht an Kachelzeilen - eine Zeile, die nicht auf eine Seite
+ * passt, wird also unten abgeschnitten UND kostet die naechste Seite. Eine
+ * feste Obergrenze am Bild reicht dafuer nicht: wie hoch eine Seite ist,
+ * haengt an der Kopfzeile, und die waechst mit headerInfo/statusBar/vizAlert
+ * (auf dem Wandtablet 138 statt 40 px - der Schirm ist damit 487 statt 572).
+ * Darum dieselbe Rechnung wie bei "hero full" unten, nur als Deckel.
+ *
+ * Der max-height ALLEIN reicht nicht - genau derselbe Stolperstein wie bei
+ * "hero full": das Widget setzt seine .card auf height:100%, und Prozent auf
+ * eine Hoehe "auto" ist wieder auto. Die Karte blieb 504 px hoch und ragte
+ * einfach aus dem 431 px hohen Host heraus (nachgemessen). Mit
+ * "grid + minmax(0, 1fr)" bekommt die Karte eine BESTIMMTE Hoehe, die unter
+ * die Inhaltshoehe gehen darf - erst dann kann das Bild darin nachgeben.
+ * Grid statt Flex, weil ein Grid-Item auch in der Breite streckt; die Karte
+ * liegt im Shadow-DOM und ist von hier aus nicht direkt ansprechbar. */
+html[data-vizmode="tv"] .viz-hero:not(.full) > * {
+  max-height: calc(var(--viz-vh, 100vh) - var(--viz-header-h, 58px) - var(--viz-tv-pad-y, 56px));
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+}
 .viz-hero > * {
   min-height: 104px;
   border-radius: var(--viz-radius);

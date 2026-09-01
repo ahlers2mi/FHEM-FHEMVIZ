@@ -249,15 +249,57 @@ Schirmhöhe.
 (`computePageOffsets`), eine Zeile bekommt also entweder ganz oder gar nicht
 Platz. Zeile 1 des Bandes endete bei 576 px bei 572 px Schirm – die Auto-Karte
 wurde unten angeschnitten *und* die zweite Bandzeile bekam eine eigene, halb
-leere Seite. Das TV-Autobild von 230 auf 200 px zu nehmen genügte.
+leere Seite.
 
-Was **nicht** hilft (jeweils gemessen, Raum Solar 2462 px Inhalt / 572 px Seite):
+## Die Kopfzeile ist nicht 40 px hoch
+
+Genau hier ist die Messung oben danebengegangen, und der Nutzer musste es mit
+Bildschirmfotos vom Wandtablet nachweisen: **eine feste Obergrenze am Autobild
+war die falsche Antwort, weil die Seitenhöhe gar nicht feststeht.**
+
+Die Attrappe lief mit einer nackten Kopfzeile (40 px) und ergab einen Schirm
+von 572 px. Sein `myViz` hat aber `headerInfo` (drei Chips) **und** `statusBar`
+(vier Chips) – zusammen drei Zeilen, **138 px**. Der Schirm ist damit **487 px**,
+nicht 572. Die Auto-Kachel (504 px) überschoss also nicht um 4 px, sondern um
+59 – Wallbox-Zeile weg, sieben Seiten statt sechs.
+
+Zwei Lehren:
+
+- **Die Sicht-Attribute gehören in die Attrappe, nicht nur die Geräte.**
+  `headerInfo`, `statusBar`, `background`, `hideRooms` – ohne sie misst man ein
+  Dashboard, das es beim Nutzer nicht gibt. Die Werte stehen in
+  `FHEM-Instanz/Main/fhem.cfg` unter `attr myViz`.
+- **Feste Pixelgrenzen sind hier immer verdächtig.** Was auf eine Seite passt,
+  hängt an einer Kopfzeile, die mit jedem Chip und jeder Störungsmeldung wächst.
+  Richtig ist der Deckel gegen `--viz-vh − --viz-header-h − --viz-tv-pad-y`,
+  also gegen die *gemessene* Kopfhöhe.
+
+Seit v0.37.17 gilt darum im TV `max-height` in genau dieser Rechnung für jede
+Hero-Kachel. **Der Deckel allein reicht nicht** – derselbe Stolperstein wie bei
+`hero full`: das Widget setzt seine `.card` auf `height: 100%`, und Prozent auf
+eine Höhe `auto` ist wieder `auto`. Die Karte blieb 504 px hoch und ragte
+einfach aus dem 431 px hohen Host heraus (nachgemessen: Host 431, Karte 504).
+Erst `display: grid` + `grid-template-rows: minmax(0, 1fr)` gibt der Karte eine
+**bestimmte** Höhe, die unter die Inhaltshöhe darf. Grid statt Flex, weil ein
+Grid-Item auch in der Breite streckt; die Karte liegt im Shadow-DOM und ist von
+außen nicht ansprechbar.
+
+Damit dabei der Inhalt stehenbleibt und nicht abgeschnitten wird, braucht die
+Kachel ein **nachgiebiges Stück**: `car` markiert sein Bild mit
+`flex: 0 1 auto; min-height: 0` (ohne das `min-height` verweigert Flexbox einem
+Bild das Schrumpfen). Das Bild ging von 200 auf 143 px, `scrollHeight` 429 bei
+431 px Karte – nichts fällt weg. Eine Hero-Kachel **ohne** so ein Stück wird vom
+Deckel beschnitten; das ist immer noch besser als heute, wo sie unter der
+Seitenkante verschwindet, aber beim Bauen neuer Hero-Widgets daran denken.
+
+Was **nicht** hilft (jeweils gemessen, Raum Solar, echte Kopfzeile 138 px):
 
 | Versuch | Seiten |
 |---|---|
 | ein `vizHero` weniger – egal welches | 6 → 6, die Höhe wandert nur nach unten |
 | Band im TV dreispaltig (min 280 px) | 6 → 5, aber mySolvis kürzt seine Beschriftungen ab |
 | eigene Höhen allein | 6 → 6, nur das Loch verschwindet |
+| kleineres Wettersymbol (`icon=…:10rem` → 4rem) | 7 → 7, Kopf bleibt 138 – die Höhe machen die **Chip-Zeilen**, das Symbol liegt daneben |
 
 Bei `width=1000` passen wegen `minmax(min(100%, 320px), 1fr)` genau **zwei**
 Hero-Kacheln nebeneinander. Drei `vizHero` in einem Raum ergeben damit zwangs-
