@@ -223,6 +223,16 @@ einem breiten Fenster (1850×820) wurde die `watertank`-Kachel 926 px hoch bei
   aufgefallen, weil die A/B-Messung (Änderung stashen, erneut messen) beide
   Modi mitnimmt.
 
+**Auf dem Handy gibt es kein Vollbild.** Im Skin `zeilen` ist die Seite eine
+durchgehende Liste; eine Kachel über den ganzen Schirm kostet dort die halbe
+Liste, und gescrollt wird ohnehin. Seit v0.37.18 zählt `full` unter diesem Skin
+darum wie `1` (gemessen 420×900: `watertank` 770 → 284 px, `mealplan` 770 →
+600 px). Die Entscheidung sitzt in `layout.js` an **einer** Stelle – der
+Variablen `heroFull`, aus der Bandklasse, `data-hero` und `data-size` folgen –
+und **nicht** in `isHeroFull()`: das liest weiter nur das Attribut, damit der
+Dreifach-Schalter im Bearbeiten-Modus den echten Wert zeigt und dasselbe Gerät
+auf dem Wandtablet Vollbild bleibt.
+
 Kacheln, die ihre Höhe selbst ausrechnen, überlaufen sonst:
 `watertank` leitet die SVG-Höhe aus der Breite ab (viewBox 220:108),
 `mealplan` hat sieben feste Zeilen. Widgets erkennen den Vollbild-Fall am

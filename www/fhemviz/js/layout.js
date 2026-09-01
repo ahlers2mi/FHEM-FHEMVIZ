@@ -813,7 +813,15 @@ export function renderLayout(root, store, client, opts = {}) {
     // Mindestens ein "full"-Blickfang: das Band fuellt die Flaeche (eine
     // Spalte, Kachel auf volle Hoehe gestreckt) und der Raum wird markiert,
     // damit die Gruppen im TV-Modus wegfallen.
-    const heroFull = heroDevs.some(isHeroFull);
+    // Ausnahme Handy-Skin: "zeilen" ist eine durchgehende Liste, und eine
+    // Kachel, die den ganzen Schirm nimmt, kostet dort die halbe Liste -
+    // gescrollt wird auf dem Handy ohnehin. "full" zaehlt hier also wie "1".
+    // Das ATTRIBUT bleibt unangetastet: dasselbe Geraet ist auf dem
+    // Wandtablet weiter Vollbild, und der Schalter im Editiermodus zeigt
+    // weiter den echten Wert (der liest isHeroFull direkt).
+    const heroFull =
+      document.documentElement.dataset.vizskin !== "zeilen" &&
+      heroDevs.some(isHeroFull);
     if (heroFull) roomEl.classList.add("hero-full");
     if (heroDevs.length) {
       const band = document.createElement("div");

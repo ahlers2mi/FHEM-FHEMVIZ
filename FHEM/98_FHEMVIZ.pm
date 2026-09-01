@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.17
+# Version:  v0.37.18
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.17";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.18";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -375,7 +375,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.17"),
+            FHEMVIZ_jsonStr("v0.37.18"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1061,7 +1061,13 @@ sub FHEMVIZ_Attr {
         (<code>watertank</code> leitet die Höhe der Zeichnung aus der Breite
         ab) wuchsen in einem breiten <b>Browserfenster</b> sonst über den
         Schirm hinaus; jetzt wird die Zeichnung kleiner und mittig gestellt
-        statt die Seite zu verlängern.
+        statt die Seite zu verlängern.<br>
+        <b>Im Handy-Skin <code>zeilen</code> wirkt <code>full</code> wie
+        <code>1</code></b> (ab v0.37.18): dort ist die Seite eine
+        durchgehende Liste, und eine Kachel über den ganzen Schirm kostet
+        die halbe Liste — gescrollt wird auf dem Handy ohnehin. Das Attribut
+        bleibt unverändert, dieselbe Kachel ist auf dem Wandtablet weiter
+        Vollbild.
         Beispiel:<br>
         <code>attr bewaesserung vizHero full</code></li>
     <li><a id="FHEMVIZ-attr-vizHide"></a><b>vizHide</b> 1|0<br>
