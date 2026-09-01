@@ -314,6 +314,14 @@ html[data-vizsnap="gruppe"][data-vizzoom]:not([data-vizmode="tv"]) body {
    * da .card overflow:hidden hat). */
   align-items: start;
 }
+/* Jede Hero-Kachel behaelt IHRE Hoehe. Das align-items:start oben allein
+ * reicht dafuer nicht: jedes Widget bringt aus base-widget.js ein
+ * ":host { height: 100% }" mit, und eine Prozenthoehe an einem Grid-Element
+ * rechnet gegen die ZEILE - die ist so hoch wie die hoechste Kachel. Gemessen
+ * im Raum Solar (TV, width 1000): die Auto-Kachel ist 534 px hoch, mySolvis
+ * braucht 300 - und bekam trotzdem 534, also 234 px Loch unter dem letzten
+ * Wert. Nur fuer das normale Band; "full" streckt absichtlich (Regel unten). */
+.viz-hero:not(.full) > * { height: auto; align-self: start; }
 .viz-hero > * {
   min-height: 104px;
   border-radius: var(--viz-radius);
