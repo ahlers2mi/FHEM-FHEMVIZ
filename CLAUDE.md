@@ -228,6 +228,49 @@ Kacheln, die ihre Höhe selbst ausrechnen, überlaufen sonst:
 `mealplan` hat sieben feste Zeilen. Widgets erkennen den Vollbild-Fall am
 Attribut `data-hero="full"` und dürfen darauf reagieren.
 
+## Eine ausreißende Kachel zieht die Nachbarin mit
+
+Im Hero-Band steht `align-items: start` mit dem Kommentar „die Kachel wächst mit
+dem Inhalt". **Das stimmte nicht.** Jedes Widget bringt aus `base-widget.js` ein
+`:host { height: 100% }` mit, und eine Prozenthöhe an einem Grid-Element rechnet
+gegen die **Zeile** – und die ist so hoch wie die höchste Kachel darin. Die
+Absicht der Regel war damit von einer Zeile im Widget-Grundgerüst ausgehebelt.
+
+Gemessen im Raum Solar (TV, `width=1000`, Schirm 1280×800): die Auto-Kachel ist
+534 px hoch (Bild 230 + acht Zeilen), mySolvis braucht 300 – und bekam trotzdem
+534. 234 px Loch unter dem letzten Wert. Der Nutzer beschrieb es als „wenn eine
+Kachel ausreißt, passt das ganze Bild nicht mehr".
+
+Behoben mit `.viz-hero:not(.full) > * { height: auto; align-self: start; }`. Das
+`:not(.full)` ist Pflicht: `vizHero full` streckt **absichtlich** auf die
+Schirmhöhe.
+
+**Vier Pixel kosten eine ganze Seite.** Das Auto-Paging bricht an Kachelzeilen
+(`computePageOffsets`), eine Zeile bekommt also entweder ganz oder gar nicht
+Platz. Zeile 1 des Bandes endete bei 576 px bei 572 px Schirm – die Auto-Karte
+wurde unten angeschnitten *und* die zweite Bandzeile bekam eine eigene, halb
+leere Seite. Das TV-Autobild von 230 auf 200 px zu nehmen genügte.
+
+Was **nicht** hilft (jeweils gemessen, Raum Solar 2462 px Inhalt / 572 px Seite):
+
+| Versuch | Seiten |
+|---|---|
+| ein `vizHero` weniger – egal welches | 6 → 6, die Höhe wandert nur nach unten |
+| Band im TV dreispaltig (min 280 px) | 6 → 5, aber mySolvis kürzt seine Beschriftungen ab |
+| eigene Höhen allein | 6 → 6, nur das Loch verschwindet |
+
+Bei `width=1000` passen wegen `minmax(min(100%, 320px), 1fr)` genau **zwei**
+Hero-Kacheln nebeneinander. Drei `vizHero` in einem Raum ergeben damit zwangs-
+läufig zwei Bandzeilen, also mindestens zwei Seiten allein für das Band.
+
+Messrezept: das Auto-Paging **anhalten**, sonst scrollt der Karussell-Timer
+gegen die Messung und jede Seite zeigt etwas anderes
+(`page.evaluate(() => { const m = setTimeout(()=>{},0);
+for (let i=1; i<=m; i++) { clearTimeout(i); clearInterval(i); } })`). Danach die
+Seiten-Offsets wie `computePageOffsets` nachrechnen und je Offset ein
+Bildschirmfoto – erst der Kontaktabzug aller Seiten zeigt, was der Nutzer
+tatsächlich durchblättert.
+
 ## Der Viewport ist Zustand, kein Startwert
 
 Der TV-Modus rechnet seinen Skalierungsfaktor aus `window.innerWidth`. Die hängt
