@@ -415,6 +415,17 @@ der Kopfkante gegen `header.bottom` messen. Der Vergleich Variable ↔ echt ist
 die schnellste Prüfung: stimmen die zwei Zahlen nicht, ist alles darunter
 falsch, was mit der Kopfhöhe rechnet (Snap, TV-Fläche, Hero-Deckel).
 
+**Zweiter Schritt, gleicher Fehlerbericht („snappt etwas zu hoch"):** die
+Kachel stand danach korrekt bei Kopf + 8 px – aber die **Gruppenüberschrift
+darüber** lag unter der Kopfzeile (h3 137–148 bei Kopfkante 142, auf dem Handy
+„ALLGEMEIN" halb verdeckt). Snap-Ziel ist `.viz-grid > *`, die Überschrift
+gehört nicht dazu. Seit v0.37.21 setzt `layout.js` der **ersten Kachel jeder
+Gruppe** ein `scroll-margin-top` in Höhe von h3 (+ Rand) und, beim ersten
+Block eines Raums, zusätzlich des h2 – **gemessen**, nicht geschätzt, weil die
+Höhen je Skin verschieden sind (zeilen 13 px, bento 23 px). Nachgemessen:
+h3 bei 150 (= Kopf + 8), Kachel bei 163, verdeckt 0. Merksatz: **wer an eine
+Kante rastet, muss wissen, was über der Kante noch dazugehört.**
+
 ## Der Viewport ist Zustand, kein Startwert
 
 Der TV-Modus rechnet seinen Skalierungsfaktor aus `window.innerWidth`. Die hängt
