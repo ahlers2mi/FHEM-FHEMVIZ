@@ -493,8 +493,15 @@ html[data-vizmode="tv"] .viz-room { margin-bottom: 0; }
 html[data-vizmode="tv"] .viz-room > h2 { font-size: 1.2rem; text-align: center; }
 html[data-vizmode="tv"] #viz-header { padding: 14px 34px; }
 
-/* Event-Uebernahme: dezenter roter Rahmen um den gesamten Schirm */
-body.viz-alert::after {
+/* Event-Uebernahme (set <viz> scene): dezenter roter Rahmen um den Schirm.
+ * Am HTML-Element, nicht am body - body::after ist schon vergeben: mit
+ * attr background liegt dort die Abdunklungsebene (viz-has-bg, z-index -1,
+ * opacity 0.45). Stand der Rahmen ebenfalls an body::after, VERSCHMOLZEN
+ * beide Regeln: die Ebene behielt Farbe und Deckkraft, bekam aber den
+ * z-index 99 des Rahmens - und lag damit VOR dem Inhalt. Die Seite wurde bei
+ * jedem Event um ein Drittel dunkler (Kachelhelligkeit 42,6 -> 28,8), ohne
+ * Hintergrundbild fiel es nie auf. */
+html.viz-alert::after {
   content: ""; position: fixed; inset: 0; z-index: 99;
   border: 3px solid var(--viz-error); pointer-events: none;
 }

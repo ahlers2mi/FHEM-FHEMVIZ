@@ -715,7 +715,7 @@ class TvController {
     // Kopfleiste zurueckholen, sonst fehlen headerInfo/statusBar in der
     // Tablet-Ansicht, bis die Rotation wieder eine Seite zeigt.
     this._leaveClockPage();
-    document.body.classList.remove("viz-alert");
+    document.documentElement.classList.remove("viz-alert");
     el("viz-clock").hidden = true;
     el("viz-progress").hidden = true;
     el("viz-scene").hidden = true;
@@ -940,14 +940,14 @@ class TvController {
     // geloescht): dunkler Schirm mit rotem Rahmen, bis jemand die Seite neu
     // laedt. Genau so ist es am Wandtablet aufgetreten.
     this.eventTimer = setTimeout(() => {
-      document.body.classList.remove("viz-alert");
+      document.documentElement.classList.remove("viz-alert");
       // Nach dem Event zurueck: zur gepinnten Seite oder in die Rotation.
       if (this.pinned) this._showPinned();
       else this._show(this.scenes[this.idx]);
     }, Math.max(1, Number(sec) || 1) * 1000);
 
     this._leaveClockPage();
-    document.body.classList.add("viz-alert");
+    document.documentElement.classList.add("viz-alert");
     try {
       this._render(resolved);
       this._page(sec, sceneLabel(resolved) + " · Event");
@@ -988,7 +988,7 @@ class TvController {
     if (!this.active) return;
     clearTimeout(this.timer);
     clearTimeout(this.eventTimer);
-    document.body.classList.remove("viz-alert");
+    document.documentElement.classList.remove("viz-alert");
     this._showPinned();
   }
 
