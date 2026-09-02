@@ -315,6 +315,53 @@ Bei `width=1000` passen wegen `minmax(min(100%, 320px), 1fr)` genau **zwei**
 Hero-Kacheln nebeneinander. Drei `vizHero` in einem Raum ergeben damit zwangs-
 läufig zwei Bandzeilen, also mindestens zwei Seiten allein für das Band.
 
+## Der Pager maß, bevor das Bild da war
+
+„Scrollen tust du nicht genug": Seite 2 begann mitten in der Auto-Kachel, und
+zwar auf **jeder** Seite um dieselben 127 px zu hoch. `_page()` rechnete die
+Offsets **einmal**, synchron direkt nach `_render()` – da ist ein `<img>` ohne
+feste Höhe noch 0 px hoch. Kommt das Bild (auch aus dem Cache, das ist trotzdem
+asynchron), rückt alles darunter um die Bildhöhe nach unten, die Offsets stimmen
+nicht mehr. Gemessen: ohne Bild `[0, 346, 796, …]`, mit Bild `[0, 473, 923, …]`.
+
+Seit v0.37.19 misst `_page()` **beim Blättern frisch** (`computePageOffsets`
+im Timer statt vorab) und prüft eine Sekunde nach dem Zeichnen die Seitenzahl
+noch einmal; hat sie sich geändert, wird mit der Restzeit neu geplant.
+Messrezept dafür: `pager.js` im Scratchpad – Szene mit bekannter Dauer
+(`tvScenes Solar:12`), Fahrzeugbild im Mock um 0/500/1500 ms verzögern und
+`scrollTop` zu festen Zeitpunkten gegen die Soll-Offsets halten. Der alte Code
+lag **auch bei 0 ms Verzögerung** daneben – das Bild ist beim Messen schlicht
+nie da.
+
+## Zwei Regeln, ein Pseudo-Element: die Seite wurde bei jedem Event dunkler
+
+Der **rote Rahmen** um den ganzen Schirm ist die Markierung einer
+Event-Übernahme (`set <viz> scene <Raum> <sek>`; in der Kopfzeile steht dann
+„· Event"). Am 02.09. kam er von `set d_tablet_esszimmer web Weather` →
+`set myViz scene Wetter 60`. Der Nutzer meldete „der rote Rahmen ist wieder da"
+– gemeint war aber, wie sich beim Nachfragen zeigte, **dass die Seite dabei
+dunkler wird**. Erst die zweite Frage hat das Symptom richtig benannt; ich
+hatte den Rahmen erklärt und den Fehler übersehen.
+
+Ursache: der Rahmen stand an `body.viz-alert::after`, die Abdunklung des
+Hintergrundbilds (`attr background`) an `body.viz-has-bg::after` – **dasselbe**
+Pseudo-Element. Zwei Regeln auf einem Pseudo-Element verschmelzen: die Ebene
+behielt `background` und `opacity 0.45` der Abdunklung, bekam aber den
+`z-index 99` des Rahmens und lag damit **vor** dem Inhalt. Gemessen an einer
+Kachel: Helligkeit 42,6 → 28,8. Ohne Hintergrundbild fiel es nie auf, darum
+war es in der Attrappe so lange unsichtbar (siehe „Sicht-Attribute gehören in
+die Attrappe").
+
+Seit v0.37.19 hängt der Rahmen an `html.viz-alert::after`, die Klasse steht
+am `documentElement`. Nachgemessen: `body::after` bleibt bei `z-index -1`,
+Helligkeit im Event unverändert 42,6. Merksatz: **`::before`/`::after` eines
+Elements sind zwei Slots, keine Liste** – wer eine zweite Ebene braucht,
+nimmt ein anderes Element.
+
+Der Fehlerfall von v0.37.14 („Rahmen **und** dunkler Schirm **und** Rotation
+steht") hatte also zwei Ursachen: die stehende Rotation (damals behoben) und
+diese Abdunklung, die ich damals für die Folge der stehenden Rotation hielt.
+
 Messrezept: das Auto-Paging **anhalten**, sonst scrollt der Karussell-Timer
 gegen die Messung und jede Seite zeigt etwas anderes
 (`page.evaluate(() => { const m = setTimeout(()=>{},0);
