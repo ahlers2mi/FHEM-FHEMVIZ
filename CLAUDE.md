@@ -315,6 +315,33 @@ Bei `width=1000` passen wegen `minmax(min(100%, 320px), 1fr)` genau **zwei**
 Hero-Kacheln nebeneinander. Drei `vizHero` in einem Raum ergeben damit zwangs-
 läufig zwei Bandzeilen, also mindestens zwei Seiten allein für das Band.
 
+## Der Pager maß, bevor das Bild da war
+
+„Scrollen tust du nicht genug": Seite 2 begann mitten in der Auto-Kachel, und
+zwar auf **jeder** Seite um dieselben 127 px zu hoch. `_page()` rechnete die
+Offsets **einmal**, synchron direkt nach `_render()` – da ist ein `<img>` ohne
+feste Höhe noch 0 px hoch. Kommt das Bild (auch aus dem Cache, das ist trotzdem
+asynchron), rückt alles darunter um die Bildhöhe nach unten, die Offsets stimmen
+nicht mehr. Gemessen: ohne Bild `[0, 346, 796, …]`, mit Bild `[0, 473, 923, …]`.
+
+Seit v0.37.19 misst `_page()` **beim Blättern frisch** (`computePageOffsets`
+im Timer statt vorab) und prüft eine Sekunde nach dem Zeichnen die Seitenzahl
+noch einmal; hat sie sich geändert, wird mit der Restzeit neu geplant.
+Messrezept dafür: `pager.js` im Scratchpad – Szene mit bekannter Dauer
+(`tvScenes Solar:12`), Fahrzeugbild im Mock um 0/500/1500 ms verzögern und
+`scrollTop` zu festen Zeitpunkten gegen die Soll-Offsets halten. Der alte Code
+lag **auch bei 0 ms Verzögerung** daneben – das Bild ist beim Messen schlicht
+nie da.
+
+Nicht verwechseln: der **rote Rahmen** um den ganzen Schirm ist kein Fehler,
+sondern die Markierung einer Event-Übernahme (`set <viz> scene <Raum> <sek>`,
+`body.viz-alert::after`; in der Kopfzeile steht dann „· Event"). Am 02.09.
+kam er von `set d_tablet_esszimmer web Weather` → `set myViz scene Wetter 60`.
+Der Fehlerfall von v0.37.14 war „Rahmen **und** dunkler Schirm **und** Rotation
+steht" – der Rahmen allein mit laufender Seite ist Absicht. Der Nutzer liest
+Rot trotzdem als Störung; ob die Markierung anders aussehen soll, ist seine
+Entscheidung.
+
 Messrezept: das Auto-Paging **anhalten**, sonst scrollt der Karussell-Timer
 gegen die Messung und jede Seite zeigt etwas anderes
 (`page.evaluate(() => { const m = setTimeout(()=>{},0);

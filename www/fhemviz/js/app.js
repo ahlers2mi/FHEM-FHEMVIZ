@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.37.18";
+const SPA_VERSION = "v0.37.19";
 
 const el = (id) => document.getElementById(id);
 
@@ -779,36 +779,67 @@ class TvController {
     this.pageTimers.forEach(clearTimeout);
     this.pageTimers = [];
     this.root.scrollTop = 0;
-
-    const pages = computePageOffsets(this.root);
-    if (pages.length <= 1) {
-      el("viz-scene").textContent = labelBase;
-      return;
-    }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el("viz-scene").textContent = `${labelBase} · 1/${pages.length}`;
 
-    // Dauer je Seite. Normalerweise gleichmaessig - eine Vollbild-Kachel
-    // (vizHero full) belegt aber Seite 1 allein, und die soll man laenger
-    // sehen als die Kachelseiten danach. attr tvHeroSec legt fest, wie viele
-    // Sekunden der Szenenzeit auf sie fallen; der Rest teilt sich den Rest.
-    // Ohne das Attribut bleibt es bei der Gleichverteilung wie bisher.
-    const heroSec = this._heroSec(sec, pages.length);
-    const dauer = heroSec
-      ? [heroSec, ...Array(pages.length - 1).fill((sec - heroSec) / (pages.length - 1))]
-      : Array(pages.length).fill(sec / pages.length);
+    // Die Seiten-Offsets werden NICHT vorab festgehalten. Direkt nach dem
+    // Zeichnen sind Bilder (Fahrzeugbild, Kamerabild, Wochenplan-Fotos) noch
+    // nicht geladen, die Kachel ist entsprechend niedriger - und alles
+    // darunter rueckt spaeter nach unten. Ein in diesem Moment gemessener
+    // Offset landet dann mitten in einer Kachel: im Raum Solar lagen alle
+    // Seiten ab der zweiten um 127 px (die Bildhoehe) zu hoch, Seite 2
+    // begann in der Mitte der Auto-Kachel. Darum: beim Blaettern frisch
+    // messen und die Seitenzahl kurz nach dem Zeichnen noch einmal pruefen.
+    const blaettern = (i, gesamt) => {
+      const frisch = computePageOffsets(this.root);
+      const top = frisch[Math.min(i, frisch.length - 1)];
+      if (reduce) this.root.scrollTop = top;
+      else this._smoothScroll(top, 1600); // sanft ueber 1,6 s blaettern
+      el("viz-scene").textContent = `${labelBase} · ${i + 1}/${gesamt}`;
+    };
 
-    let t = 0;
-    pages.slice(1).forEach((top, i) => {
-      t += dauer[i] * 1000;
+    const planen = (rest, ab) => {
+      this.pageTimers.forEach(clearTimeout);
+      this.pageTimers = [];
+      const pages = computePageOffsets(this.root);
+      if (pages.length <= 1) {
+        el("viz-scene").textContent = labelBase;
+        return pages.length;
+      }
+      el("viz-scene").textContent = `${labelBase} · 1/${pages.length}`;
+
+      // Dauer je Seite. Normalerweise gleichmaessig - eine Vollbild-Kachel
+      // (vizHero full) belegt aber Seite 1 allein, und die soll man laenger
+      // sehen als die Kachelseiten danach. attr tvHeroSec legt fest, wie
+      // viele Sekunden der Szenenzeit auf sie fallen; der Rest teilt sich den
+      // Rest. Ohne das Attribut bleibt es bei der Gleichverteilung.
+      const heroSec = this._heroSec(rest, pages.length);
+      const dauer = heroSec
+        ? [heroSec, ...Array(pages.length - 1).fill((rest - heroSec) / (pages.length - 1))]
+        : Array(pages.length).fill(rest / pages.length);
+
+      // "ab" ist die schon verstrichene Zeit (beim Nachplanen): die Timer
+      // laufen relativ zu jetzt, die Seitenzeiten relativ zum Szenenstart.
+      let t = -ab;
+      for (let i = 1; i < pages.length; i++) {
+        t += dauer[i - 1] * 1000;
+        if (t <= 0) continue;
+        this.pageTimers.push(setTimeout(() => blaettern(i, pages.length), t));
+      }
+      return pages.length;
+    };
+
+    const erst = planen(sec, 0);
+    // Nach einer Sekunde sind die Bilder da (aus dem Cache sofort, ueber das
+    // Netz fast immer). Hat sich die Seitenzahl geaendert, neu planen - mit
+    // der Restzeit, damit die Szene insgesamt nicht laenger dauert.
+    const NACHMESSEN = 1000;
+    if (sec * 1000 > NACHMESSEN * 2) {
       this.pageTimers.push(
         setTimeout(() => {
-          if (reduce) this.root.scrollTop = top;
-          else this._smoothScroll(top, 1600); // sanft ueber 1,6 s blaettern
-          el("viz-scene").textContent = `${labelBase} · ${i + 2}/${pages.length}`;
-        }, t)
+          if (computePageOffsets(this.root).length !== erst) planen(sec, NACHMESSEN / 1000);
+        }, NACHMESSEN)
       );
-    });
+    }
   }
 
   /**
