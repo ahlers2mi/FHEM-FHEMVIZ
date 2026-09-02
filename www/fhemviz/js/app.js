@@ -1865,6 +1865,18 @@ async function main() {
     // Modus, wo kein TvController laeuft) und bei Groessenaenderung nachziehen.
     measureViewport();
     window.addEventListener("resize", measureViewport);
+    // Die Kopfzeile aendert ihre Hoehe OHNE resize: headerInfo- und
+    // statusBar-Chips kommen erst mit den Geraetedaten, die Statuszeile wird
+    // laenger ("17 Geraet(e) · Zoom 0.9 · v…") und schiebt auf dem Handy die
+    // Uhr in eine eigene Zeile, vizAlert blendet eine Zeile ein und aus.
+    // Gemessen auf dem Handy (412 px, zeilen, zoom 0.9): --viz-header-h 115,
+    // Kopfzeile echt 142 - die Kacheln rasteten beim Scrollen 19 px UNTER der
+    // Kopfkante ein (scroll-padding-top haengt an dieser Variablen). Darum
+    // die Kopfzeile selbst beobachten, nicht das Fenster.
+    if (window.ResizeObserver) {
+      const kopf = el("viz-header");
+      if (kopf) new ResizeObserver(() => measureViewport()).observe(kopf);
+    }
 
     // On-Screen-Diagnose fuer Geraete ohne DevTools: ?debug=1
     if (params.get("debug")) setupDebug();

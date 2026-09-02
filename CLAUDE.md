@@ -394,6 +394,27 @@ Und einmal mehr: der Fehler war nur auf der Vollbild-Kachel sichtbar, die
 Attrappe hatte ihn (`herofull.js`) – gemessen wurde dort aber nur die Höhe,
 nicht der Inhalt der Zeilen. **Ein Bild anschauen kostet zehn Sekunden.**
 
+## Die Kopfhöhe ist Zustand, kein Startwert (Handy-Snap)
+
+`scroll-padding-top` für das Einrasten hängt an `--viz-header-h`. Die wurde
+**einmal** beim Start gemessen und danach nur bei `resize` – aber die Kopfzeile
+wächst ohne `resize`: headerInfo- und statusBar-Chips kommen erst mit den
+Gerätedaten, die Statuszeile wird länger („17 Gerät(e) · Zoom 0.9 · v…") und
+schiebt auf dem Handy die Uhr in eine eigene Zeile, `vizAlert` blendet eine
+Zeile ein und aus. Gemessen (412 px, `zeilen`, `zoom 0.9`): Variable **115**,
+Kopfzeile echt **142** – die Kacheln rasteten **19 px unter** der Kopfkante
+ein. Der Nutzer: „der Umbruch kommt, weil die Kopfzeile zu lang ist, dann
+rasten die Kacheln zu hoch ein – nur auf dem Handy."
+
+Seit v0.37.20 beobachtet ein `ResizeObserver` die Kopfzeile selbst und ruft
+`measureViewport()` – nicht das Fenster, die Kopfzeile. Nachgemessen: Variable
+142 = echt 142, Kacheln rasten bei 150 (Kopf + 8 px) ein, keine angeschnitten.
+Messrezept: `handy-snap.js` im Scratchpad – nach dem Laden Variable gegen
+`offsetHeight` halten, dann `mouse.wheel`, 900 ms warten, erste Kachel unter
+der Kopfkante gegen `header.bottom` messen. Der Vergleich Variable ↔ echt ist
+die schnellste Prüfung: stimmen die zwei Zahlen nicht, ist alles darunter
+falsch, was mit der Kopfhöhe rechnet (Snap, TV-Fläche, Hero-Deckel).
+
 ## Der Viewport ist Zustand, kein Startwert
 
 Der TV-Modus rechnet seinen Skalierungsfaktor aus `window.innerWidth`. Die hängt
