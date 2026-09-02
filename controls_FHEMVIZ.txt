@@ -1,4 +1,4 @@
-UPD 2026-09-02_05:01:57 95796 FHEM/98_FHEMVIZ.pm
+UPD 2026-09-02_05:46:10 95796 FHEM/98_FHEMVIZ.pm
 UPD 2026-07-26_16:02:19 203778 www/fhemviz/backgrounds/cubes.png
 UPD 2026-09-02_05:34:36 33280 www/fhemviz/css/fhemviz.css
 UPD 2026-08-28_09:21:27 4117 www/fhemviz/css/skin-bento.css
@@ -14,7 +14,7 @@ UPD 2026-08-29_19:13:00 359945 www/fhemviz/img/car/tesla-frei.png
 UPD 2026-08-29_19:13:00 329024 www/fhemviz/img/car/tesla-laedt.png
 UPD 2026-08-29_19:13:00 321870 www/fhemviz/img/car/tesla-steckt.png
 UPD 2026-08-06_06:22:02 2169 www/fhemviz/index.html
-UPD 2026-09-02_05:34:36 77736 www/fhemviz/js/app.js
+UPD 2026-09-02_06:50:07 78482 www/fhemviz/js/app.js
 UPD 2026-08-16_18:23:01 8110 www/fhemviz/js/fhem-client.js
 UPD 2026-09-01_20:23:07 42523 www/fhemviz/js/layout.js
 UPD 2026-08-03_15:34:35 5715 www/fhemviz/js/store.js
@@ -43,6 +43,6 @@ UPD 2026-07-23_08:06:59 4754 www/fhemviz/js/widgets/text.js
 UPD 2026-08-02_09:02:12 4267 www/fhemviz/js/widgets/vent.js
 UPD 2026-08-02_09:02:12 6611 www/fhemviz/js/widgets/ventgroup.js
 UPD 2026-07-23_06:10:25 7658 www/fhemviz/js/widgets/watering.js
-UPD 2026-08-28_05:43:35 24622 www/fhemviz/js/widgets/watertank.js
+UPD 2026-09-02_05:46:10 25406 www/fhemviz/js/widgets/watertank.js
 UPD 2026-07-21_17:49:51 6596 www/fhemviz/js/widgets/weather.js
 UPD 2026-08-15_08:23:06 605 www/fhemviz/manifest.webmanifest
