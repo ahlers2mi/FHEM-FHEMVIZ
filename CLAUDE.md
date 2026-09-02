@@ -370,6 +370,30 @@ Seiten-Offsets wie `computePageOffsets` nachrechnen und je Offset ein
 Bildschirmfoto – erst der Kontaktabzug aller Seiten zeigt, was der Nutzer
 tatsächlich durchblättert.
 
+## `auto-fill` ist nicht `auto-fit`
+
+Die Zahlenzeile der `watertank`-Kachel bekam in v0.37.12 zwei Werte dazu und
+dafür `repeat(auto-fill, minmax(62px, 1fr))`. Auf der 2x2-Kachel sah das
+richtig aus – auf der **Vollbild-Kachel** (1696 px breit) legte `auto-fill`
+**25 Spuren** an, die fünf Zahlen saßen in den ersten fünf zu je 62 px, die
+Beschriftung brach um („heute / geerntet"), der Rest der Zeile blieb leer.
+Der Nutzer: „zusammengerutscht und super klein, das war vor 5,6 Releases
+noch nicht so."
+
+`auto-fill` behält leere Spuren, `auto-fit` lässt sie zusammenfallen und die
+vorhandenen Elemente strecken – mit `auto-fit` sind es 334 px je Zahl.
+**Faustregel:** wer eine Zeile „nach Platz" packen will und dabei die Elemente
+über die Breite verteilt haben möchte, braucht `auto-fit`; `auto-fill` ist nur
+richtig, wenn die Elemente ihre Mindestbreite behalten sollen (Symbolraster).
+
+Dazu seit v0.37.20 größere Zahlen auf der Vollbild-Kachel
+(`:host([data-hero="full"])`, 1,6 rem statt 0,95): die Zeichnung darüber ist
+650 px hoch, 17-px-Zahlen wirken daneben verloren. Gilt im Browser wie im TV.
+
+Und einmal mehr: der Fehler war nur auf der Vollbild-Kachel sichtbar, die
+Attrappe hatte ihn (`herofull.js`) – gemessen wurde dort aber nur die Höhe,
+nicht der Inhalt der Zeilen. **Ein Bild anschauen kostet zehn Sekunden.**
+
 ## Der Viewport ist Zustand, kein Startwert
 
 Der TV-Modus rechnet seinen Skalierungsfaktor aus `window.innerWidth`. Die hängt

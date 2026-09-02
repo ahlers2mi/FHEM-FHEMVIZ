@@ -499,10 +499,16 @@ export class FhemvizWatertank extends FhemvizWidget {
         }
 
         /* Nicht mehr fest dreispaltig: mit Bodenfeuchte und "zuletzt gegossen"
-           sind es bis zu fuenf Zahlen. auto-fill packt sie nach Platz - auf der
-           2x2-Kachel in eine Zeile, auf schmalen Sichten in zwei. */
+           sind es bis zu fuenf Zahlen; sie packen nach Platz - auf der
+           2x2-Kachel in eine Zeile, auf schmalen Sichten in zwei.
+           auto-FIT, nicht auto-fill: auto-fill legt so viele Spuren an, wie in
+           die Breite passen, und laesst die leeren stehen. Auf der 1696 px
+           breiten Vollbild-Kachel waren das 25 Spuren, die fuenf Zahlen sassen
+           in den ersten fuenf zu je 62 px, die Beschriftung brach um. auto-fit
+           laesst leere Spuren zusammenfallen, die Zahlen teilen sich die
+           Breite (gemessen 334 px je Zahl). */
         .wt-figs {
-          display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+          display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr));
           gap: 4px 6px;
           border-top: 1px solid var(--viz-border); padding-top: 8px; margin-top: auto;
         }
@@ -515,6 +521,11 @@ export class FhemvizWatertank extends FhemvizWidget {
         .wt-fig span { font-size: 0.63rem; color: var(--viz-muted); }
         .wt-fig.rain b { color: var(--viz-water-rain); }
         :host([data-size="2x2"]) .wt-fig b { font-size: 1.05rem; }
+        /* Vollbild-Kachel (vizHero full, Browser wie TV): die Zeichnung darueber
+           ist 650 px hoch, daneben wirken 17-px-Zahlen verloren. */
+        :host([data-hero="full"]) .wt-fig b { font-size: 1.6rem; }
+        :host([data-hero="full"]) .wt-fig b .u { font-size: 0.9rem; }
+        :host([data-hero="full"]) .wt-fig span { font-size: 0.85rem; }
 
         .wt-alarm {
           display: flex; align-items: center; gap: 7px;
