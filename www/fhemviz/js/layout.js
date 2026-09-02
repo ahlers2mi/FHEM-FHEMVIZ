@@ -1013,6 +1013,33 @@ export function renderLayout(root, store, client, opts = {}) {
     });
   }
 
+  // Rastendes Scrollen (snap kachel): Snap-Ziel ist die Kachel, nicht die
+  // Ueberschrift darueber. Rastet die ERSTE Kachel einer Gruppe ein, steht
+  // sie Kopf + 8 px hoch - und ihr h3 (und beim ersten Block eines Raums das
+  // h2) liegt UNTER der klebenden Kopfzeile. Auf dem Handy war "ALLGEMEIN"
+  // halb verdeckt (gemessen: h3 137-148 bei Kopfkante 142). scroll-margin-top
+  // in Hoehe der Ueberschrift(en) schiebt den Snap-Punkt nach oben, die
+  // Ueberschrift kommt mit. Gemessen statt geschaetzt, weil die Hoehen je
+  // Skin anders sind (zeilen 13 px, bento 23 px).
+  for (const grid of root.querySelectorAll(".viz-grid")) {
+    const first = grid.firstElementChild;
+    if (!first) continue;
+    let oben = 0;
+    const h3 = grid.previousElementSibling;
+    if (h3 && h3.tagName === "H3") {
+      oben += h3.offsetHeight + parseFloat(getComputedStyle(h3).marginBottom || 0);
+    }
+    const groupEl = grid.parentElement;
+    const wrap = groupEl && groupEl.parentElement;
+    if (wrap && groupEl === wrap.firstElementChild) {
+      const h2 = wrap.previousElementSibling;
+      if (h2 && h2.tagName === "H2") {
+        oben += h2.offsetHeight + parseFloat(getComputedStyle(h2).marginBottom || 0);
+      }
+    }
+    first.style.scrollMarginTop = oben ? Math.ceil(oben) + "px" : "";
+  }
+
   // Tab-Leiste ganz am Ende einhaengen (siehe oben): fixed (ohne Zoom)
   // ignoriert die Position ohnehin, sticky (mit Zoom) klebt so korrekt
   // unten statt oben.
