@@ -11,6 +11,38 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.22 — 03.09.2026
+
+**`watertank`: der vierte Weg – von der Pumpe in den Garten**
+
+- **Gartenabgang gezeichnet.** Die Tauchpumpe hatte im Schema nur einen
+  Ausgang (zum IBC). Jetzt geht von ihr eine zweite Leitung nach unten rechts
+  aus dem Bild, mit Regner-Fächer und Beschriftung „Garten". Läuft ein Kreis
+  (`currentValve` gesetzt), leuchtet sie und das Pumpenrad ist an; die übrigen
+  Rohre bleiben dunkel. Anlass: „zeigt das Bewässern eigentlich nichts an?" –
+  bis dahin stand nur „Gießt · Pool" in der Kopfzeile, das Fass rührte sich
+  nicht.
+- **Das Fass sinkt während des Kreises.** Das Modul bucht die Entnahme erst
+  beim Schließen des Ventils; die Kachel rechnet ab dem Zeitstempel von
+  `currentValve` mit `valve<N>Flow_lpm` mit – wie bisher schon bei Pumpe und
+  Schwerkraft. Mit offenem Hahn dieselbe Rechnung wie `MainsDuringDraw` im
+  Modul (v1.0.88): bis zur Schwimmerhöhe leert der Kreis allein, darunter
+  liefert der Hahn nach – zieht der Kreis weniger als der Hahn liefert, bleibt
+  das Fass auf der gestrichelten Linie stehen.
+- **Farbe sagt, was im Garten landet.** Cyan, solange Regenwasser fließt;
+  sobald der Hahn den Kreis trägt, werden Gartenleitung und Fächer graublau,
+  und die Leitungs-Zuleitung links leuchtet mit (vorher galt sie bei Fass auf
+  Höhe als „zu").
+- **Kopfzeile:** `Gießt · Pool · 8,2 l/min · noch 6 min · 1/3` aus
+  `remainingTime` und `cycleProgress`; bei Pause steht „Pause".
+- **Zahlenzeile:** „heute gegossen" aus `watered_today_l` (Modul
+  Gartenbewaesserung ab v1.0.89). Fehlt das Reading, fehlt die Zahl.
+- Neue Rollen in `vizTank`: `valveNum`, `remaining`, `progress`,
+  `wateredToday`.
+
+Nichts am bestehenden Bild verändert – Dach, Regen, Fass, IBC und beide
+Transportwege sind, wie sie waren.
+
 ## Ohne Versionssprung — 29.08.2026
 
 **Geändert**
