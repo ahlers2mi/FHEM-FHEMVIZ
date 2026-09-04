@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Wasservorrat-Widget (v0.37.22).
+ * FHEMVIZ - Wasservorrat-Widget (v0.37.23).
  *
  * Zeichnet die Regenwasseranlage als lebendiges Schema: Dach und Fallrohr,
  * Regenfass mit Schwimmerhoehe, gestapelte IBC, dazwischen Pumpen- und
@@ -250,11 +250,35 @@ export class FhemvizWatertank extends FhemvizWidget {
     // Rohr leuchtet - vier Minuten lang fliesst sichtbar Wasser, das nirgends
     // ankommt. Hier wird deshalb mitgerechnet, bis die echte Buchung kommt.
     // Positiv = vom Fass in den IBC.
+    // moved: was das Fass verlaesst (positiv) bzw. hereinbekommt (negativ).
+    // ibcGain: was im IBC ankommt - beim Pumpen mit offenem Hahn mehr als das
+    // Fass verliert, weil das Schwimmerventil unter der Schwimmerhoehe
+    // nachschiebt. Bis v0.37.22 rechnete die Kachel beide gleich: das Fass war
+    // nach 2,3 Minuten leer gezeichnet, waehrend die Pumpe noch vier Minuten
+    // lief (04.09., 87 l + 142 l Zulauf in 6,3 min).
     let moved = 0;
+    let ibcGain = null;
+    let fillMains = false;
+    let fillMainsRate = null;
     if (filling) {
       const rate = this._rate(map, "fillRate");
       const secs = this._since(this._r(map, "fillStarted"));
-      if (rate > 0 && secs !== null) moved = Math.min((rate * secs) / 60, barrelL ?? 0);
+      if (rate > 0 && secs !== null) {
+        const min = secs / 60;
+        ibcGain = rate * min;
+        moved = Math.min(ibcGain, barrelL ?? 0);
+        const mainsRate = mainsOn ? this._attrNum("mainsFillFlow_lpm") : null;
+        if (mainsRate > 0 && floatL !== null && barrelL !== null) {
+          const above = Math.max(0, barrelL - floatL);
+          const toFloat = above / rate;
+          if (min > toFloat) {
+            fillMains = true;
+            fillMainsRate = mainsRate;
+            const net = Math.max(0, rate - mainsRate);
+            moved = Math.min(barrelL, above + net * (min - toFloat));
+          }
+        }
+      }
     } else if (returning) {
       const rate = this._rate(map, "returnRate");
       const secs = this._since((this.device.times || {})[map.returning] || "");
@@ -297,7 +321,7 @@ export class FhemvizWatertank extends FhemvizWidget {
     const clamp = (v, cap) =>
       v === null ? null : Math.max(0, cap ? Math.min(cap, v) : v);
     const barrelShown = clamp(barrelL === null ? null : barrelL - moved - drawn, barrelCap);
-    const ibcShown = clamp(ibcL === null ? null : ibcL + moved, ibcCap);
+    const ibcShown = clamp(ibcL === null ? null : ibcL + (ibcGain ?? moved), ibcCap);
 
     // Im Fass steht unterhalb der Schwimmerhoehe Leitungswasser - aber nur,
     // solange die Zufuhr offen ist. Bei zugedrehtem Hahn ist alles Regen.
@@ -316,7 +340,7 @@ export class FhemvizWatertank extends FhemvizWidget {
     // Ventil ist aber offen und liefert genau die Entnahme nach.
     const mainsFlowing =
       mainsOn &&
-      (gardenMains ||
+      (gardenMains || fillMains ||
         !(floatL !== null && barrelShown !== null && barrelShown >= floatL - 0.5));
 
     const barrelFrac = barrelCap ? (barrelShown ?? 0) / barrelCap : 0;
@@ -335,6 +359,9 @@ export class FhemvizWatertank extends FhemvizWidget {
       const rate = this._rate(map, "fillRate");
       let txt = "Fass → IBC";
       if (rate) txt += ` · ${this._fmt(rate, 1)} l/min`;
+      // Der Hahn schiebt nach - das sieht man sonst nur an der Zeit, die die
+      // Pumpe laenger laeuft als das Fass hergibt.
+      if (fillMains && fillMainsRate) txt += ` · Hahn +${this._fmt(fillMainsRate, 1)}`;
       head = { t: txt, c: "run" };
     } else if (returning) {
       const rate = this._rate(map, "returnRate");
