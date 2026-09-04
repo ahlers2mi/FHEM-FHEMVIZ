@@ -1,9 +1,10 @@
 /*
- * FHEMVIZ - Wasservorrat-Widget (v0.37.12).
+ * FHEMVIZ - Wasservorrat-Widget (v0.37.22).
  *
  * Zeichnet die Regenwasseranlage als lebendiges Schema: Dach und Fallrohr,
  * Regenfass mit Schwimmerhoehe, gestapelte IBC, dazwischen Pumpen- und
- * Schwerkraftweg. Fuellstaende kommen in Litern aus dem Modul
+ * Schwerkraftweg - und seit v0.37.22 den vierten Weg: von derselben Pumpe in
+ * den Garten. Fuellstaende kommen in Litern aus dem Modul
  * Gartenbewaesserung (barrelLevel_l / ibcLevel_l), nicht als Prozentbalken.
  *
  * Zwei Wasserfarben tragen Information: Regenwasser cyan, Leitungswasser
@@ -43,6 +44,10 @@ const DEFAULT_MAP = {
   fillStarted: "ibcFillStarted",
   returnRate: "ibcToBarrelFlow_lpm",
   valve: "currentValveName",
+  valveNum: "currentValve",
+  remaining: "remainingTime",
+  progress: "cycleProgress",
+  wateredToday: "watered_today_l",
   moisture: "soilMoisture",
   lastWatering: "lastWatering",
   lastCircuit: "lastCircuitWatering",
@@ -120,6 +125,28 @@ export class FhemvizWatertank extends FhemvizWidget {
   _attrNum(name) {
     const v = parseFloat(String((this.device.attr || {})[name] ?? "").replace(",", "."));
     return isNaN(v) ? null : v;
+  }
+
+  /** Rate eines Giesskreises: gelerntes Reading, sonst Attribut valve<N>Flow_lpm. */
+  _valveRate(n) {
+    const name = `valve${n}Flow_lpm`;
+    const r = parseFloat(String(this.plain((this.device.readings || {})[name] ?? "")).replace(",", "."));
+    if (!isNaN(r) && r > 0) return r;
+    const a = this._attrNum(name);
+    return a !== null && a > 0 ? a : null;
+  }
+
+  /**
+   * Restzeit des laufenden Kreises, kurz. Das Modul schreibt "6 min 29 sec",
+   * "< 1 min", "finishing..." oder "8 min (paused)".
+   */
+  _remaining(map) {
+    const s = String(this._r(map, "remaining")).trim();
+    if (!s || s === "-") return "";
+    if (/paused/i.test(s)) return "Pause";
+    const m = s.match(/^(<\s*)?(\d+)\s*min/);
+    if (m) return `noch ${m[1] ? "< " : ""}${m[2]} min`;
+    return "";
   }
 
   _isYes(v) {
@@ -233,11 +260,43 @@ export class FhemvizWatertank extends FhemvizWidget {
       const secs = this._since((this.device.times || {})[map.returning] || "");
       if (rate > 0 && secs !== null) moved = -Math.min((rate * secs) / 60, ibcL ?? 0);
     }
-    this._live = filling || returning;
+    // Der vierte Weg: dieselbe Pumpe, anderer Ausgang - ein Giesskreis. Auch
+    // hier bucht das Modul erst beim Schliessen des Ventils; waehrend der
+    // zehn Minuten stuende das Fass sonst still, obwohl die Pumpe laeuft.
+    // Gerechnet wird wie MainsDuringDraw im Modul: bis zur Schwimmerhoehe
+    // leert der Kreis allein, darunter liefert der Hahn nach - seine volle
+    // Rate, wenn der Kreis mehr zieht, sonst genau die Entnahme (das Fass
+    // bleibt dann auf der gestrichelten Linie stehen). Ob gerade Regen- oder
+    // Leitungswasser im Garten landet, entscheidet die Farbe der Gartenleitung.
+    const valveNum = String(this._r(map, "valveNum")).trim();
+    const watering = /^\d+$/.test(valveNum) && !filling && !returning;
+    let drawn = 0;          // seit Ventilstart aus dem Fass, netto
+    let drawRate = null;
+    let gardenMains = false;  // der Hahn traegt den Kreis (ganz oder teilweise)
+    if (watering) {
+      drawRate = this._valveRate(valveNum);
+      const secs = this._since((this.device.times || {})[map.valveNum] || "");
+      if (drawRate > 0 && secs !== null && barrelL !== null) {
+        const min = secs / 60;
+        let level = barrelL - drawRate * min;
+        const mainsRate = mainsOn ? this._attrNum("mainsFillFlow_lpm") : null;
+        if (mainsRate > 0 && floatL !== null) {
+          const toFloat = barrelL > floatL ? (barrelL - floatL) / drawRate : 0;
+          if (min > toFloat) {
+            gardenMains = true;
+            level = drawRate <= mainsRate
+              ? floatL
+              : floatL - (drawRate - mainsRate) * (min - toFloat);
+          }
+        }
+        drawn = barrelL - Math.max(0, level);
+      }
+    }
+    this._live = filling || returning || watering;
 
     const clamp = (v, cap) =>
       v === null ? null : Math.max(0, cap ? Math.min(cap, v) : v);
-    const barrelShown = clamp(barrelL === null ? null : barrelL - moved, barrelCap);
+    const barrelShown = clamp(barrelL === null ? null : barrelL - moved - drawn, barrelCap);
     const ibcShown = clamp(ibcL === null ? null : ibcL + moved, ibcCap);
 
     // Im Fass steht unterhalb der Schwimmerhoehe Leitungswasser - aber nur,
@@ -253,9 +312,12 @@ export class FhemvizWatertank extends FhemvizWidget {
     // macht das Schwimmerventil dicht und es fliesst nichts mehr. Das Rohr bleibt
     // sichtbar, die Zufuhr IST ja offen; es hoert nur auf zu laufen. Ohne
     // barrelFloatLevel laesst sich das nicht sagen - dann bleibt es beim Fliessen.
+    // Traegt der Hahn gerade einen Kreis, steht das Fass zwar auf Hoehe, das
+    // Ventil ist aber offen und liefert genau die Entnahme nach.
     const mainsFlowing =
       mainsOn &&
-      !(floatL !== null && barrelShown !== null && barrelShown >= floatL - 0.5);
+      (gardenMains ||
+        !(floatL !== null && barrelShown !== null && barrelShown >= floatL - 0.5));
 
     const barrelFrac = barrelCap ? (barrelShown ?? 0) / barrelCap : 0;
     const ibcFrac = ibcCap ? (ibcShown ?? 0) / ibcCap : 0;
@@ -282,7 +344,15 @@ export class FhemvizWatertank extends FhemvizWidget {
     }
     else {
       const valve = this._r(map, "valve");
-      if (valve && !/^(none|-|)$/i.test(valve.trim())) head = { t: "Gießt · " + valve, c: "run" };
+      if (valve && !/^(none|-|)$/i.test(valve.trim())) {
+        let txt = "Gießt · " + valve;
+        if (drawRate) txt += ` · ${this._fmt(drawRate, 1)} l/min`;
+        const rem = this._remaining(map);
+        if (rem) txt += ` · ${rem}`;
+        const prog = String(this._r(map, "progress")).trim();
+        if (/^\d+\/\d+$/.test(prog)) txt += ` · ${prog}`;
+        head = { t: txt, c: "run" };
+      }
       else if (raining) head = { t: "Sammelt", c: "ok" };
     }
 
@@ -369,7 +439,15 @@ export class FhemvizWatertank extends FhemvizWidget {
         ${floatLine}${mainsPipe}${barrelTxt}
         <text class="wt-t" x="74" y="107" text-anchor="middle">Fass</text>
         <path class="wt-pipe${filling ? " live flow" : ""}" d="M100 88 L124 88 L124 96 L146 96"/>
-        <circle class="wt-pump${filling ? " on" : ""}" cx="112" cy="88" r="4.5"/>
+        <path class="wt-pipe garden${watering ? (gardenMains ? " mains flow" : " live flow") : ""}"
+              d="M112 92.5 L112 97"/>
+        <g class="wt-spray${watering ? (gardenMains ? " on mains" : " on") : ""}">
+          <rect x="108.6" y="98.2" width="1.4" height="2.6" rx="0.7"/>
+          <rect x="111.3" y="98.2" width="1.4" height="2.6" rx="0.7"/>
+          <rect x="114" y="98.2" width="1.4" height="2.6" rx="0.7"/>
+        </g>
+        <text class="wt-t" x="112" y="107" text-anchor="middle">Garten</text>
+        <circle class="wt-pump${filling || watering ? " on" : ""}" cx="112" cy="88" r="4.5"/>
         <path class="wt-pipe${returning ? " live flow" : ""}" d="M146 62 L124 62 L124 70 L100 70"/>
         ${ibcSvg}${ibcTxt}${hint}
         <text class="wt-t" x="176" y="107" text-anchor="middle">IBC</text>
@@ -379,6 +457,9 @@ export class FhemvizWatertank extends FhemvizWidget {
     const figs = [];
     const today = this._n(map, "harvestToday");
     if (today !== null) figs.push({ v: this._fmt(today, 1), u: "l", k: "heute geerntet", rain: 1 });
+    // Gegenstueck zur Ernte: was heute in den Garten ging (Modul ab v1.0.89).
+    const watered = this._n(map, "wateredToday");
+    if (watered !== null) figs.push({ v: this._fmt(watered), u: "l", k: "heute gegossen" });
     const rainMm = this._n(map, "rainAmount");
     if (rainMm !== null) figs.push({ v: this._fmt(rainMm, 1), u: "mm", k: "Regen im Fenster" });
     if (ibcCap && ibcShown !== null) {
@@ -431,7 +512,7 @@ export class FhemvizWatertank extends FhemvizWidget {
       : "";
 
     return this._css() + `
-      <div class="card ${filling || returning ? "on" : ""}">
+      <div class="card ${filling || returning || watering ? "on" : ""}">
         <div class="wt-head">
           <span class="label">${this.escape(this.displayName())}</span>
           <span class="wt-state ${head.c}">${this.escape(head.t)}</span>
@@ -478,6 +559,18 @@ export class FhemvizWatertank extends FhemvizWidget {
           stroke: color-mix(in srgb, var(--viz-muted) 75%, transparent); stroke-width: 1.2;
         }
         .wt-pump.on { fill: var(--viz-water-rain); stroke: var(--viz-water-rain); }
+        /* Gartenabgang: derselbe Regner-Faecher wie die Rohre in Grau, im Betrieb
+           in der Farbe des Wassers, das gerade im Garten landet. */
+        .wt-spray rect { fill: color-mix(in srgb, var(--viz-muted) 55%, transparent); }
+        .wt-spray.on rect { fill: var(--viz-water-rain); opacity: 0.9; animation: wtspray 1.2s linear infinite; }
+        .wt-spray.on.mains rect { fill: var(--viz-water-mains); }
+        .wt-spray.on rect:nth-of-type(2) { animation-delay: 0.4s; }
+        .wt-spray.on rect:nth-of-type(3) { animation-delay: 0.8s; }
+        @keyframes wtspray {
+          0% { transform: translateY(-1.5px); opacity: 0; }
+          30% { opacity: 0.9; }
+          100% { transform: translateY(3px); opacity: 0; }
+        }
         .wt-rain { fill: var(--viz-water-rain); opacity: 0.85; }
         .wt-mains { fill: var(--viz-water-mains); opacity: 0.7; }
         .wt-float { stroke: var(--viz-water-mains); stroke-width: 1.1; stroke-dasharray: 2.5 2; fill: none; }
@@ -494,7 +587,7 @@ export class FhemvizWatertank extends FhemvizWidget {
           100% { transform: translateY(13px); opacity: 0; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .flow, .wt-drop { animation: none; }
+          .flow, .wt-drop, .wt-spray.on rect { animation: none; }
           .wt-drop { opacity: 0.85; }
         }
 
