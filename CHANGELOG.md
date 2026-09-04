@@ -11,6 +11,22 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.23 — 04.09.2026
+
+**`watertank`: beim Pumpen mit offenem Hahn schiebt die Leitung nach**
+
+- Die Live-Rechnung während einer Befüllung Fass → IBC zog dem Fass die volle
+  Pumpenrate ab und schrieb dieselbe Menge dem IBC gut. Mit offenem Hahn stimmt
+  nur das Zweite: unter der Schwimmerhöhe öffnet das Schwimmerventil und
+  liefert nach, das Fass sinkt nur um Pumpe minus Zulauf (37 − 22,5 = 15 l/min).
+  Am 04.09. war das Fass in der Kachel nach 2,3 Minuten leer gezeichnet,
+  während die Pumpe noch vier Minuten lief (87 l Fass + 142 l Zulauf in 6,3 min).
+  Der Nutzer: „an den Zahlen habe ich nicht gesehen, dass Stadtwasser dazu
+  fließt". Jetzt: Fass sinkt netto, IBC bekommt brutto, die Leitungs-Zuleitung
+  leuchtet mit, und die Kopfzeile sagt `Fass → IBC · 37,4 l/min · Hahn +22,5`.
+- Dieselbe Rechnung wie bei den Gießkreisen seit v0.37.22 und wie
+  `RecordIbcFillRun` im Modul (v1.0.88).
+
 ## v0.37.22 — 03.09.2026
 
 **`watertank`: der vierte Weg – von der Pumpe in den Garten**
