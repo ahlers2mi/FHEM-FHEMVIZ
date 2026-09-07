@@ -29,7 +29,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.37.23";
+const SPA_VERSION = "v0.37.24";
 
 const el = (id) => document.getElementById(id);
 
@@ -719,7 +719,6 @@ class TvController {
     el("viz-clock").hidden = true;
     el("viz-progress").hidden = true;
     el("viz-scene").hidden = true;
-    el("viz-title").textContent = "FHEMVIZ";
   }
 
   /** Feste TV-Flaeche vermessen (siehe measureViewport). */
@@ -747,11 +746,11 @@ class TvController {
     const p = (n) => String(n).padStart(2, "0");
     const wd = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][d.getDay()];
     // Datum + Uhrzeit gemeinsam RECHTS (wie im Tablet-Modus) - der Titel
-    // links bleibt "FHEMVIZ", damit die Datumsposition ueberall gleich ist.
+    // links bleibt unangetastet (er ist der FHEMWEB-Link, siehe index.html),
+    // damit die Datumsposition ueberall gleich ist.
     el("viz-clock").textContent =
       `${wd} ${p(d.getDate())}.${p(d.getMonth() + 1)}. · ` +
       `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-    el("viz-title").textContent = "FHEMVIZ";
   }
 
   _render(room) {
@@ -1588,6 +1587,10 @@ async function main() {
   try {
     setStatus("verbinde mit FHEMWEB…");
     const client = new FhemClient();
+    // Absprung zurueck nach FHEMWEB: der Titel zeigt auf die Basis, aus der
+    // die Seite geladen wurde (.../fhem/fhemviz/index.html -> .../fhem).
+    const home = el("viz-home");
+    if (home) home.href = client.base;
     await client.fetchCsrfToken();
 
     // FHEMVIZ-Gerät bestimmen (?device=… oder erstes TYPE=FHEMVIZ).
