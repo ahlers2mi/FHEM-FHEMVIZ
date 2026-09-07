@@ -11,6 +11,23 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.24 — 07.09.2026
+
+**Kopfzeile: der Titel „FHEMVIZ ↗" führt zurück nach FHEMWEB**
+
+- Bisher gab es aus dem Dashboard keinen Weg zur normalen FHEM-Oberfläche.
+  Jetzt ist der Titel links in der Kopfzeile ein Link auf die FHEMWEB-Basis,
+  aus der die Seite geladen wurde (`…/fhem/fhemviz/index.html` → `…/fhem`);
+  der Pfeil in Akzentfarbe markiert ihn. Zurück geht es über den Menüeintrag
+  „FHEMVIZ", den das Modul in FHEMWEB einträgt.
+- Kostet keinen Pixel Kopfhöhe. Drei Stellen waren durchgespielt: eine eigene
+  Pille in der Kopfzeile hätte auf Tablet und Handy eine Zeile gekostet
+  (91 → 129 bzw. 142 → 180 px), ein Eintrag am Ende der Raumleiste liegt auf
+  dem Handy außerhalb des Sichtbereichs.
+- Im TV-Modus ist der Link aus (`pointer-events: none`, kein Pfeil): der erste
+  Tipp gehört dort `tvTouch` und wechselt in die Tablet-Ansicht, die den Link
+  dann zeigt.
+
 ## v0.37.23 — 04.09.2026
 
 **`watertank`: beim Pumpen mit offenem Hahn schiebt die Leitung nach**

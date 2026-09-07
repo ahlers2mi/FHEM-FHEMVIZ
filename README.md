@@ -468,6 +468,11 @@ Im TV-Betrieb und bei `readonly 1` ist der Modus abgeschaltet.
 | `?flash=0` | Aufleuchten bei Wertänderung abschalten |
 | `?edit=1` | Editiermodus (siehe oben) |
 
+**Zurück nach FHEMWEB:** der Titel „FHEMVIZ ↗" links in der Kopfzeile ist ein
+Link auf die FHEMWEB-Startseite der Instanz, aus der die Seite geladen wurde.
+Im TV-Modus ist er abgeschaltet — dort wechselt der erste Tipp über `tvTouch`
+in die Tablet-Ansicht, und die zeigt den Link.
+
 ## Eigene Widgets (Plugin-API)
 
 Eigene Widgets leben in `www/fhemviz/js/widgets/custom/index.js` — die Datei

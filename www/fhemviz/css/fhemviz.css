@@ -131,6 +131,17 @@ html[data-vizzoom] body { overflow-y: auto; scrollbar-gutter: stable; }
   font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em;
   text-transform: uppercase; margin: 0; color: var(--viz-muted);
 }
+/* Der Titel ist der Absprung nach FHEMWEB (Ziel setzt app.js). Kostet keinen
+ * Pixel Kopfhoehe - die Kopfzeile ist auf Tablet und Handy ohnehin voll, eine
+ * eigene Pille wuerde dort eine Zeile kosten (gemessen 91 -> 129, 142 -> 180).
+ * Der Pfeil in Akzentfarbe zeigt, dass man da tippen kann. */
+#viz-title a { color: inherit; text-decoration: none; }
+#viz-title a::after { content: " \2197"; color: var(--viz-accent); font-weight: 400; }
+/* TV: der erste Tipp gehoert tvTouch (Wechsel in die Tablet-Ansicht), nicht
+ * dem Link - sonst wirft ein Tipp auf die Kopfzeile den Wandschirm nach
+ * FHEMWEB. Nach dem Wechsel steht data-vizmode auf "tablet", der Link lebt. */
+html[data-vizmode="tv"] #viz-title a { pointer-events: none; }
+html[data-vizmode="tv"] #viz-title a::after { content: none; }
 .viz-scene {
   font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--viz-accent);

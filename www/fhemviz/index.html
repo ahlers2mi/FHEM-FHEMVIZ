@@ -30,7 +30,10 @@
   </head>
   <body>
     <header id="viz-header">
-      <h1 id="viz-title">FHEMVIZ</h1>
+      <!-- Der Titel ist der Absprung zurueck nach FHEMWEB; app.js setzt das
+           Ziel auf die erkannte FHEMWEB-Basis (z. B. /fhem). Im TV-Modus ist
+           der Link per CSS abgeschaltet (pointer-events: none). -->
+      <h1 id="viz-title"><a id="viz-home" href="../">FHEMVIZ</a></h1>
       <span id="viz-scene" class="viz-scene" hidden></span>
       <span id="viz-status" class="viz-status">initialisiere…</span>
       <span id="viz-clock" class="viz-clock" hidden></span>
