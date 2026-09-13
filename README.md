@@ -504,6 +504,8 @@ FHEM/98_FHEMVIZ.pm     Helfer-Modul (Attribute, get config, set scene)
 www/fhemviz/           buildfreie SPA (Web Components, kein Node/npm)
 controls_FHEMVIZ.txt   FHEM-update-Manifest (wird per Workflow gepflegt)
 CONCEPT.md             Konzept & Architektur
+t/                     Tests ohne FHEM: Attributliste (Perl), eine Kachel allein,
+                       die ganze Seite gegen eine FHEMWEB-Attrappe (siehe t/README.md)
 ```
 
 ## Nach einem `update`: Version und Browser-Cache

@@ -11,6 +11,26 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.26 — 13.09.2026
+
+**Seitentest im Repo (`t/seite`) — und ein Fund beim ersten Lauf**
+
+- Die FHEMWEB-Attrappe, mit der die letzten Runden gemessen wurden (Kopfhöhe,
+  Snap, Auto-Paging, Event-Rahmen, Hero-Deckel, Titel-Link), liegt jetzt im
+  Repo statt im Sitzungs-Scratchpad: `node t/seite/run.js`. Sie fährt die
+  **ganze** SPA gegen einen kleinen Node-Server mit den drei Endpunkten, die
+  die Oberfläche braucht, mit den echten Sicht-Attributen von `myViz` und
+  einem bereinigten Auszug der Solar-Geräte (`t/seite/fixtures/`,
+  `extrakt.py` baut ihn neu). Drei Profile: Tablet, Handy (isMobile), TV.
+- **Snap auf dem Handy: die Hero-Kacheln rasteten nicht.** Die Regel
+  `scroll-snap-align: start` galt nur für `.viz-grid > *`; die drei Kacheln
+  des Hero-Bands (Auto, Solvis, Energiefluss, je ~430 px) hatten keinen
+  Rastpunkt, ein Wisch über das Band endete mitten in einer Kachel. Erst der
+  Seitentest hat es gezeigt — das Messrezept von v0.37.20 war in einem Raum
+  ohne Band angewendet worden. Jetzt rasten auch die Band-Kacheln, und die
+  erste bekommt wie im Raster einen `scroll-margin-top` in Höhe des h2, damit
+  die Raumüberschrift nicht unter der Kopfzeile landet.
+
 ## v0.37.25 — 13.09.2026
 
 **watertank: „zuletzt gegossen" beantwortet jetzt die Frage, die draufsteht**

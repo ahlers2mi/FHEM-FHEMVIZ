@@ -292,7 +292,11 @@ html[data-vizsnap="gruppe"]:not([data-vizmode="tv"]) {
   scroll-snap-type: y proximity;
   scroll-padding-top: calc(var(--viz-header-h, 58px) + 8px);
 }
-html[data-vizsnap="kachel"]:not([data-vizmode="tv"]) .viz-grid > * {
+/* Auch die Kacheln im Hero-Band: auf dem Handy (zeilen) steht das Band ganz
+ * oben in der Liste, und ein Wisch ueber drei 430-px-Kacheln ohne Rastpunkt
+ * endete mitten in der Auto-Kachel (Seitentest t/seite, Fall kopfzeile). */
+html[data-vizsnap="kachel"]:not([data-vizmode="tv"]) .viz-grid > *,
+html[data-vizsnap="kachel"]:not([data-vizmode="tv"]) .viz-hero > * {
   scroll-snap-align: start;
 }
 /* Gruppen-Rasten wirkt nur an Gruppenanfaengen. In einer Gruppe, die hoeher

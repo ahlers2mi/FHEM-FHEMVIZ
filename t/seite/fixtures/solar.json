@@ -1,0 +1,3198 @@
+[
+ {
+  "Name": "mySolvis",
+  "Internals": {
+   "NAME": "mySolvis",
+   "TYPE": "SolvisClient",
+   "DEF": "",
+   "STATE": "disconnected"
+  },
+  "Attributes": {
+   "alias": "mySolvis",
+   "event-min-interval": ".*:3600",
+   "event-on-change-reading": ".*",
+   "fp_SchalterDash": "134,885,1,Solvis Heizung,",
+   "fp_SolarDash": "85,715,1,Solvis Heizung,",
+   "fp_WetterDash": "332,885,1,Solvis Heizung,",
+   "fp_WetterDash_Test": "332,885,1,Solvis Heizung,",
+   "icon": "sani_boiler_temp",
+   "room": "Draußen,Homebridge,Keller,Solar,System->GeminiControl,System->mcp_rw,FHEMVIZ->Solar",
+   "sortby": "20",
+   "stateFormat": "{sprintf(\"Durchfluss <b >%.1f l/h</b>, Solarleistung <b >%.1f kw</b>, Kollektor <b>%.1f C</b>\", ReadingsVal($name,\"S17.Durchfluss_Solarpanel\",0), ReadingsVal($name,\"SL.Solarleistung_kW\",0), ReadingsVal($name,\"S08.Solarkollektortemperatur\",0))}",
+   "userReadings": "statSE.Solarertrag_kWhLastDay { my $val=ReadingsVal($name,\"statSE.Solarertrag_kWhLast\",0);; $val=~s/.*Day..([\\d.]*).*/$1/eg;; return int($val) },test { return int(5) }",
+   "vizHero": "1",
+   "vizReadings": "SL.Solarleistung_kW:Solarleistung:kW:accent,S08.Solarkollektortemperatur:Kollektor:°C:warn,S17.Durchfluss_Solarpanel:Durchfluss:l/h",
+   "vizSize": "2x2"
+  },
+  "PossibleSets": "",
+  "Readings": {
+   "A01.Pumpe_Solar": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A02.Pumpe_Warmwasser": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A03.Pumpe_HK1": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A04.Pumpe_HK2": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A05.Pumpe_Warmwasserzirkulation": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A06": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A07": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A08.Mischer_HK1_auf": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A09.Mischer_HK1_zu": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A10.Mischer_HK2_auf": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A11.Mischer_HK2_zu": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A12.Brenner": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A13": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "A14.Entstoerung": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C01.StartsBrenner": {
+    "Value": "26424",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C02.LaufzeitBrenner": {
+    "Value": "47515",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C04.WarmwasserPumpe": {
+    "Value": "auto",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C05.WassertemperaturSoll": {
+    "Value": "48",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C06.Anlagenmodus_HK1": {
+    "Value": "Standby",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C08.Nachttemperatur_HK1": {
+    "Value": "16",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C09.TemperaturFeineinstellung_HK1": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C11.Vorlauf_Soll_HK1": {
+    "Value": "5",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C12.Anlagenmodus_HK2": {
+    "Value": "Standby",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C13.Tagestemperatur_HK2": {
+    "Value": "21",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C14.Nachttemperatur_HK2": {
+    "Value": "16",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C15.TemperaturFeineinstellung_HK2": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C24.LaufzeitSolarpumpe": {
+    "Value": "23119",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C26.Warmwasserzirkulation_Puls": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C27.Warmwasserzirkulation_Zeit": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "C46.WarmwasserNachheizen": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "Control": {
+    "Value": "finished",
+    "Time": "2026-09-04 14:09:39"
+   },
+   "HK2_Valves": {
+    "Value": "on",
+    "Time": "2026-08-23 11:10:38"
+   },
+   "HumanAccess": {
+    "Value": "none",
+    "Time": "2026-09-04 03:14:42"
+   },
+   "I-1": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "I-2": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "I-3": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "I1.Anlagentyp": {
+    "Value": "33",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "I2.Systemnummer": {
+    "Value": "2",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "O-1.Modulation": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "O-2": {
+    "Value": "76",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "O-3": {
+    "Value": "76",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "O-4": {
+    "Value": "13",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "O-5": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "RF1.Raumfuehler_HK1": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "RF2.Raumfuehler_HK2": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "RF3": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S01.Warmwasserpuffer": {
+    "Value": "65.2",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S02.Warmwassertemperatur": {
+    "Value": "43.4",
+    "Time": "2026-09-04 20:19:00"
+   },
+   "S03.Speicherreferenztemperatur": {
+    "Value": "35.9",
+    "Time": "2026-09-04 20:17:00"
+   },
+   "S04.Heizungspuffertemperatur_oben": {
+    "Value": "63.2",
+    "Time": "2026-09-04 20:18:40"
+   },
+   "S05.Solarvorlauftemperatur": {
+    "Value": "26.7",
+    "Time": "2026-09-04 20:19:00"
+   },
+   "S06.Solarruecklauftemperatur": {
+    "Value": "28.2",
+    "Time": "2026-09-04 20:18:00"
+   },
+   "S07.Solardruck": {
+    "Value": "-35",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S08.Solarkollektortemperatur": {
+    "Value": "21",
+    "Time": "2026-09-04 20:18:00"
+   },
+   "S09.Heizungspuffertemperatur_unten": {
+    "Value": "58.7",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S10.Aussentemperatur": {
+    "Value": "16.7",
+    "Time": "2026-09-04 20:08:50"
+   },
+   "S11.ZirkulationRuecklauftemperatur": {
+    "Value": "250",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S12.Vorlauftemperatur_HK1": {
+    "Value": "23.6",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S13.Vorlauftemperatur_HK2": {
+    "Value": "250",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S14": {
+    "Value": "250",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S15": {
+    "Value": "250",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S16": {
+    "Value": "250",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S17.Durchfluss_Solarpanel": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "S18.Durchfluss_Warmwasserzirkulation": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "SE.Solarertrag_kWh": {
+    "Value": "48806",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "SL.Solarleistung_kW": {
+    "Value": "0",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "X01.BrennerStarts": {
+    "Value": "91961",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "X02.BrennerLaufzeit_s": {
+    "Value": "171056370",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "X05.BrennerStatus": {
+    "Value": "off",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "X06.UhrzeitSolvis": {
+    "Value": "2026-09-04 20:19:28",
+    "Time": "2026-09-04 20:19:00"
+   },
+   "X07.MischerPosition0_HK1": {
+    "Value": "on",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "X08.MischerPosition0_HK2": {
+    "Value": "on",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "X10.LaufzeitSolarpumpe_s": {
+    "Value": "83410570",
+    "Time": "2026-09-04 20:00:05"
+   },
+   "statSE.Solarertrag_kWh": {
+    "Value": "Hour: 0 Day: 1 Month: 24 Year: 2087",
+    "Time": "2026-09-04 20:19:09"
+   },
+   "statSE.Solarertrag_kWhLast": {
+    "Value": "Hour: 0 Day: 6 Month: 254 Year: 1502 (since: 2025-05-20 )",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "statSE.Solarertrag_kWhLastDay": {
+    "Value": "6",
+    "Time": "2026-09-04 20:19:09"
+   },
+   "statSL.Solarleistung_kW": {
+    "Value": "Hour: 0.0 Day: 4.6 Month: 40.0 Year: 813.0",
+    "Time": "2026-09-04 20:19:09"
+   },
+   "statSL.Solarleistung_kWDay": {
+    "Value": "Min: 0.0 Avg: 0.3 Max: 4.4",
+    "Time": "2026-08-31 21:18:40"
+   },
+   "statSL.Solarleistung_kWDayLast": {
+    "Value": "Min: 0.0 Avg: 0.0 Max: 2.6",
+    "Time": "2026-08-30 23:59:55"
+   },
+   "statSL.Solarleistung_kWHour": {
+    "Value": "Min: 0.0 Avg: 0.0 Max: 0.0",
+    "Time": "2026-08-31 21:18:40"
+   },
+   "statSL.Solarleistung_kWHourLast": {
+    "Value": "Min: 0.0 Avg: 0.0 Max: 0.0",
+    "Time": "2026-08-31 20:59:55"
+   },
+   "statSL.Solarleistung_kWLast": {
+    "Value": "Hour: 0.0 Day: 12.4 Month: 745.0 Year: 381.8 (since: 2025-06-10 )",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "statSL.Solarleistung_kWMonth": {
+    "Value": "Min: 0.0 Avg: 0.3 Max: 5.6",
+    "Time": "2026-08-31 21:18:40"
+   },
+   "statSL.Solarleistung_kWMonthLast": {
+    "Value": "Min: 0.0 Avg: 0.4 Max: 5.5",
+    "Time": "2026-07-31 23:59:55"
+   },
+   "statSL.Solarleistung_kWYear": {
+    "Value": "Min: 0.0 Avg: 0.2 Max: 8.3 (since: 2025-05-19_19:13:00 )",
+    "Time": "2026-08-31 21:18:40"
+   },
+   "state": {
+    "Value": "disconnected",
+    "Time": "2026-09-04 20:19:09"
+   },
+   "test": {
+    "Value": "5",
+    "Time": "2026-09-04 20:19:09"
+   }
+  }
+ },
+ {
+  "Name": "d_Wechselrichter_all",
+  "Internals": {
+   "NAME": "d_Wechselrichter_all",
+   "TYPE": "dummy",
+   "DEF": "",
+   "STATE": "PV <b >37</b> W | Haus <b >933</b> W | Netz <b style=\"color: red\">1144</b> W | Batterie <b style=\"color: green\">68</b> W, <b>63 %</b>"
+  },
+  "Attributes": {
+   "alias": "Wechselrichter Summe",
+   "event-min-interval": ".*_gesamtheute.*:300,.*:3600",
+   "event-on-change-reading": ".*_gesamtheute.*:50,.*",
+   "event-on-update-reading": "Output_priority,Battery_charging_priority,Maximum_mains_charging_current",
+   "group": "Wechselrichter",
+   "room": "Solar,FHEMVIZ->Solar",
+   "setList": "Battery_charging_priority:Utility_Priority,PV_priority,PV_and_Utility,Only_PV Output_priority:Utility-PV-Battery,PV-Only,PV-Battery-Utility,PV-Utility-Battery Mode:manuel,auto,winter Maximum_mains_charging_current",
+   "sortby": "30",
+   "stateFormat": "{",
+   "vizFlow": "pv=pv_leistung,haus=out_leistung,netz=netzleistung_all,batterie=rem_MQTT2_SMART_SHUNT1:data_battery_power_shunt_state,soc=rem_MQTT2_SMART_SHUNT1:data_state_of_charge_shunt_state,volt=rem_MQTT2_SMART_SHUNT1:data_battery_voltage_shunt_state,status=rem_MQTT2_SMART_SHUNT1:status,reserve=d_batterie_save,reserveSoc=25,full=d_www_wechselrichter_100",
+   "vizGroup": "Solar",
+   "vizHero": "1",
+   "vizReadings": "pv_leistung:PV:W:ok@>50,out_leistung:Haus:W:bad@>4000|warn@>1000,netzleistung_all:Netz:W:bad@>1000|warn@>10|ok@<10,batterie_leistung:Batterie:W:ok@>10|warn@<=10",
+   "vizSize": "2x2",
+   "vizWidget": "flow"
+  },
+  "PossibleSets": "Battery_charging_priority:Utility_Priority,PV_priority,PV_and_Utility,Only_PV Output_priority:Utility-PV-Battery,PV-Only,PV-Battery-Utility,PV-Utility-Battery Mode:manuel,auto,winter Maximum_mains_charging_current",
+  "Readings": {
+   "Battery_charging_priority": {
+    "Value": "Only_PV",
+    "Time": "2026-09-02 07:11:56"
+   },
+   "Maximum_mains_charging_current": {
+    "Value": "60",
+    "Time": "2026-08-01 12:46:31"
+   },
+   "Mode": {
+    "Value": "auto",
+    "Time": "2026-03-28 13:19:25"
+   },
+   "Output_priority": {
+    "Value": "PV-Utility-Battery",
+    "Time": "2026-09-04 18:30:26"
+   },
+   "ac_ausgangslast": {
+    "Value": "0",
+    "Time": "2025-08-15 12:45:07"
+   },
+   "ac_ausgangslast_kw": {
+    "Value": "0.00",
+    "Time": "2025-08-15 12:45:07"
+   },
+   "ac_ausgangsleistung": {
+    "Value": "2662",
+    "Time": "2025-07-10 12:22:24"
+   },
+   "ac_ausgangsleistung_gesamt": {
+    "Value": "20331484.68",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "ac_ausgangsleistung_gesamtLast": {
+    "Value": "20320683.84",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "ac_ausgangsleistung_gesamt_kw": {
+    "Value": "10.63",
+    "Time": "2025-07-10 12:01:24"
+   },
+   "ac_ausgangsleistung_gesamtheute": {
+    "Value": "10800.84",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "ac_ausgangsleistung_gesamtheuteLast": {
+    "Value": "13649.6",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "ac_ausgangsleistung_gesamtheute_kw": {
+    "Value": "10.80",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "ac_ausgangsleistung_kw": {
+    "Value": "2.66",
+    "Time": "2025-07-10 12:22:24"
+   },
+   "ac_ausgangsstrom": {
+    "Value": "16.6",
+    "Time": "2025-08-15 12:53:24"
+   },
+   "ac_ausgangsstrom_kw": {
+    "Value": "0.02",
+    "Time": "2025-08-15 12:53:24"
+   },
+   "bat_charge_priority": {
+    "Value": "520",
+    "Time": "2026-09-04 20:18:06"
+   },
+   "batterie_leistung": {
+    "Value": "68",
+    "Time": "2026-09-04 20:19:01"
+   },
+   "batterie_leistung_gesamt": {
+    "Value": "3064166.69",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "batterie_leistung_gesamtCalc": {
+    "Value": "12360",
+    "Time": "2025-06-24 21:50:23"
+   },
+   "batterie_leistung_gesamtCalcLast": {
+    "Value": "12360",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "batterie_leistung_gesamtCalcSoc": {
+    "Value": "79.4",
+    "Time": "2025-06-24 21:50:23"
+   },
+   "batterie_leistung_gesamtLast": {
+    "Value": "3067091.47",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "batterie_leistung_gesamt_kw": {
+    "Value": "1.49",
+    "Time": "2025-07-10 12:01:24"
+   },
+   "batterie_leistung_gesamtheute": {
+    "Value": "-2924.78",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "batterie_leistung_gesamtheuteLast": {
+    "Value": "-1589.62",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "batterie_leistung_gesamtheute_kw": {
+    "Value": "-2.92",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "batterie_leistung_kw": {
+    "Value": "0.07",
+    "Time": "2026-09-04 20:19:01"
+   },
+   "batterie_strom": {
+    "Value": "51.1",
+    "Time": "2025-08-15 12:54:24"
+   },
+   "batterie_strom_kw": {
+    "Value": "0.05",
+    "Time": "2025-08-15 12:54:24"
+   },
+   "batteriespannung": {
+    "Value": "53.1",
+    "Time": "2025-08-15 12:50:08"
+   },
+   "battery_eq_mode": {
+    "Value": "0",
+    "Time": "2025-08-15 12:45:08"
+   },
+   "devicestatus": {
+    "Value": "2",
+    "Time": "2025-08-15 12:45:08"
+   },
+   "emergencyLoad": {
+    "Value": "off",
+    "Time": "2026-09-02 07:11:56"
+   },
+   "intmodus": {
+    "Value": "0",
+    "Time": "2025-08-15 12:45:08"
+   },
+   "mains_max": {
+    "Value": "20",
+    "Time": "2025-08-15 12:45:08"
+   },
+   "mode": {
+    "Value": "2",
+    "Time": "2025-08-15 12:45:08"
+   },
+   "modus": {
+    "Value": "3",
+    "Time": "2026-09-04 20:18:06"
+   },
+   "netzeinspeisung": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "netzeinspeisung_gesamt": {
+    "Value": "3783.896",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "netzleistung": {
+    "Value": "1144",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "netzleistung_all": {
+    "Value": "1144",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "netzleistung_gesamt": {
+    "Value": "13591926.82",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "netzleistung_gesamtLast": {
+    "Value": "13579800.61",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "netzleistung_gesamt_kw": {
+    "Value": "2.76",
+    "Time": "2025-07-10 11:30:07"
+   },
+   "netzleistung_gesamtheute": {
+    "Value": "12126.21",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "netzleistung_gesamtheuteAll": {
+    "Value": "11276.21",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "netzleistung_gesamtheuteLast": {
+    "Value": "5420.75",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "netzleistung_gesamtheute_kw": {
+    "Value": "12.13",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "netzleistung_kw": {
+    "Value": "1.14",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "out_leistung": {
+    "Value": "933",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "out_leistung_gesamt": {
+    "Value": "32665472.24",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "out_leistung_gesamtLast": {
+    "Value": "32643017.71",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "out_leistung_gesamt_kw": {
+    "Value": "12.64",
+    "Time": "2025-07-10 12:01:24"
+   },
+   "out_leistung_gesamtheute": {
+    "Value": "22454.53",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "out_leistung_gesamtheuteLast": {
+    "Value": "17658.45",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "out_leistung_gesamtheute_kw": {
+    "Value": "22.45",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "out_leistung_kw": {
+    "Value": "0.93",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "out_strom": {
+    "Value": "14.3",
+    "Time": "2025-08-15 12:54:24"
+   },
+   "out_strom_kw": {
+    "Value": "0.01",
+    "Time": "2025-08-15 12:54:24"
+   },
+   "outputmode": {
+    "Value": "0",
+    "Time": "2026-09-04 20:18:06"
+   },
+   "pv_leistung": {
+    "Value": "37",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "pv_leistung_eur_gesamt": {
+    "Value": "6820.33",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "pv_leistung_gesamt": {
+    "Value": "22122040.4",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "pv_leistung_gesamtLast": {
+    "Value": "22115207.78",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "pv_leistung_gesamtLast_kw": {
+    "Value": "1021.73",
+    "Time": "2025-08-14 23:59:50"
+   },
+   "pv_leistung_gesamt_kw": {
+    "Value": "38.82",
+    "Time": "2025-07-10 12:22:24"
+   },
+   "pv_leistung_gesamtheute": {
+    "Value": "6832.62",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "pv_leistung_gesamtheuteLast": {
+    "Value": "9930.26",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "pv_leistung_gesamtheute_kw": {
+    "Value": "6.83",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "pv_leistung_kw": {
+    "Value": "0.04",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "pv_leistung_proz_gesamt": {
+    "Value": "55.43",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "regler_mode": {
+    "Value": "2",
+    "Time": "2026-09-04 20:18:06"
+   },
+   "soc": {
+    "Value": "63",
+    "Time": "2026-09-04 20:18:06"
+   },
+   "solarstrom": {
+    "Value": "26.7",
+    "Time": "2025-08-15 12:54:24"
+   },
+   "solarstrom_kw": {
+    "Value": "0.03",
+    "Time": "2025-08-15 12:54:24"
+   },
+   "statBatterie_leistung_gesamt": {
+    "Value": "Hour: 22.2299999999818 Day: -2900.7800000001912 Month: 12363.0699999999451 Year: 1308607.3899999998976",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "statBatterie_leistung_gesamtLast": {
+    "Value": "Hour: 112.5299999997952 Day: -1770.4399999998166 Month: 305015.6499999999651 Year: 1746729.8000000007451 (since: 2025-05-20 )",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "statNetzleistung_gesamt": {
+    "Value": "Hour: 646.25 Day: 12367.05 Month: 29261.62 Year: 2101672.55",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "statNetzleistung_gesamtLast": {
+    "Value": "Hour: 1705.34 Day: 5179.93 Month: 238406.95 Year: 11490186.08 (since: 2025-05-20 )",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "statOut_leistung_gesamt": {
+    "Value": "Hour: 571.83 Day: 22629.83 Month: 77394.41 Year: 6652541.95",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "statOut_leistung_gesamtLast": {
+    "Value": "Hour: 1461.89 Day: 17673.53 Month: 890289.50 Year: 25974530.32 (since: 2025-05-20 )",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "statPv_leistung_gesamt": {
+    "Value": "Hour: 9.66 Day: 6833.68 Month: 57000.67 Year: 5616802.30",
+    "Time": "2026-09-04 20:19:05"
+   },
+   "statPv_leistung_gesamtLast": {
+    "Value": "Hour: 73.37 Day: 9930.60 Month: 814205.43 Year: 16454862.48 (since: 2025-05-20 )",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "temperatur": {
+    "Value": "45",
+    "Time": "2025-08-15 12:52:06"
+   },
+   "warnungen": {
+    "Value": "0",
+    "Time": "2025-08-15 12:29:07"
+   },
+   "warnungen_kw": {
+    "Value": "0.00",
+    "Time": "2025-08-15 12:29:07"
+   },
+   "wattstundengesamt": {
+    "Value": "18691.57",
+    "Time": "2025-08-15 12:54:23"
+   },
+   "wattstundengesamtheute": {
+    "Value": "18691.57",
+    "Time": "2025-08-15 12:54:23"
+   },
+   "wattstundengesamtheute_kw": {
+    "Value": "18.69",
+    "Time": "2025-08-15 12:54:23"
+   }
+  }
+ },
+ {
+  "Name": "d_autark",
+  "Internals": {
+   "NAME": "d_autark",
+   "TYPE": "dummy",
+   "DEF": "",
+   "STATE": "<div id=\"progressbar\"><div style=\"width:30.68%\">30.68%</div></div>"
+  },
+  "Attributes": {
+   "alias": "Autark",
+   "event-min-interval": "percent_gesamtheuteLast:3600",
+   "event-on-change-reading": "autark,duration,duration_gesamtheuteLast,durationlast,netz,percent,solar,start,stop",
+   "fp_SolarDash": "242,830,1,PV Anteil,",
+   "room": "Solar,FHEMVIZ->Solar",
+   "stateFormat": "{sprintf(\"<div id=\\\"progressbar\\\"><div style=\\\"width:%.2f%%\\\">%.2f%%</div></div>\", ReadingsVal($name,\"percent\",0), ReadingsVal($name,\"percent\",0))}",
+   "userReadings": "netz {if(ReadingsVal($name,\"autark\",\"off\") eq \"on\"){return \"off\"}else{return \"on\"}}, dauer:duration.* {my $s=ReadingsVal($name,\"duration\",0);; sprintf(\"%d:%02d h\",int($s/3600),int(($s%3600)/60))}",
+   "vizGroup": "Solar",
+   "vizReadings": "percent:Autark heute:%:accent:bar,percent_gesamtheuteLast:Gestern:%,dauer:Autark-Dauer heute,autark:Gerade autark"
+  },
+  "PossibleSets": "",
+  "Readings": {
+   "autark": {
+    "Value": "off",
+    "Time": "2026-09-04 18:31:05"
+   },
+   "dauer": {
+    "Value": "8:11 h",
+    "Time": "2026-09-04 18:31:05"
+   },
+   "duration": {
+    "Value": "29460.3312399387",
+    "Time": "2026-09-04 18:31:05"
+   },
+   "duration_gesamtheuteLast": {
+    "Value": "66615.0330901146",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "durationlast": {
+    "Value": "29460.3312399387",
+    "Time": "2026-09-04 18:31:05"
+   },
+   "netz": {
+    "Value": "on",
+    "Time": "2026-09-04 20:14:13"
+   },
+   "percent": {
+    "Value": "30.68",
+    "Time": "2026-09-04 20:14:13"
+   },
+   "percent_gesamtheuteLast": {
+    "Value": "56.28",
+    "Time": "2026-09-03 23:59:50"
+   },
+   "solar": {
+    "Value": "off",
+    "Time": "2026-09-04 19:46:29"
+   },
+   "start": {
+    "Value": "1788510005.38236",
+    "Time": "2026-09-04 10:20:05"
+   },
+   "stop": {
+    "Value": "1788539465.7136",
+    "Time": "2026-09-04 18:31:05"
+   }
+  }
+ },
+ {
+  "Name": "d_solar",
+  "Internals": {
+   "NAME": "d_solar",
+   "TYPE": "dummy",
+   "DEF": "",
+   "STATE": "check"
+  },
+  "Attributes": {
+   "alias": "Solarindex",
+   "event-min-interval": ".*:15",
+   "icon": "weather_sun",
+   "room": "FHEMVIZ->Solar,Solar",
+   "setList": "index overage:on,off check:noArg",
+   "stateFormat": "index",
+   "vizGroup": "Solar",
+   "vizReadings": "index:Solarindex::bad@<=0|warn@<=3|ok@>=8:bad,overage:Überschuss",
+   "vizSize": "1x1"
+  },
+  "PossibleSets": "index overage:on,off check:noArg",
+  "Readings": {
+   "index": {
+    "Value": "-9",
+    "Time": "2026-09-04 20:04:31"
+   },
+   "overage": {
+    "Value": "off",
+    "Time": "2026-08-17 05:04:53"
+   },
+   "state": {
+    "Value": "check",
+    "Time": "2026-09-04 20:19:04"
+   }
+  }
+ },
+ {
+  "Name": "Forecast",
+  "Internals": {
+   "NAME": "Forecast",
+   "TYPE": "SolarForecast",
+   "DEF": "",
+   "STATE": "updated"
+  },
+  "Attributes": {
+   "alias": "Forecast",
+   "plantControl": "feedinPowerLimit=800 reductionState=d_www_wechselrichter_100:state:{$VALUE=~/on/}",
+   "setupBatteryDev01": "rem_MQTT2_SMART_SHUNT1 pin=data_battery_power_shunt_in_state:W pout=data_battery_power_shunt_out_state:W intotal=calcBatteriePowerInGesamt:Wh outtotal=calcBatteriePowerOutGesamt:Wh charge=data_state_of_charge_shunt_state cap=29200",
+   "setupInverterDev01": "MQTT2_Wechselrichter1 capacity=5600 pvOut=pv_leistung:W etotal=pv_leistung_gesamt:Wh strings=Schuppen_O1",
+   "setupInverterDev02": "MQTT2_Wechselrichter2 capacity=5600 pvOut=pv_leistung:W etotal=pv_leistung_gesamt:Wh strings=Schuppen_O2",
+   "setupInverterDev03": "MQTT2_Wechselrichter3 capacity=5600 pvOut=pv_leistung:W etotal=pv_leistung_gesamt:Wh strings=Garage_S",
+   "setupInverterDev04": "MQTT2_Sonoff_POW_01 capacity=800 pvOut=ENERGY_Power:W etotal=ENERGY_Total:Wh strings=Carport_S",
+   "setupInverterStrings": "Schuppen_O1,Schuppen_O2,Garage_S,Carport_S,Wald_S",
+   "setupMeterDev": "d_Wechselrichter_all gcon=netzleistung:W contotal=netzleistung_gesamt:Wh gfeedin=netzeinspeisung feedtotal=netzeinspeisung_gesamt conprice=30.27:ct feedprice=30.27:ct",
+   "setupStringAzimuth": "Schuppen_O1=-90 Schuppen_O2=-90 Garage_S=0 Carport_S=0 Wald_S=0",
+   "setupStringDeclination": "Schuppen_O1=20 Schuppen_O2=20 Garage_S=45 Carport_S=45 Wald_S=45",
+   "setupStringPeak": "Schuppen_O1=3.85 Schuppen_O2=3.85 Garage_S=1.92 Carport_S=0.6 Wald_S=0",
+   "consumer01": "d_clima_gaestezimmer type=heater power=900 mode=can icon=vent_ventilation_level_automatic mintime=20 on=\"on\" off=\"off\" swstate=power:On:Off auto=Automatiksteuerung notbefore=8 notafter=20 interruptable=1",
+   "consumer02": "MQTT2_Tesla_Model3 type=bev power=3680 icon=car_in@blue pcurr=charge_power:W etotal=charge_etotal:kWh batCap=75000 currSoC=battery_level targetSoC=wish_charge_limit evid=vehicle_name:.+",
+   "consumer03": "d_clima_garage type=heater power=900 mode=can icon=vent_ventilation_level_automatic mintime=20 on=\"on\" off=\"off\" swstate=power:On:Off auto=Automatiksteuerung notbefore=8 notafter=20 interruptable=1",
+   "ctrlLanguage": "DE",
+   "disable": "0",
+   "event-on-change-reading": "nextRadiationAPICall,Tomorrow_PVforecast,Today_PVforecast,Today_PVreal,RestOfDayPVforecast,Today_MaxPVforecast,LastHourPVforecast,LastHourPVreal,LastHourGridconsumptionReal",
+   "graphicBeam1Color": "3C14FF",
+   "graphicBeam1Content": "pvForecast",
+   "graphicBeam2Color": "19FF29",
+   "graphicBeam2Content": "pvReal",
+   "graphicBeam3Content": "batsocRealSum",
+   "graphicControl": "headerDetail=all layoutType=double",
+   "graphicHistoryHour": "4",
+   "graphicSelect": "both",
+   "graphicShowNight": "0",
+   "group": "Energy Meter",
+   "room": "Energie,Homebridge,System->GeminiControl,FHEMVIZ->Solar",
+   "setupEnvironment": "outsideTemp=MQTT2_B0CBD8D5566F:temp_C presence=irgendwer:anwesend:{$VALUE=~/on/} windSpeed=MQTT2_B0CBD8D5566F:windspeed_ms",
+   "setupInverterDev05": "MQTT2_Wechselrichter4 capacity=5600 pvOut=pv_leistung:W etotal=pv_leistung_gesamt:Wh strings=Wald_S",
+   "setupRadiationAPI": "OpenMeteoDWD-API",
+   "setupWeatherDev1": "OpenMeteoDWD-API",
+   "stateFormat": "Today_PVforecast",
+   "verbose": "3",
+   "vizGroup": "Solar",
+   "vizReadings": "Current_AutarkyRate:Autarkie:%::bar",
+   "vizSize": "2x2"
+  },
+  "PossibleSets": "",
+  "Readings": {
+   ".associatedWith": {
+    "Value": "d_Wechselrichter_all d_clima_gaestezimmer MQTT2_Tesla_Model3 d_clima_garage rem_MQTT2_SMART_SHUNT1 MQTT2_Wechselrichter1 MQTT2_Wechselrichter2 MQTT2_Wechselrichter3 MQTT2_Sonoff_POW_01 MQTT2_Wechselrichter4 MQTT2_B0CBD8D5566F irgendwer",
+    "Time": "2026-08-31 21:19:10"
+   },
+   ".lastupdateForecastValues": {
+    "Value": "1788545907",
+    "Time": "2026-09-04 20:18:27"
+   },
+   ".pvCorrectionFactor_Auto_Soll": {
+    "Value": "on_complex_ai",
+    "Time": "2026-09-04 20:18:27"
+   },
+   ".signaldone_01": {
+    "Value": "done",
+    "Time": "2026-09-04 01:00:04"
+   },
+   ".signaldone_02": {
+    "Value": "done",
+    "Time": "2026-09-04 02:00:04"
+   },
+   ".signaldone_03": {
+    "Value": "done",
+    "Time": "2026-09-04 03:00:04"
+   },
+   ".signaldone_04": {
+    "Value": "done",
+    "Time": "2026-09-04 04:00:04"
+   },
+   ".signaldone_05": {
+    "Value": "done",
+    "Time": "2026-09-04 05:00:04"
+   },
+   ".signaldone_06": {
+    "Value": "done",
+    "Time": "2026-09-04 06:00:04"
+   },
+   ".signaldone_07": {
+    "Value": "done",
+    "Time": "2026-09-04 07:00:04"
+   },
+   ".signaldone_08": {
+    "Value": "done",
+    "Time": "2026-09-04 08:00:04"
+   },
+   ".signaldone_09": {
+    "Value": "done",
+    "Time": "2026-09-04 09:00:04"
+   },
+   ".signaldone_10": {
+    "Value": "done",
+    "Time": "2026-09-04 10:00:04"
+   },
+   ".signaldone_11": {
+    "Value": "done",
+    "Time": "2026-09-04 11:00:04"
+   },
+   ".signaldone_12": {
+    "Value": "done",
+    "Time": "2026-09-04 12:00:04"
+   },
+   ".signaldone_13": {
+    "Value": "done",
+    "Time": "2026-09-04 13:00:04"
+   },
+   ".signaldone_14": {
+    "Value": "done",
+    "Time": "2026-09-04 14:00:04"
+   },
+   ".signaldone_15": {
+    "Value": "done",
+    "Time": "2026-09-04 15:00:04"
+   },
+   ".signaldone_16": {
+    "Value": "done",
+    "Time": "2026-09-04 16:00:04"
+   },
+   ".signaldone_17": {
+    "Value": "done",
+    "Time": "2026-09-04 17:00:04"
+   },
+   ".signaldone_18": {
+    "Value": "done",
+    "Time": "2026-09-04 18:00:04"
+   },
+   ".signaldone_19": {
+    "Value": "done",
+    "Time": "2026-09-04 19:00:04"
+   },
+   ".signaldone_20": {
+    "Value": "done",
+    "Time": "2026-09-04 20:00:04"
+   },
+   ".signaldone_24": {
+    "Value": "done",
+    "Time": "2026-09-04 00:00:04"
+   },
+   "Battery_ChargeOptTargetPower_01": {
+    "Value": "9223372036854775808 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Battery_ChargeUnrestricted_01": {
+    "Value": "1",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Battery_TargetAchievable_01": {
+    "Value": "0",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_AutarkyRate": {
+    "Value": "31 %",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_BatCharge_01": {
+    "Value": "3.8 %",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_Consumption": {
+    "Value": "-814 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_GridConsumption": {
+    "Value": "1135 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_GridFeedIn": {
+    "Value": "0 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_PV": {
+    "Value": "38 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_PowerBatIn_01": {
+    "Value": "2498 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_PowerBatOut_01": {
+    "Value": "511 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_SelfConsumption": {
+    "Value": "0 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_SelfConsumptionRate": {
+    "Value": "0 %",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Current_Surplus": {
+    "Value": "852 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "LastHourGridconsumptionReal": {
+    "Value": "1705 Wh",
+    "Time": "2026-09-04 20:00:00"
+   },
+   "LastHourPVforecast": {
+    "Value": "198 Wh",
+    "Time": "2026-09-04 20:00:00"
+   },
+   "LastHourPVreal": {
+    "Value": "74 Wh",
+    "Time": "2026-09-04 20:00:00"
+   },
+   "NextHours_Sum01_PVforecast": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "NextHours_Sum02_PVforecast": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "NextHours_Sum03_PVforecast": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "NextHours_Sum04_ConsumptionForecast": {
+    "Value": "490 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "NextHours_Sum04_PVforecast": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "RestOfDayConsumptionForecast": {
+    "Value": "115 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "RestOfDayPVforecast": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_CONdeviation": {
+    "Value": "42.80 %",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_CONforecast": {
+    "Value": "31996 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_CONreal": {
+    "Value": "19042 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_Hour01_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 00:59:54"
+   },
+   "Today_Hour01_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 00:59:54"
+   },
+   "Today_Hour01_GridConsumption": {
+    "Value": "1914 Wh",
+    "Time": "2026-09-04 00:59:54"
+   },
+   "Today_Hour01_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 00:59:54"
+   },
+   "Today_Hour01_PVreal": {
+    "Value": "5 Wh",
+    "Time": "2026-09-04 00:59:54"
+   },
+   "Today_Hour02_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 01:59:49"
+   },
+   "Today_Hour02_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 01:59:49"
+   },
+   "Today_Hour02_GridConsumption": {
+    "Value": "707 Wh",
+    "Time": "2026-09-04 01:59:49"
+   },
+   "Today_Hour02_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 01:59:49"
+   },
+   "Today_Hour02_PVreal": {
+    "Value": "4 Wh",
+    "Time": "2026-09-04 01:59:49"
+   },
+   "Today_Hour03_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 02:59:49"
+   },
+   "Today_Hour03_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 02:59:49"
+   },
+   "Today_Hour03_GridConsumption": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 02:59:49"
+   },
+   "Today_Hour03_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 02:59:49"
+   },
+   "Today_Hour03_PVreal": {
+    "Value": "3 Wh",
+    "Time": "2026-09-04 02:59:49"
+   },
+   "Today_Hour04_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 03:59:49"
+   },
+   "Today_Hour04_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 03:59:49"
+   },
+   "Today_Hour04_GridConsumption": {
+    "Value": "102 Wh",
+    "Time": "2026-09-04 03:59:49"
+   },
+   "Today_Hour04_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 03:59:49"
+   },
+   "Today_Hour04_PVreal": {
+    "Value": "3 Wh",
+    "Time": "2026-09-04 03:59:49"
+   },
+   "Today_Hour05_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 04:59:49"
+   },
+   "Today_Hour05_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 04:59:49"
+   },
+   "Today_Hour05_GridConsumption": {
+    "Value": "665 Wh",
+    "Time": "2026-09-04 04:59:49"
+   },
+   "Today_Hour05_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 04:59:49"
+   },
+   "Today_Hour05_PVreal": {
+    "Value": "3 Wh",
+    "Time": "2026-09-04 04:59:49"
+   },
+   "Today_Hour06_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 05:59:49"
+   },
+   "Today_Hour06_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 05:59:49"
+   },
+   "Today_Hour06_GridConsumption": {
+    "Value": "700 Wh",
+    "Time": "2026-09-04 05:59:49"
+   },
+   "Today_Hour06_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 05:59:49"
+   },
+   "Today_Hour06_PVreal": {
+    "Value": "5 Wh",
+    "Time": "2026-09-04 05:59:49"
+   },
+   "Today_Hour07_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 06:59:49"
+   },
+   "Today_Hour07_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 06:59:49"
+   },
+   "Today_Hour07_GridConsumption": {
+    "Value": "758 Wh",
+    "Time": "2026-09-04 06:59:49"
+   },
+   "Today_Hour07_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 06:59:49"
+   },
+   "Today_Hour07_PVforecast": {
+    "Value": "24 Wh",
+    "Time": "2026-09-04 00:30:44"
+   },
+   "Today_Hour07_PVreal": {
+    "Value": "23 Wh",
+    "Time": "2026-09-04 06:59:49"
+   },
+   "Today_Hour08_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 07:59:54"
+   },
+   "Today_Hour08_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 07:59:54"
+   },
+   "Today_Hour08_GridConsumption": {
+    "Value": "942 Wh",
+    "Time": "2026-09-04 07:59:54"
+   },
+   "Today_Hour08_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 07:59:54"
+   },
+   "Today_Hour08_PVforecast": {
+    "Value": "221 Wh",
+    "Time": "2026-09-04 07:59:54"
+   },
+   "Today_Hour08_PVreal": {
+    "Value": "80 Wh",
+    "Time": "2026-09-04 07:59:54"
+   },
+   "Today_Hour09_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 08:59:49"
+   },
+   "Today_Hour09_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 08:59:49"
+   },
+   "Today_Hour09_GridConsumption": {
+    "Value": "1982 Wh",
+    "Time": "2026-09-04 08:59:49"
+   },
+   "Today_Hour09_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 08:59:49"
+   },
+   "Today_Hour09_PVforecast": {
+    "Value": "518 Wh",
+    "Time": "2026-09-04 08:59:49"
+   },
+   "Today_Hour09_PVreal": {
+    "Value": "139 Wh",
+    "Time": "2026-09-04 08:59:49"
+   },
+   "Today_Hour10_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 09:59:49"
+   },
+   "Today_Hour10_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 09:59:49"
+   },
+   "Today_Hour10_GridConsumption": {
+    "Value": "1401 Wh",
+    "Time": "2026-09-04 09:59:49"
+   },
+   "Today_Hour10_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 09:59:49"
+   },
+   "Today_Hour10_PVforecast": {
+    "Value": "136 Wh",
+    "Time": "2026-09-04 09:59:49"
+   },
+   "Today_Hour10_PVreal": {
+    "Value": "291 Wh",
+    "Time": "2026-09-04 09:59:49"
+   },
+   "Today_Hour11_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 10:59:49"
+   },
+   "Today_Hour11_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 10:59:49"
+   },
+   "Today_Hour11_GridConsumption": {
+    "Value": "324 Wh",
+    "Time": "2026-09-04 10:59:49"
+   },
+   "Today_Hour11_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 10:59:49"
+   },
+   "Today_Hour11_PVforecast": {
+    "Value": "851 Wh",
+    "Time": "2026-09-04 10:59:49"
+   },
+   "Today_Hour11_PVreal": {
+    "Value": "636 Wh",
+    "Time": "2026-09-04 10:59:49"
+   },
+   "Today_Hour12_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 11:59:49"
+   },
+   "Today_Hour12_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 11:59:49"
+   },
+   "Today_Hour12_GridConsumption": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 11:59:49"
+   },
+   "Today_Hour12_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 11:59:49"
+   },
+   "Today_Hour12_PVforecast": {
+    "Value": "455 Wh",
+    "Time": "2026-09-04 11:59:49"
+   },
+   "Today_Hour12_PVreal": {
+    "Value": "563 Wh",
+    "Time": "2026-09-04 11:59:49"
+   },
+   "Today_Hour13_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 12:59:49"
+   },
+   "Today_Hour13_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 12:59:49"
+   },
+   "Today_Hour13_GridConsumption": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 12:59:49"
+   },
+   "Today_Hour13_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 12:59:49"
+   },
+   "Today_Hour13_PVforecast": {
+    "Value": "506 Wh",
+    "Time": "2026-09-04 12:59:49"
+   },
+   "Today_Hour13_PVreal": {
+    "Value": "1031 Wh",
+    "Time": "2026-09-04 12:59:49"
+   },
+   "Today_Hour14_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 13:59:49"
+   },
+   "Today_Hour14_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 13:59:49"
+   },
+   "Today_Hour14_GridConsumption": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 13:59:49"
+   },
+   "Today_Hour14_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 13:59:49"
+   },
+   "Today_Hour14_PVforecast": {
+    "Value": "107 Wh",
+    "Time": "2026-09-04 13:59:49"
+   },
+   "Today_Hour14_PVreal": {
+    "Value": "1610 Wh",
+    "Time": "2026-09-04 13:59:49"
+   },
+   "Today_Hour15_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 14:59:54"
+   },
+   "Today_Hour15_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 14:59:54"
+   },
+   "Today_Hour15_GridConsumption": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 14:59:54"
+   },
+   "Today_Hour15_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 14:59:54"
+   },
+   "Today_Hour15_PVforecast": {
+    "Value": "204 Wh",
+    "Time": "2026-09-04 14:59:54"
+   },
+   "Today_Hour15_PVreal": {
+    "Value": "1085 Wh",
+    "Time": "2026-09-04 14:59:54"
+   },
+   "Today_Hour16_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 15:59:49"
+   },
+   "Today_Hour16_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 15:59:49"
+   },
+   "Today_Hour16_GridConsumption": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 15:59:49"
+   },
+   "Today_Hour16_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 15:59:49"
+   },
+   "Today_Hour16_PVforecast": {
+    "Value": "146 Wh",
+    "Time": "2026-09-04 15:59:49"
+   },
+   "Today_Hour16_PVreal": {
+    "Value": "258 Wh",
+    "Time": "2026-09-04 15:59:49"
+   },
+   "Today_Hour17_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 16:59:49"
+   },
+   "Today_Hour17_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 16:59:49"
+   },
+   "Today_Hour17_GridConsumption": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 16:59:49"
+   },
+   "Today_Hour17_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 16:59:49"
+   },
+   "Today_Hour17_PVforecast": {
+    "Value": "93 Wh",
+    "Time": "2026-09-04 16:59:49"
+   },
+   "Today_Hour17_PVreal": {
+    "Value": "196 Wh",
+    "Time": "2026-09-04 16:59:49"
+   },
+   "Today_Hour18_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 17:59:49"
+   },
+   "Today_Hour18_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 17:59:49"
+   },
+   "Today_Hour18_GridConsumption": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 17:59:49"
+   },
+   "Today_Hour18_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 17:59:49"
+   },
+   "Today_Hour18_PVforecast": {
+    "Value": "2626 Wh",
+    "Time": "2026-09-04 17:59:49"
+   },
+   "Today_Hour18_PVreal": {
+    "Value": "467 Wh",
+    "Time": "2026-09-04 17:59:49"
+   },
+   "Today_Hour19_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 18:59:49"
+   },
+   "Today_Hour19_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 18:59:49"
+   },
+   "Today_Hour19_GridConsumption": {
+    "Value": "520 Wh",
+    "Time": "2026-09-04 18:59:49"
+   },
+   "Today_Hour19_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 18:59:49"
+   },
+   "Today_Hour19_PVforecast": {
+    "Value": "315 Wh",
+    "Time": "2026-09-04 18:59:49"
+   },
+   "Today_Hour19_PVreal": {
+    "Value": "350 Wh",
+    "Time": "2026-09-04 18:59:49"
+   },
+   "Today_Hour20_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 19:59:49"
+   },
+   "Today_Hour20_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 19:59:49"
+   },
+   "Today_Hour20_GridConsumption": {
+    "Value": "1705 Wh",
+    "Time": "2026-09-04 19:59:49"
+   },
+   "Today_Hour20_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 19:59:49"
+   },
+   "Today_Hour20_PVforecast": {
+    "Value": "198 Wh",
+    "Time": "2026-09-04 19:59:49"
+   },
+   "Today_Hour20_PVreal": {
+    "Value": "74 Wh",
+    "Time": "2026-09-04 19:59:49"
+   },
+   "Today_Hour21_BatIn_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_Hour21_BatOut_01": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_Hour21_GridConsumption": {
+    "Value": "641 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_Hour21_GridFeedIn": {
+    "Value": "0 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_Hour21_PVforecast": {
+    "Value": "24 Wh",
+    "Time": "2026-09-04 00:30:44"
+   },
+   "Today_Hour21_PVreal": {
+    "Value": "9 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_MaxPVforecast": {
+    "Value": "2626 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_MaxPVforecastTime": {
+    "Value": "2026-09-04 17:00:00",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_PVdeviation": {
+    "Value": "-7.15181932245922 %",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_PVforecast": {
+    "Value": "6376 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_PVreal": {
+    "Value": "6835 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_SunRise": {
+    "Value": "06:46",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Today_SunSet": {
+    "Value": "20:12",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Tomorrow_CONforecast": {
+    "Value": "31677 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Tomorrow_PVforecast": {
+    "Value": "17024 Wh",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Tomorrow_SunRise": {
+    "Value": "06:48",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "Tomorrow_SunSet": {
+    "Value": "20:10",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "consumer01": {
+    "Value": "name='Klima Gästezimmer' state='off' mode='can' planningstate='planned'",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "consumer01_planned_start": {
+    "Value": "05.09.2026 10:00:00",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "consumer01_planned_stop": {
+    "Value": "05.09.2026 10:20:00",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "consumer02": {
+    "Value": "name='Model 3' state='unknown' mode='mustNot' planningstate='noSchedule'",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "consumer02_currentPower": {
+    "Value": "0 W",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "consumer03": {
+    "Value": "name='Klima Garage' state='off' mode='can' planningstate='planned'",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "consumer03_planned_start": {
+    "Value": "05.09.2026 11:00:00",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "consumer03_planned_stop": {
+    "Value": "05.09.2026 11:20:00",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "nextCycletime": {
+    "Value": "20:19:37",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "nextRadiationAPICall": {
+    "Value": "nach 04.09.2026 20:28:48",
+    "Time": "2026-09-04 20:13:48"
+   },
+   "pvCorrectionFactor_08": {
+    "Value": "0.52 (automatic - old factor: 0.55, AI result used, Sun Alt range: 5, Cloud range: 100, Days in range: 19)",
+    "Time": "2026-09-04 08:00:04"
+   },
+   "pvCorrectionFactor_09": {
+    "Value": "0.30 (automatic - old factor: 0.33, AI result used, Sun Alt range: 15, Cloud range: 100, Days in range: 19)",
+    "Time": "2026-09-04 09:00:04"
+   },
+   "pvCorrectionFactor_10": {
+    "Value": "0.77 (automatic - old factor: 0.83, AI result used, Sun Alt range: 25, Cloud range: 100, Days in range: 20)",
+    "Time": "2026-09-04 10:00:04"
+   },
+   "pvCorrectionFactor_11": {
+    "Value": "0.55 (automatic - old factor: 0.59, AI result used, Sun Alt range: 35, Cloud range: 100, Days in range: 20)",
+    "Time": "2026-09-04 11:00:04"
+   },
+   "pvCorrectionFactor_12": {
+    "Value": "0.49 (automatic - old factor: 0.48, AI result used, Sun Alt range: 40, Cloud range: 100, Days in range: 19)",
+    "Time": "2026-09-04 12:00:04"
+   },
+   "pvCorrectionFactor_13": {
+    "Value": "0.66 (automatic - old factor: 0.68, Sun Alt range: 45, Cloud range: 100, Days in range: 20)",
+    "Time": "2026-09-04 13:00:04"
+   },
+   "pvCorrectionFactor_14": {
+    "Value": "1.06 (automatic - old factor: 1.09, AI result used, Sun Alt range: 45, Cloud range: 100, Days in range: 19)",
+    "Time": "2026-09-04 14:00:04"
+   },
+   "pvCorrectionFactor_15": {
+    "Value": "0.69 (automatic - old factor: 0.66, AI result used, Sun Alt range: 45, Cloud range: 100, Days in range: 19)",
+    "Time": "2026-09-04 15:00:04"
+   },
+   "pvCorrectionFactor_16": {
+    "Value": "0.71 (automatic - old factor: 0.70, Sun Alt range: 40, Cloud range: 100, Days in range: 19)",
+    "Time": "2026-09-04 16:00:04"
+   },
+   "pvCorrectionFactor_17": {
+    "Value": "0.71 (automatic - old factor: 0.74, AI result used, Sun Alt range: 30, Cloud range: 100, Days in range: 16)",
+    "Time": "2026-09-04 17:00:04"
+   },
+   "pvCorrectionFactor_18": {
+    "Value": "0.61 (automatic - old factor: 0.64, AI result used, Sun Alt range: 25, Cloud range: 90, Days in range: 3)",
+    "Time": "2026-09-04 18:00:04"
+   },
+   "pvCorrectionFactor_19": {
+    "Value": "0.43 (automatic - old factor: 0.39, Sun Alt range: 15, Cloud range: 95, Days in range: 5)",
+    "Time": "2026-09-04 19:00:04"
+   },
+   "pvCorrectionFactor_20": {
+    "Value": "0.37 (automatic - old factor: 0.37, AI result used, Sun Alt range: 5, Cloud range: 100, Days in range: 20)",
+    "Time": "2026-09-04 20:00:04"
+   },
+   "pvCorrectionFactor_Auto": {
+    "Value": "on_complex_ai",
+    "Time": "2026-09-04 20:18:27"
+   },
+   "state": {
+    "Value": "updated",
+    "Time": "2026-09-04 20:18:28"
+   }
+  }
+ },
+ {
+  "Name": "MQTT2_Tesla_Model3",
+  "Internals": {
+   "NAME": "MQTT2_Tesla_Model3",
+   "TYPE": "MQTT2_DEVICE",
+   "DEF": "",
+   "STATE": "virtual_charge_limit"
+  },
+  "Attributes": {
+   "IODev": "myBroker2",
+   "T2F_types_info": "Reichweite,Batteriestand,Füllstand,Akkustand => Die Reichweite vom Tesla beträgt ' . ReadingsVal($device, 'est_battery_range_km', '') .' km, Akkustand '. ReadingsVal($device, 'battery_level', '') . ' Prozent",
+   "alias": "Model 3",
+   "devicetopic": "LRW3E7EK5RC985504",
+   "icon": "car_in@blue",
+   "room": "Draußen,Garage,Homebridge,System->MQTT,System->Tesla,FHEMVIZ->Solar",
+   "setList": "wish_charge_limit:slider,20,5,100 ioBroker/tesla-motors/0/$DEVICETOPIC/wish_charge_limit $EVTPART1",
+   "sortby": "10",
+   "stateFormat": "{sprintf(\"Battery %s%% %skm | %s%% Limit\", ReadingsVal($name,\"battery_level\",\"0\"), ReadingsVal($name,\"battery_range_km\",\"0\"), ReadingsVal($name,\"virtual_charge_limit\",\"0\"))}",
+   "userReadings": "distance:longitude.* {calcDistkm(ReadingsVal($name, 'latitude', ''), ReadingsVal($name, 'longitude', ''), AttrVal('global', 'latitude', ''), AttrVal('global', 'longitude', ''))}",
+   "vizCar": "wallbox=MQTT2_GOE,home=Im Nott|Zuhause|Home,image=laedt:/fhem/fhemviz/img/car/tesla-laedt.png|steckt:/fhem/fhemviz/img/car/tesla-steckt.png|frei:/fhem/fhemviz/img/car/tesla-frei.png",
+   "vizHero": "1",
+   "vizReadings": "battery_level:Ladung:%:accent,battery_range_km:Reichweite:km,distance:Entfernung:km",
+   "vizSize": "2x1"
+  },
+  "PossibleSets": "wish_charge_limit:slider,20,5,100 ioBroker/tesla-motors/0/$DEVICETOPIC/wish_charge_limit $EVTPART1",
+  "Readings": {
+   "IODev": {
+    "Value": "myBroker2",
+    "Time": "2026-08-31 21:19:04"
+   },
+   "auto_on": {
+    "Value": "off",
+    "Time": "2026-08-29 20:16:58"
+   },
+   "batCap": {
+    "Value": "82000",
+    "Time": "2026-07-13 16:18:21"
+   },
+   "battery_heater": {
+    "Value": "false",
+    "Time": "2026-09-04 20:09:06"
+   },
+   "battery_level": {
+    "Value": "19",
+    "Time": "2026-09-04 20:09:06"
+   },
+   "battery_range_km": {
+    "Value": "103.4",
+    "Time": "2026-09-04 20:09:06"
+   },
+   "charge_limit_soc": {
+    "Value": "90",
+    "Time": "2026-09-04 20:09:06"
+   },
+   "charge_port_door_open": {
+    "Value": "false",
+    "Time": "2026-09-04 20:09:06"
+   },
+   "distance": {
+    "Value": "0.02",
+    "Time": "2026-09-04 20:09:07"
+   },
+   "est_battery_range_km": {
+    "Value": "300.21",
+    "Time": "2026-04-30 08:43:26"
+   },
+   "heading": {
+    "Value": "76",
+    "Time": "2025-07-02 21:04:28"
+   },
+   "set_charge_limit": {
+    "Value": "90",
+    "Time": "2026-09-04 20:09:06"
+   },
+   "speed_km": {
+    "Value": "0",
+    "Time": "2026-09-04 20:09:07"
+   },
+   "state": {
+    "Value": "virtual_charge_limit",
+    "Time": "2026-08-29 20:16:58"
+   },
+   "virtual_charge_limit": {
+    "Value": "20",
+    "Time": "2026-08-29 20:16:58"
+   },
+   "wish_charge_limit": {
+    "Value": "20",
+    "Time": "2026-08-29 20:14:49"
+   }
+  }
+ },
+ {
+  "Name": "MQTT2_Sonoff_POW_01",
+  "Internals": {
+   "NAME": "MQTT2_Sonoff_POW_01",
+   "TYPE": "MQTT2_DEVICE",
+   "DEF": "",
+   "STATE": "<div style=\"color: white\">Aktuell <b style=\"color: green\">3 W</b>,<br> Heute <b style=\"color: green\">0.8 Kw/h</b>,<br> Kostenamo 136.81 %</div>"
+  },
+  "Attributes": {
+   "IODev": "myBroker2",
+   "alias": "Piratenanlage",
+   "devStateIcon": "on:rc_GREEN:off off:rc_RED:on",
+   "devicetopic": "DVES_54B7A0",
+   "event-min-interval": "ENERGY_.*:10",
+   "event-on-change-reading": "POWER,kostenammo,pooltrigger,ENERGY_Power",
+   "fp_SchalterDash": "-1,973,5,Sonoff_POW_01,",
+   "fp_SolarDash": "86,596,1,Piratenanlage,",
+   "fp_WetterDash": "20,979,0,Sonoff_POW_01,",
+   "fp_WetterDash_Test": "20,979,0,Sonoff_POW_01,",
+   "genericDeviceType": "light",
+   "group": "Wechselrichter",
+   "icon": "measure_photovoltaic_inst",
+   "room": "Draußen,Gewächshaus,Solar,System->MQTT,System->mcp_rw,FHEMVIZ->Solar",
+   "setList": "off:noArg cmnd/$DEVICETOPIC/POWER OFF",
+   "stateFormat": "{sprintf(\"<div style=\\\"color: white\\\">Aktuell <b style=\\\"color: green\\\">%.0f W</b>,<br> Heute <b style=\\\"color: green\\\">%.1f Kw/h</b>,<br> Kostenamo %.2f %%</div>\", ReadingsVal($name,\"ENERGY_Power\",0), ReadingsVal($name,\"ENERGY_Today\",0), ReadingsVal($name,\"kostenammo\",0))}",
+   "vizGroup": "Solar",
+   "vizReadings": "ENERGY_Power:Aktuell:W:ok,ENERGY_Today:Heute:kWh,ENERGY_Yesterday:Gestern:kWh",
+   "vizWidget": "switch"
+  },
+  "PossibleSets": "off:noArg cmnd/$DEVICETOPIC/POWER OFF",
+  "Readings": {
+   "ENERGY_ApparentPower": {
+    "Value": "23",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_Current": {
+    "Value": "0.101",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_Factor": {
+    "Value": "0.13",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_Period": {
+    "Value": "0",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "ENERGY_Power": {
+    "Value": "3",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_ReactivePower": {
+    "Value": "23",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_Today": {
+    "Value": "0.850",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_Total": {
+    "Value": "3783.896",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_TotalStartTime": {
+    "Value": "2021-06-11T11:20:47",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_Voltage": {
+    "Value": "233",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ENERGY_Yesterday": {
+    "Value": "1.611",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "Heap": {
+    "Value": "24",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "IODev": {
+    "Value": "myBroker2",
+    "Time": "2026-08-31 21:19:04"
+   },
+   "LoadAvg": {
+    "Value": "19",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "MqttCount": {
+    "Value": "7",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "POWER": {
+    "Value": "ON",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "PowerDelta": {
+    "Value": "5",
+    "Time": "2026-08-18 10:29:39"
+   },
+   "Sleep": {
+    "Value": "50",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "SleepMode": {
+    "Value": "Dynamic",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "TelePeriod": {
+    "Value": "30",
+    "Time": "2026-08-18 10:29:30"
+   },
+   "Time": {
+    "Value": "2026-09-04T19:19:07",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "Uptime": {
+    "Value": "47T08:25:52",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "UptimeSec": {
+    "Value": "4091152",
+    "Time": "2026-09-04 20:18:59"
+   },
+   "WebServerMode": {
+    "Value": "Admin",
+    "Time": "2026-07-19 12:35:19"
+   },
+   "kostenammo": {
+    "Value": "136.81",
+    "Time": "2026-09-04 15:33:11"
+   },
+   "pooltrigger": {
+    "Value": "off",
+    "Time": "2026-09-04 15:33:11"
+   }
+  }
+ },
+ {
+  "Name": "poolControl",
+  "Internals": {
+   "NAME": "poolControl",
+   "TYPE": "PoolControl",
+   "DEF": "",
+   "STATE": "Pool 21.9/Soll 33.5°C | Filter off (manuell aus) | 0.3/3h"
+  },
+  "Attributes": {
+   "alias": "Pool",
+   "disable": "1",
+   "event-on-change-reading": ".*",
+   "filterHours": "3",
+   "filterNightEnd": "06:00",
+   "filterNightStart": "22:00",
+   "filterOffCmd": "OFF",
+   "filterOnCmd": "ON",
+   "filterOnRegex": "on|ON|1",
+   "filterStateReading": "POWER",
+   "filterSwitch": "MQTT2_Sonoff_TH10_01",
+   "heating": "off",
+   "heatpumpOffset": "0.9",
+   "heatpumpRampTime": "180",
+   "heatpumpReadOnly": "1",
+   "heatpumpRegBand": "0.5",
+   "heatpumpSwitch": "d_pool_wp",
+   "heatpumpTemp": "31",
+   "heatpumpTempCmd": "temperatur",
+   "inflowSensor": "MQTT2_Sonoff_TH10_01:solarTemp",
+   "poolSensor": "MQTT2_Sonoff_TH10_01:poolTemp",
+   "room": "Draußen,FHEMVIZ->Solar,Solar",
+   "solarEndTime": "20:30",
+   "solarHysteresis": "0.3",
+   "solarHysteresisFilter": "0.1",
+   "solarIndexOff": "3",
+   "solarIndexOn": "8",
+   "solarIndexSensor": "d_solar:index",
+   "solarOffCmd": "off",
+   "solarOnCmd": "on",
+   "solarRetryDelay": "1800",
+   "solarSettleTime": "180",
+   "solarStartTime": "13:00",
+   "solarSwitch": "rp_POOL_SOLAR",
+   "targetTempSchedule": "00:00 32 14:00 33.5",
+   "verbose": "3",
+   "vizGroup": "Pool",
+   "vizReadings": "poolTemp:Wasser:°C:bad@>=34.5|ok@>=32|blau@<31,targetTemp:Soll:°C,inflowTemp:Zulauf:°C:warn@>=poolTemp+3|ok@>poolTemp|blau@<poolTemp,filterRuntimeToday:Filter heute:min::0,filterRemaining:Filter noch:h,solarState:Solarheizung,heatpumpState:Wärmepumpe,filterReason:Filter-Grund",
+   "vizSize": "2x2",
+   "vizState": "filterState",
+   "vizStates": "on:Filter läuft:ok,off:Filter aus",
+   "vizWidget": "actions",
+   "webCmd": "filter:mode:solarCheck",
+   "webCmdLabel": "Filter-Modus:Betrieb:Solar prüfen",
+   "wpEndTime": "19:00",
+   "wpStartTime": "09:00"
+  },
+  "PossibleSets": "",
+  "Readings": {
+   "controlActive": {
+    "Value": "on",
+    "Time": "2026-08-31 21:19:04"
+   },
+   "desiredTemperature": {
+    "Value": "30",
+    "Time": "2026-08-31 21:19:04"
+   },
+   "filter": {
+    "Value": "auto",
+    "Time": "2026-08-31 21:19:04"
+   },
+   "filterReason": {
+    "Value": "manuell aus",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "filterRemaining": {
+    "Value": "2.7",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "filterRuntimeDay": {
+    "Value": "2026-08-30",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "filterRuntimeToday": {
+    "Value": "16",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "filterState": {
+    "Value": "off",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "heating": {
+    "Value": "off",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "heatingNeeded": {
+    "Value": "no",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "heatpumpEffective": {
+    "Value": "22.8",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "heatpumpState": {
+    "Value": "off (beobachtet)",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "inflowTemp": {
+    "Value": "21.8",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "lastDecision": {
+    "Value": "Heizen deaktiviert (attr heating off)",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "mixState": {
+    "Value": "idle",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "mode": {
+    "Value": "auto",
+    "Time": "2026-08-31 21:19:04"
+   },
+   "poolTemp": {
+    "Value": "21.9",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "solarHeating": {
+    "Value": "no",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "solarIndex": {
+    "Value": "-10",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "solarState": {
+    "Value": "off (Heizen deaktiviert)",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "state": {
+    "Value": "Pool 21.9/Soll 33.5°C | Filter off (manuell aus) | 0.3/3h",
+    "Time": "2026-08-30 22:16:27"
+   },
+   "targetTemp": {
+    "Value": "33.5",
+    "Time": "2026-08-30 22:16:27"
+   }
+  }
+ },
+ {
+  "Name": "d_wechselrichter_chart",
+  "Internals": {
+   "NAME": "d_wechselrichter_chart",
+   "TYPE": "dummy",
+   "DEF": ""
+  },
+  "Attributes": {
+   "alias": "PV-Ertrag pro Tag",
+   "room": "FHEMVIZ->Solar",
+   "vizChart": "LogDB:d_Wechselrichter_all#pv_leistung_gesamtheute:PV-Ertrag:ok unit=Wh hours=168",
+   "vizSize": "2x2",
+   "vizWidget": "chart"
+  },
+  "PossibleSets": "",
+  "Readings": {}
+ },
+ {
+  "Name": "MQTT2_GOE",
+  "Internals": {
+   "NAME": "MQTT2_GOE",
+   "TYPE": "MQTT2_DEVICE",
+   "DEF": "",
+   "STATE": "Activation"
+  },
+  "Attributes": {
+   "IODev": "myBroker2",
+   "alias": "Wallbox",
+   "devStateIcon": "ALW.1:status_open:Activation+0 ALW.0:status_locked:Activation+1",
+   "event-min-interval": ".*:120",
+   "event-on-change-reading": "Activation,Ampere,car,nrg_2,nrg_12",
+   "group": "Auto",
+   "icon": "electric_car_icon",
+   "jsonMap": "alw:Activation amp:Ampere tmp:temperature",
+   "model": "go_eCharger_old",
+   "room": "Garage,Solar,System->MQTT,System->mcp_rw,FHEMVIZ->Stuff",
+   "setList": "Activation:0,1 go-eCharger/029259/cmd/req alw=$EVTPART1",
+   "stateFormat": "Status: charger_state Ampere A, energy_all_w W",
+   "userReadings": "charger_state:car.* { my $val = ReadingsVal($name,\"car\",\"none\");;;; my %rets = (\"none\" => \"-1\",\"1\" => \"waiting for car\",\"2\" => \"Charging\",\"3\" => \"Ready\",\"4\" => \"Charging finished\",);;;; $rets{$val}}, ",
+   "vizStates": "Charging:lädt:accent,waiting for car:kein Auto,Ready:bereit:ok,Charging finished:fertig:ok"
+  },
+  "PossibleSets": "Activation:0,1 go-eCharger/029259/cmd/req alw=$EVTPART1",
+  "Readings": {
+   "Activation": {
+    "Value": "1",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "Ampere": {
+    "Value": "12",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "Automatiksteuerung": {
+    "Value": "0",
+    "Time": "2026-04-07 11:27:04"
+   },
+   "IODev": {
+    "Value": "myBroker2",
+    "Time": "2026-08-31 21:19:04"
+   },
+   "adi": {
+    "Value": "1",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "afi": {
+    "Value": "7",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "aho": {
+    "Value": "3",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "al1": {
+    "Value": "10",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "al2": {
+    "Value": "16",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "al3": {
+    "Value": "20",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "al4": {
+    "Value": "24",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "al5": {
+    "Value": "32",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ama": {
+    "Value": "32",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "amt": {
+    "Value": "32",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ast": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "azo": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "car": {
+    "Value": "1",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "cbl": {
+    "Value": "32",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "cch": {
+    "Value": "65535",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "cdi": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "cfi": {
+    "Value": "65280",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "charger_state": {
+    "Value": "waiting for car",
+    "Time": "2026-09-04 20:18:42"
+   },
+   "dto": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "dwo": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "dws": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ec1": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ec4": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ec5": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ec6": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ec7": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ec8": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ec9": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "eca": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ecd": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ecr": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "energy_akt": {
+    "Value": "17.55",
+    "Time": "2025-08-26 09:23:17"
+   },
+   "energy_all_w": {
+    "Value": "0",
+    "Time": "2026-09-04 20:18:42"
+   },
+   "energy_home_w": {
+    "Value": "0",
+    "Time": "2026-09-04 20:18:42"
+   },
+   "energy_total": {
+    "Value": "2952",
+    "Time": "2025-08-26 09:23:17"
+   },
+   "err": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "eto": {
+    "Value": "3770",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "fwv": {
+    "Value": "041.0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "lbr": {
+    "Value": "255",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "lch": {
+    "Value": "91478",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "loa": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "loe": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "lof": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "log": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "lom": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "lop": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "lot": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "lse": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nmo": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_1": {
+    "Value": "218",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_10": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_11": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_12": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_13": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_14": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_15": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_16": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_2": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_3": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_4": {
+    "Value": "1",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_5": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_6": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_7": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_8": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "nrg_9": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "pha": {
+    "Value": "8",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "r1x": {
+    "Value": "2",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rbc": {
+    "Value": "25",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rbt": {
+    "Value": "897956871",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rc1": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rc4": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rc5": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rc6": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rc7": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rc8": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rc9": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rca": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rcd": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rcr": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rn1": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rn4": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rn5": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rn6": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rn7": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rn8": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rn9": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rna": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rne": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "rnm": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "sch": {
+    "Value": "AAAAAAAAAAAAAAAA",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "sdp": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "sse": {
+    "Value": "029259",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "state": {
+    "Value": "Activation",
+    "Time": "2026-09-04 09:00:22"
+   },
+   "stp": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tds": {
+    "Value": "1",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "temperature": {
+    "Value": "12",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tma_1": {
+    "Value": "24.88",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tma_2": {
+    "Value": "23.75",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tma_3": {
+    "Value": "23.50",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tma_4": {
+    "Value": "23.88",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tma_5": {
+    "Value": "26.00",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tma_6": {
+    "Value": "26.63",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tme": {
+    "Value": "0409262019",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "tof": {
+    "Value": "101",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "txi": {
+    "Value": "2",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "uby": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "ust": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "version": {
+    "Value": "B",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "wak": {
+    "Value": "",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "wen": {
+    "Value": "1",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "wke": {
+    "Value": "*************",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "wss": {
+    "Value": "NETZ",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "wst": {
+    "Value": "3",
+    "Time": "2026-09-04 20:19:07"
+   }
+  }
+ },
+ {
+  "Name": "rem_MQTT2_SMART_SHUNT1",
+  "Internals": {
+   "NAME": "rem_MQTT2_SMART_SHUNT1",
+   "TYPE": "DoRemoteDevice",
+   "DEF": "",
+   "STATE": "style norm"
+  },
+  "Attributes": {
+   "T2F_types_info": "Batteriestand,Füllstand,Akkustand,Hausspeicher,Heimspeicher => Der Batteriestand ist bei '.punkt_komma(ReadingsVal($device, 'data_state_of_charge_shunt_state', '') ).' Prozent",
+   "alias": "Smart Shunt",
+   "event-min-interval": ".*:30",
+   "event-on-change-reading": "data_state_of_charge_shunt_state,data_battery_power_shunt_state,data_battery_power_shunt_in_state,data_battery_power_shunt_out_state,calcBatteriePowerInDay,calcBatteriePowerOutDay,data_battery_voltage_shunt_state",
+   "group": "Wechselrichter",
+   "room": "Remote->Solar,Solar,Remote->MQTT,System->Tesla,FHEMVIZ->Stuff",
+   "setList": "attrTemplate:?,General_Info,MQTT2_CLIENT_general_bridge,MQTT2_mosquitto_SYS,MQTT2_IO_ignoreRegexp_basic,MQTT2_IO_ignoreRegexp_tasmota,MQTT2_IO_ignoreRegexp_shelly,MQTT2_IO_ignoreRegexp_homeassistant,tasmota_basic,tasmota_basic_state_power1,tasmota_1ch+motion+SI7021,tasmota_POW,tasmota_POW_USB_split,tasmota_plug_with_rgbw_split,tasmota_plug_with_rgb_split,tasmota_ir,tasmota_rf,tasmota_rf_keys_example,tasmota_use_DS18x20_id,tasmota_zigbee2tasmota_bridge,tasmota_clear_readings_reset_readingsList_and_reboot,tasmota_set_lowercase_texts_and_state1,tasmota_set_uppercase_texts_and_state1,tasmota_set_power1_state_to_power,tasmota_2channel_split,tasmota_2ch_unified,tasmota_2channel_split_energy,tasmota_NSPanel_split,tasmota_2ch_shutter_invert_1,tasmota_2ch_shutter_invert_0,tasmota_4ch_two_shutters_invert_0,tasmota_2ch_shutter_venetian_invert_0,tasmota_3channel_input_shelly_i3,tasmota_4channel_input_shelly_i4,tasmota_4channel_split,tasmota_3socketUSB_split,tasmota_4ch_unified_basic_text,tasmota_4ch_unified_icon,tasmota_8ch_unified_icon,tasmota_8channel_split,tasmota_rgb_led_controller,tasmota_rgbw_led,tasmota_rgbcct_light,tasmota_cct_led,tasmota_TuyaMCU_dimmer,tasmota_window_sensor_MC400A,tasmota_bt2tasmota_bridge,shelly1,shellyPlus_1,shellyPlus_1pm,shellyPlus_2pm_split,shellyPlus_2pm_roller_invert_0,shellyPlus_2pm_venetian_blinds_invert_0,shellyPlus_2pm_roller_invert_1,shellypro4pm,shellyPlus_i4,shellyPowerStripG4_split_cmd,ESPurna_single_relay,eBus_daemon_splitter,ebus_update_files_from_svn,ems-esp_heater_device,ems-esp_boiler,ems-esp_thermostat_read-only,ems-esp_thermostat_simple,ems-esp_thermostat_RC35_type,WThermostatBeca,zigbee2mqtt_bridge,sonos2mqtt_bridge,sonos2mqtt_speaker,sonos2mqtt_bridge_comfort,roon,InstarCam,wled_controller,go_eCharger,go_eCharger_old,8channel_ethernet_board_split,8channel_ethernet_board_unified,6channel_ethernet_board_6input_split,6channel_ethernet_board_6input_unified,8channel_relay_board_8di_split,hoymiles_microinverter_hub_bridge,hoymiles_opendtu_hub_bridge,LayZSpa,esp_milight_hub_bridge,OpenMQTTGateway_MCU,valetudo,worx_landroid,wallpanel_app,weewx_weather_station,McLighting",
+   "stateFormat": "{sprintf(\"Bat1 %s V | Bat2 %s V | SOC %s %% | %s W | %s\" , ReadingsVal($name,\"data_battery_voltage_shunt_state\",\"0\"), ReadingsVal($name,\"data_starter_battery_shunt_state\",\"0\"), ReadingsVal($name,\"data_state_of_charge_shunt_state\",\"0\"), ReadingsVal($name,\"data_battery_power_shunt_state\",\"0\"), ReadingsVal($name,\"status\",\"0\"))}"
+  },
+  "PossibleSets": "attrTemplate:?,General_Info,MQTT2_CLIENT_general_bridge,MQTT2_mosquitto_SYS,MQTT2_IO_ignoreRegexp_basic,MQTT2_IO_ignoreRegexp_tasmota,MQTT2_IO_ignoreRegexp_shelly,MQTT2_IO_ignoreRegexp_homeassistant,tasmota_basic,tasmota_basic_state_power1,tasmota_1ch+motion+SI7021,tasmota_POW,tasmota_POW_USB_split,tasmota_plug_with_rgbw_split,tasmota_plug_with_rgb_split,tasmota_ir,tasmota_rf,tasmota_rf_keys_example,tasmota_use_DS18x20_id,tasmota_zigbee2tasmota_bridge,tasmota_clear_readings_reset_readingsList_and_reboot,tasmota_set_lowercase_texts_and_state1,tasmota_set_uppercase_texts_and_state1,tasmota_set_power1_state_to_power,tasmota_2channel_split,tasmota_2ch_unified,tasmota_2channel_split_energy,tasmota_NSPanel_split,tasmota_2ch_shutter_invert_1,tasmota_2ch_shutter_invert_0,tasmota_4ch_two_shutters_invert_0,tasmota_2ch_shutter_venetian_invert_0,tasmota_3channel_input_shelly_i3,tasmota_4channel_input_shelly_i4,tasmota_4channel_split,tasmota_3socketUSB_split,tasmota_4ch_unified_basic_text,tasmota_4ch_unified_icon,tasmota_8ch_unified_icon,tasmota_8channel_split,tasmota_rgb_led_controller,tasmota_rgbw_led,tasmota_rgbcct_light,tasmota_cct_led,tasmota_TuyaMCU_dimmer,tasmota_window_sensor_MC400A,tasmota_bt2tasmota_bridge,shelly1,shellyPlus_1,shellyPlus_1pm,shellyPlus_2pm_split,shellyPlus_2pm_roller_invert_0,shellyPlus_2pm_venetian_blinds_invert_0,shellyPlus_2pm_roller_invert_1,shellypro4pm,shellyPlus_i4,shellyPowerStripG4_split_cmd,ESPurna_single_relay,eBus_daemon_splitter,ebus_update_files_from_svn,ems-esp_heater_device,ems-esp_boiler,ems-esp_thermostat_read-only,ems-esp_thermostat_simple,ems-esp_thermostat_RC35_type,WThermostatBeca,zigbee2mqtt_bridge,sonos2mqtt_bridge,sonos2mqtt_speaker,sonos2mqtt_bridge_comfort,roon,InstarCam,wled_controller,go_eCharger,go_eCharger_old,8channel_ethernet_board_split,8channel_ethernet_board_unified,6channel_ethernet_board_6input_split,6channel_ethernet_board_6input_unified,8channel_relay_board_8di_split,hoymiles_microinverter_hub_bridge,hoymiles_opendtu_hub_bridge,LayZSpa,esp_milight_hub_bridge,OpenMQTTGateway_MCU,valetudo,worx_landroid,wallpanel_app,weewx_weather_station,McLighting",
+  "Readings": {
+   ".noevent": {
+    "Value": "0",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "calcBatteriePowerInDay": {
+    "Value": "1864.6",
+    "Time": "2026-06-26 09:29:16"
+   },
+   "calcBatteriePowerInDayLast": {
+    "Value": "20376.4",
+    "Time": "2026-09-03 23:59:30"
+   },
+   "calcBatteriePowerInGesamt": {
+    "Value": "6381.9",
+    "Time": "2026-09-03 23:59:30"
+   },
+   "calcBatteriePowerOutDay": {
+    "Value": "4358.1",
+    "Time": "2026-06-26 09:29:16"
+   },
+   "calcBatteriePowerOutDayLast": {
+    "Value": "5549.8",
+    "Time": "2026-09-03 23:59:30"
+   },
+   "calcBatteriePowerOutGesamt": {
+    "Value": "13140.7",
+    "Time": "2026-09-03 23:59:30"
+   },
+   "data_battery_power_shunt_in_state": {
+    "Value": "2498.31",
+    "Time": "2026-06-26 08:38:05"
+   },
+   "data_battery_power_shunt_out_state": {
+    "Value": "511.99",
+    "Time": "2026-06-07 20:08:38"
+   },
+   "data_battery_power_shunt_state": {
+    "Value": "134.29",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "data_battery_voltage_shunt_state": {
+    "Value": "49.75",
+    "Time": "2026-09-04 20:18:57"
+   },
+   "data_consumed_ah_shunt_state": {
+    "Value": "-594.8",
+    "Time": "2026-09-04 20:17:14"
+   },
+   "data_current_shunt_state": {
+    "Value": "2.6995",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "data_starter_battery_shunt_state": {
+    "Value": "49.76",
+    "Time": "2026-09-04 20:18:58"
+   },
+   "data_state_of_charge_shunt_state": {
+    "Value": "3.9",
+    "Time": "2026-09-04 20:18:43"
+   },
+   "data_time_remaining_shunt_state": {
+    "Value": "65535",
+    "Time": "2026-09-04 18:31:09"
+   },
+   "fhemsystem": {
+    "Value": "Remote2",
+    "Time": "2026-07-28 09:12:41"
+   },
+   "noevent": {
+    "Value": "0",
+    "Time": "2026-06-12 11:25:06"
+   },
+   "statData_battery_power_shunt_in_stateDayAvg": {
+    "Value": "169.4555555441590684",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "statData_battery_power_shunt_in_stateDayAvgLast": {
+    "Value": "848.9810729380159273",
+    "Time": "2026-09-03 23:59:55"
+   },
+   "statData_battery_power_shunt_in_stateDayLast": {
+    "Value": "Min: 0.0000000000000000 Avg: 848.9810729380159273 Max: 4341.1800000000002910",
+    "Time": "2026-09-03 23:59:55"
+   },
+   "statData_battery_power_shunt_in_stateHourLast": {
+    "Value": "Min: 0.0000000000000000 Avg: 177.0601472222222412 Max: 452.0699999999999932",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "statData_battery_power_shunt_in_stateMonthLast": {
+    "Value": "Min: 0.000000000000000 Avg: 176.211906989639857 Max: 3207.730000000000018",
+    "Time": "2025-12-31 23:59:55"
+   },
+   "statData_battery_power_shunt_out_stateDayAvg": {
+    "Value": "483.6627856449319438",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "statData_battery_power_shunt_out_stateDayAvgLast": {
+    "Value": "231.5043064125867147",
+    "Time": "2026-09-03 23:59:55"
+   },
+   "statData_battery_power_shunt_out_stateDayLast": {
+    "Value": "Min: 0.0000000000000000 Avg: 231.5043064125867147 Max: 2921.3899999999998727",
+    "Time": "2026-09-03 23:59:55"
+   },
+   "statData_battery_power_shunt_out_stateHourLast": {
+    "Value": "Min: 0.0000000000000000 Avg: 263.7211822728535822 Max: 886.1799999999999500",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "statData_battery_power_shunt_out_stateMonthLast": {
+    "Value": "Min: 0.000000000000000 Avg: 165.672514663152668 Max: 7228.250000000000000",
+    "Time": "2025-12-31 23:59:55"
+   },
+   "statData_battery_power_shunt_stateDayAvg": {
+    "Value": "-312.1022721615929640",
+    "Time": "2026-09-04 20:19:07"
+   },
+   "statData_battery_power_shunt_stateDayAvgLast": {
+    "Value": "615.3689363487965238",
+    "Time": "2026-09-03 23:59:55"
+   },
+   "statData_battery_power_shunt_stateDayLast": {
+    "Value": "Min: -2921.3899999999998727 Avg: 615.3689363487965238 Max: 4341.1800000000002910",
+    "Time": "2026-09-03 23:59:55"
+   },
+   "statData_battery_power_shunt_stateHourLast": {
+    "Value": "Min: -886.1799999999999500 Avg: -83.3240277777777720 Max: 453.8999999999999773",
+    "Time": "2026-09-04 19:59:55"
+   },
+   "statData_battery_power_shunt_stateMonthLast": {
+    "Value": "Min: -7228.250000000000000 Avg: 10.395226766780464 Max: 3209.969999999999800",
+    "Time": "2025-12-31 23:59:55"
+   },
+   "state": {
+    "Value": "style norm",
+    "Time": "2026-01-19 11:27:30"
+   },
+   "status": {
+    "Value": "online",
+    "Time": "2026-08-30 00:15:56"
+   }
+  }
+ },
+ {
+  "Name": "MQTT2_B0CBD8D5566F",
+  "Internals": {
+   "NAME": "MQTT2_B0CBD8D5566F",
+   "TYPE": "MQTT2_DEVICE",
+   "DEF": "",
+   "STATE": "16.5 °C, 93 %, 999.4 hPa"
+  },
+  "Attributes": {
+   "IODev": "myBroker2",
+   "alias": "Wetter GW3000A",
+   "event-on-change-reading": ".*",
+   "room": "Gewächshaus,Wettervorhersage,FHEMVIZ->Draußen",
+   "stateFormat": "temp_C °C, humidity %, pressureRel_hPa hPa",
+   "vizSize": "2x2"
+  },
+  "PossibleSets": "",
+  "Readings": {
+   "IODev": {
+    "Value": "myBroker2",
+    "Time": "2026-08-31 21:19:04"
+   },
+   "baromabsin": {
+    "Value": "29.512",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "baromrelin": {
+    "Value": "29.512",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "cdnflg": {
+    "Value": "6",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "dailyrain_mm": {
+    "Value": "7.59",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "dailyrainin": {
+    "Value": "0.299",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "dateutc": {
+    "Value": "2026-09-04 18:18:14",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "dns_err_cnt": {
+    "Value": "0",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "ec_error": {
+    "Value": "4",
+    "Time": "2026-09-03 16:08:14"
+   },
+   "eventrain_mm": {
+    "Value": "7.59",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "eventrainin": {
+    "Value": "0.299",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "freq": {
+    "Value": "868M",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "heap": {
+    "Value": "106176",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "hourlyrain_mm": {
+    "Value": "0.00",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "hourlyrainin": {
+    "Value": "0.000",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "humidity": {
+    "Value": "93",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "humidityin": {
+    "Value": "73",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "interval": {
+    "Value": "60",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "last24hrain_mm": {
+    "Value": "7.59",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "last24hrainin": {
+    "Value": "0.299",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "maxdailygust": {
+    "Value": "18.34",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "maxdailygust_kmh": {
+    "Value": "29.5",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "maxdailygust_ms": {
+    "Value": "8.2",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "model": {
+    "Value": "GW3000A",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "monthlyrain_mm": {
+    "Value": "8.89",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "monthlyrainin": {
+    "Value": "0.350",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "pressureAbs_hPa": {
+    "Value": "999.4",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "pressureRel_hPa": {
+    "Value": "999.4",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "rainrate_mm": {
+    "Value": "0.00",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "rainratein": {
+    "Value": "0.000",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "runtime": {
+    "Value": "689460",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "soilad2": {
+    "Value": "287",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "soilbatt2": {
+    "Value": "1.5",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "soilmoisture2": {
+    "Value": "62",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "solarradiation": {
+    "Value": "0.56",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "stationtype": {
+    "Value": "GW3000A_V1.2.2",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "temp_C": {
+    "Value": "16.5",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "tempf": {
+    "Value": "61.70",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "tempin_C": {
+    "Value": "20.6",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "tempinf": {
+    "Value": "69.08",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "uv": {
+    "Value": "0",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "vpd": {
+    "Value": "0.039",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "weeklyrain_mm": {
+    "Value": "17.50",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "weeklyrainin": {
+    "Value": "0.689",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "wh65batt": {
+    "Value": "0",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "winddir": {
+    "Value": "310",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "winddir_avg10m": {
+    "Value": "308",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "windgust_kmh": {
+    "Value": "1.8",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "windgust_ms": {
+    "Value": "0.5",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "windgustmph": {
+    "Value": "1.12",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "windspeed_kmh": {
+    "Value": "0.4",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "windspeed_ms": {
+    "Value": "0.1",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "windspeedmph": {
+    "Value": "0.22",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "yearlyrain_mm": {
+    "Value": "62.20",
+    "Time": "2026-09-04 20:18:14"
+   },
+   "yearlyrainin": {
+    "Value": "2.449",
+    "Time": "2026-09-04 20:18:14"
+   }
+  }
+ },
+ {
+  "Name": "st_fenster",
+  "Internals": {
+   "NAME": "st_fenster",
+   "TYPE": "structure",
+   "DEF": "onoff MAX_0d4731 MAX_0d48e4 MAX_0d4aa5 MAX_0d4724 MAX_0d3f4a MAX_0d4a8d MAX_0a9ea0 MAX_0a9e8c MAX_0a9d31 MAX_0a9db5",
+   "STATE": "closed"
+  },
+  "Attributes": {
+   "alias": "Alle Fenster",
+   "group": "Fenster",
+   "onoff": "st_alarm",
+   "room": "Fenster,FHEMVIZ->Fenster",
+   "vizGroup": "Fenster",
+   "vizSize": "2x1"
+  },
+  "PossibleSets": "",
+  "Readings": {
+   "LastDevice": {
+    "Value": "MAX_0a9db5",
+    "Time": "2026-09-04 20:17:39"
+   },
+   "LastDevice_Abs": {
+    "Value": "MAX_0a9db5",
+    "Time": "2026-09-04 20:17:39"
+   },
+   "state": {
+    "Value": "closed",
+    "Time": "2026-09-04 20:17:39"
+   }
+  }
+ },
+ {
+  "Name": "st_tuer",
+  "Internals": {
+   "NAME": "st_tuer",
+   "TYPE": "structure",
+   "DEF": "onoff MAX_0a9a28 MAX_0a9d5a MAX_0d48bd MQTT2_DOOR_GARAGE1",
+   "STATE": "closed"
+  },
+  "Attributes": {
+   "alias": "Alle Türen",
+   "room": "Alarm,Fenster,FHEMVIZ->Fenster",
+   "vizGroup": "Türen",
+   "vizSize": "2x1"
+  },
+  "PossibleSets": "",
+  "Readings": {
+   "LastDevice": {
+    "Value": "MAX_0a9a28",
+    "Time": "2026-09-04 20:01:35"
+   },
+   "LastDevice_Abs": {
+    "Value": "MAX_0a9a28",
+    "Time": "2026-09-04 20:01:35"
+   },
+   "state": {
+    "Value": "closed",
+    "Time": "2026-09-04 20:01:35"
+   }
+  }
+ },
+ {
+  "Name": "d_www_wechselrichter_100",
+  "Internals": {
+   "NAME": "d_www_wechselrichter_100",
+   "TYPE": "dummy",
+   "DEF": "",
+   "STATE": "off"
+  },
+  "Attributes": {
+   "alias": "Abregelung",
+   "devStateIcon": "on:turtle-icon@red off:15px-blank",
+   "fp_SolarDash": "119,278,0,d_www_wechselrichter_100,",
+   "icon": "15px-blank",
+   "room": "System->HTML,FHEMVIZ->Stuff",
+   "setList": "on:noArg off:noArg",
+   "vizStates": "on:aktiv:bad,off:frei"
+  },
+  "PossibleSets": "on:noArg off:noArg",
+  "Readings": {
+   "state": {
+    "Value": "off",
+    "Time": "2026-08-12 17:21:06"
+   }
+  }
+ },
+ {
+  "Name": "weather_dummy",
+  "Internals": {
+   "NAME": "weather_dummy",
+   "TYPE": "dummy",
+   "DEF": "",
+   "STATE": "Es wird morgen <b>13.9</b> bis <b>20.4</b> Grad"
+  },
+  "Attributes": {
+   "T2F_rooms": "Heute",
+   "T2F_types_info": "warm => '.punkt_komma(ReadingsVal($device, 'heute', '') ).'",
+   "alias": "Wetter",
+   "fp_Altbau": "60,360,0,",
+   "fp_Neubau": "60,360,0,",
+   "fp_SchalterDash": "60,360,0,",
+   "fp_SolarDash": "60,360,0,",
+   "fp_WetterDash": "60,360,0,",
+   "fp_WetterDash_Test": "60,360,0,",
+   "room": "Wettervorhersage,System->mcp_rw,FHEMVIZ->Wetter",
+   "vizText": "Es wird morgen {temp_min} bis {temp_max} Grad",
+   "vizWidget": "text"
+  },
+  "PossibleSets": "",
+  "Readings": {
+   "heute": {
+    "Value": "Es wird heute 17.8 bis 23.1 Grad",
+    "Time": "2026-09-04 12:07:37"
+   },
+   "morgen": {
+    "Value": "Es wird morgen 13.9 bis 20.4 Grad",
+    "Time": "2026-09-04 20:02:37"
+   },
+   "state": {
+    "Value": "Es wird morgen <b>13.9</b> bis <b>20.4</b> Grad",
+    "Time": "2026-09-04 20:02:37"
+   },
+   "temp_max": {
+    "Value": "20.4",
+    "Time": "2026-09-04 20:02:37"
+   },
+   "temp_min": {
+    "Value": "13.9",
+    "Time": "2026-09-04 20:02:37"
+   }
+  }
+ },
+ {
+  "Name": "www_weather_icon_today",
+  "Internals": {
+   "NAME": "www_weather_icon_today",
+   "TYPE": "weblink",
+   "DEF": "image /fhem/icons/weather/partly_cloudy",
+   "STATE": "initialized"
+  },
+  "Attributes": {
+   "alias": "Wetter Icon",
+   "fp_Altbau": "20,830,1,",
+   "fp_Neubau": "20,830,1,",
+   "fp_SchalterDash": "20,830,1,",
+   "fp_SolarDash": "20,830,1,",
+   "fp_WetterDash": "20,830,1,",
+   "fp_WetterDash_Test": "20,830,1,",
+   "htmlattr": "title=\"Bewölkung unverändert\"",
+   "room": "FHEMVIZ->Stuff,Wettervorhersage",
+   "vizWidget": "image"
+  },
+  "PossibleSets": "",
+  "Readings": {}
+ }
+]

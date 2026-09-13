@@ -190,7 +190,25 @@ erste Messversuch gescheitert.
 Layout-Fehler lassen sich nicht am Code erraten – zweimal ist genau das
 schiefgegangen (`vizHero full` ragte über den Schirm, obwohl die CSS-Regel
 „richtig" aussah). Die Umgebung hier hat Chromium und Playwright, damit geht
-ein echter Test:
+ein echter Test.
+
+**Die Attrappe liegt seit v0.37.26 im Repo: `node t/seite/run.js`**
+(Server, Fixtures mit den echten `myViz`-Attributen, drei Geräte-Profile,
+fünf Fallgruppen – Einzelheiten in `t/README.md`). Neue Messungen gehören als
+Fall nach `t/seite/cases/`, nicht als Einwegskript ins Scratchpad: die
+Skripte dieser Sitzung (`seiten.js`, `handy-snap.js`, `pager.js`, `dunkel.js`,
+`mock-link.js`) waren alle dieselbe Attrappe mit anderem Messkopf, und der
+Nutzer hat nach dem dritten gefragt, warum das nicht im Repo liegt. Playwright
+ist nicht im Repo installiert – `npm install playwright` im Repo oder
+`NODE_PATH=<pfad>/node_modules` setzen.
+
+Beim ersten Lauf im Repo fiel gleich etwas auf, das die Einwegskripte nie
+gesehen hatten: **auf dem Handy rasteten die Hero-Kacheln nicht** – die
+Snap-Regel kannte nur `.viz-grid > *`, das Messrezept von v0.37.20 war in einem
+Raum ohne Band angewendet worden. Ein Rahmen, der bei jedem Lauf alle Räume
+und Profile mitnimmt, findet so etwas; ein Skript für die Frage des Tages nicht.
+
+Die Regeln, nach denen die Attrappe gebaut ist:
 
 - Ein kleiner Node-Server bedient die **drei** Endpunkte, die die SPA braucht:
   `?cmd=get <viz> config` (Konfigurations-JSON), `?cmd=jsonlist2 <devspec>`

@@ -1039,6 +1039,17 @@ export function renderLayout(root, store, client, opts = {}) {
     }
     first.style.scrollMarginTop = oben ? Math.ceil(oben) + "px" : "";
   }
+  // Dasselbe fuer das Hero-Band: es steht direkt unter dem h2 des Raums, und
+  // seine erste Kachel ist seit v0.37.26 ebenfalls Snap-Ziel (vorher rastete
+  // auf dem Handy ueber dem ganzen Band nichts). Ohne den Rand laege die
+  // Raumueberschrift nach dem Einrasten unter der Kopfzeile.
+  for (const band of root.querySelectorAll(".viz-hero")) {
+    const first = band.firstElementChild;
+    const h2 = band.previousElementSibling;
+    if (!first || !h2 || h2.tagName !== "H2") continue;
+    const oben = h2.offsetHeight + parseFloat(getComputedStyle(h2).marginBottom || 0);
+    first.style.scrollMarginTop = oben ? Math.ceil(oben) + "px" : "";
+  }
 
   // Tab-Leiste ganz am Ende einhaengen (siehe oben): fixed (ohne Zoom)
   // ignoriert die Position ohnehin, sticky (mit Zoom) klebt so korrekt
