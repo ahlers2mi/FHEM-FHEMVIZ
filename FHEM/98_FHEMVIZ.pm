@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.24
+# Version:  v0.37.25
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.24";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.25";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -375,7 +375,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.24"),
+            FHEMVIZ_jsonStr("v0.37.25"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1227,13 +1227,23 @@ sub FHEMVIZ_Attr {
         <code>fillRate</code> (ibcFillFlow_lpm), <code>valve</code>
         (currentValveName), <code>moisture</code> (soilMoisture),
         <code>lastWatering</code> (lastWatering), <code>lastCircuit</code>
-        (lastCircuitWatering).<br>
-        <b>Zahlenzeile:</b> heute geerntet, Regen im Fenster, IBC-Füllgrad,
-        Bodenfeuchte und das Alter der letzten Bewässerung. Für Letzteres gilt
-        der <b>spätere</b> der beiden Zeitpunkte – <code>lastWatering</code> ist
-        der Nachtzyklus, <code>lastCircuitWatering</code> ein einzeln
-        gestarteter Kreis. Wer auf die Kachel schaut, will wissen, wann zuletzt
-        Wasser lief, nicht über welchen der beiden Wege.<br>
+        (lastCircuitWatering), <code>lastFlow</code> (lastWaterFlow).<br>
+        <b>Zahlenzeile:</b> heute geerntet, heute gegossen, Regen im Fenster,
+        IBC-Füllgrad, Bodenfeuchte und das Alter der letzten Bewässerung. Für
+        Letzteres gilt der <b>späteste</b> der drei Zeitpunkte.<br>
+        Die drei beantworten zwei verschiedene Fragen, und der Unterschied ist
+        die eigentliche Information. <code>lastWaterFlow</code> (Modul
+        <i>Gartenbewaesserung</i> ab v1.0.93) sagt, wann zuletzt <b>Wasser
+        floss</b>. <code>lastWatering</code> und <code>lastCircuitWatering</code>
+        entstehen dagegen nur beim <b>regulären Abschluss</b> eines Nachtzyklus
+        bzw. eines einzeln gestarteten Kreises – bricht ein Lauf am leeren Fass
+        ab, bleiben beide stehen. Fehlt <code>lastWaterFlow</code> (älteres
+        Modul), gelten weiterhin nur die beiden anderen.<br>
+        Hinkt der letzte <b>Abschluss</b> dem letzten Fluss um mehr als sechs
+        Stunden hinterher, zeigt die Kachel eine zweite Zahl in Warnfarbe:
+        <b>zuletzt fertig</b>. Dann kommt seit Stunden kein Gießprogramm mehr
+        durch – üblicherweise, weil das Fass jedes Mal vorher leer ist. Im
+        Normalbetrieb erscheint sie nicht.<br>
         Die Größen kommen aus den <b>Attributen des Geräts</b>:
         <code>barrelUsableVolume</code>, <code>barrelFloatLevel</code> (die
         gestrichelte Linie im Fass) und <code>ibcUsableVolume</code>. Ohne sie

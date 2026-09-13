@@ -1,5 +1,5 @@
 /*
- * FHEMVIZ - Wasservorrat-Widget (v0.37.23).
+ * FHEMVIZ - Wasservorrat-Widget (v0.37.25).
  *
  * Zeichnet die Regenwasseranlage als lebendiges Schema: Dach und Fallrohr,
  * Regenfass mit Schwimmerhoehe, gestapelte IBC, dazwischen Pumpen- und
@@ -51,6 +51,7 @@ const DEFAULT_MAP = {
   moisture: "soilMoisture",
   lastWatering: "lastWatering",
   lastCircuit: "lastCircuitWatering",
+  lastFlow: "lastWaterFlow",
 };
 
 export class FhemvizWatertank extends FhemvizWidget {
@@ -79,15 +80,23 @@ export class FhemvizWatertank extends FhemvizWidget {
   }
 
   /**
-   * Wann wurde zuletzt gegossen? Der spaetere der beiden Zeitpunkte gilt:
-   * lastWatering ist der Nachtzyklus, lastCircuitWatering ein einzeln
-   * gestarteter Kreis (Gewaechshaus). Wer auf die Kachel schaut, will wissen,
-   * wann ueberhaupt zuletzt Wasser lief - nicht, welcher der beiden Wege es war.
-   * Format des Moduls: "2026-08-28 01:36:07".
+   * Der spaeteste der uebergebenen Zeitpunkte. Format des Moduls:
+   * "2026-08-28 01:36:07".
+   *
+   * Die drei Rollen beantworten zwei verschiedene Fragen. lastWaterFlow (Modul
+   * ab v1.0.93) sagt, wann zuletzt WASSER FLOSS - es entsteht bei jeder
+   * Buchung. lastWatering und lastCircuitWatering entstehen dagegen nur beim
+   * REGULAEREN ABSCHLUSS eines Nachtzyklus bzw. eines einzeln gestarteten
+   * Kreises; bricht ein Lauf am leeren Fass ab, bleiben beide stehen.
+   *
+   * Am 13.09.2026 zeigte die Kachel deshalb "397 l heute gegossen" neben
+   * "zuletzt gegossen vor 40 Std.": fuenf Teillaeufe, keiner davon zu Ende
+   * gekommen. Beide Zahlen waren richtig, nur stand ueber der zweiten die
+   * falsche Frage.
    */
-  _lastWater(map) {
+  _lastWater(map, roles) {
     let neuste = null;
-    for (const role of ["lastWatering", "lastCircuit"]) {
+    for (const role of roles || ["lastFlow", "lastWatering", "lastCircuit"]) {
       const m = String(this._r(map, role)).match(
         /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/
       );
@@ -500,12 +509,29 @@ export class FhemvizWatertank extends FhemvizWidget {
     const last = this._lastWater(map);
     const age = last ? this._age(last) : null;
     if (age) figs.push({ v: age.v, u: age.u, k: "zuletzt gegossen" });
+    // Hinkt der letzte ABSCHLUSS dem letzten Fluss deutlich hinterher, kommt
+    // seit einer Weile kein Giessprogramm mehr durch - typischerweise, weil das
+    // Fass jedes Mal vorher leer ist. Das ist die eigentliche Stoerung, und sie
+    // steht in keinem Alarm-Reading: das Modul haelt den Zyklus fuer laufend.
+    // Nur dann eine zweite Zahl, sonst waere sie im Normalbetrieb Rauschen.
+    // "age &&" ist Absicht: steht der Zeitpunkt in der Zukunft (Uhr des Tablets
+    // gegen die des Servers), liefert _age null und die erste Zahl faellt aus.
+    // Dann darf die zweite nicht allein stehenbleiben - "39 Std. zuletzt
+    // fertig" ohne ihren Bezug liest sich wie die Antwort auf die Frage, die
+    // gerade nicht beantwortet wird.
+    const done = this._lastWater(map, ["lastWatering", "lastCircuit"]);
+    if (age && last && done && last - done > 6 * 3600 * 1000) {
+      const ageDone = this._age(done);
+      if (ageDone) figs.push({ v: ageDone.v, u: ageDone.u, k: "zuletzt fertig", warn: 1 });
+    }
     const figHtml = figs.length
       ? `<div class="wt-figs">` +
         figs
           .map(
             (f) =>
-              `<div class="wt-fig${f.rain ? " rain" : ""}"><b>${this.escape(f.v)}<span class="u">${
+              `<div class="wt-fig${f.rain ? " rain" : ""}${f.warn ? " warn" : ""}"><b>${this.escape(
+                f.v
+              )}<span class="u">${
                 f.u
               }</span></b><span>${this.escape(f.k)}</span></div>`
           )
@@ -640,6 +666,7 @@ export class FhemvizWatertank extends FhemvizWidget {
         .wt-fig b .u { font-size: 0.62rem; font-weight: 500; color: var(--viz-muted); margin-left: 2px; }
         .wt-fig span { font-size: 0.63rem; color: var(--viz-muted); }
         .wt-fig.rain b { color: var(--viz-water-rain); }
+        .wt-fig.warn b { color: var(--viz-error); }
         :host([data-size="2x2"]) .wt-fig b { font-size: 1.05rem; }
         /* Vollbild-Kachel (vizHero full, Browser wie TV): die Zeichnung darueber
            ist 650 px hoch, daneben wirken 17-px-Zahlen verloren. */

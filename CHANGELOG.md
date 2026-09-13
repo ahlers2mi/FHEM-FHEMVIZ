@@ -11,6 +11,37 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.25 — 13.09.2026
+
+**watertank: „zuletzt gegossen" beantwortet jetzt die Frage, die draufsteht**
+
+- Die Kachel zeigte am 13.09. gleichzeitig **„397 l heute gegossen"** und
+  **„zuletzt gegossen vor 40 Std."** Beide Zahlen waren richtig — sie
+  beantworten nur verschiedene Fragen. `lastWatering` und
+  `lastCircuitWatering` entstehen im Modul **nur beim regulären Abschluss**
+  eines Laufs; an dem Tag brach jeder der fünf Teilläufe am leeren Fass ab, und
+  keiner von beiden wurde gesetzt. Die Menge dagegen wird bei jedem
+  Ventilschluss gebucht.
+- Neue Rolle **`lastFlow`** (Default `lastWaterFlow`, Modul
+  Gartenbewaesserung ab v1.0.93): der Zeitpunkt, zu dem zuletzt wirklich
+  Wasser floss. „zuletzt gegossen" nimmt jetzt den spätesten der **drei**
+  Zeitpunkte. Fehlt das Reading — älteres Modul —, bleibt es bei den beiden
+  alten, die Kachel verhält sich unverändert.
+- Hinkt der letzte **Abschluss** dem letzten Fluss um mehr als sechs Stunden
+  hinterher, kommt eine zweite Zahl dazu: **„zuletzt fertig"** in Warnfarbe.
+  Das ist die eigentliche Störung — seit Stunden kommt kein Gießprogramm mehr
+  durch — und sie steht in keinem Alarm-Reading, weil das Modul den Zyklus für
+  laufend hält. Im Normalbetrieb erscheint die Zahl nicht.
+- Steht der Zeitpunkt in der Zukunft (Uhr des Tablets gegen die des Servers),
+  liefert die Altersrechnung nichts und die erste Zahl fällt aus. Dann bleibt
+  auch die zweite weg: „39 Std. zuletzt fertig" allein liest sich wie die
+  Antwort auf die Frage, die gerade nicht beantwortet wird. Beim Messen
+  aufgefallen, nicht beim Lesen.
+- Gemessen mit der FHEMWEB-Attrappe und Playwright, Gerätedaten aus
+  `FHEM-Instanz`, vier Fälle bei 320/400/420 px: sechs bzw. sieben Zahlen,
+  zwei Zeilen, kein Überlauf quer (`scrollWidth - clientWidth` = 0), Kachel
+  306–355 px hoch.
+
 ## v0.37.24 — 07.09.2026
 
 **Kopfzeile: der Titel „FHEMVIZ ↗" führt zurück nach FHEMWEB**
