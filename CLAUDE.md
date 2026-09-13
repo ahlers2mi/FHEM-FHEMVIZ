@@ -155,6 +155,36 @@ sofort auf. Beide Proben in ein Bild, dann einmal hinsehen.
 die Endung in seiner MIME-Tabelle nicht. Auf 256 Farben quantisieren spart
 genauso viel, macht aber sichtbare Streifen im blauen Lack – nachgesehen.
 
+## Eine Kachel allein prüfen: `t/widget/run.js`
+
+Für Änderungen an **einem** Widget liegt der Rahmen seit v0.37.25 im Repo:
+
+```
+node t/widget/run.js                  alle Fälle
+node t/widget/run.js watertank 0      erster Fall, plus Screenshot
+```
+
+Er lädt ein einzelnes Widget, setzt ihm `device` von Hand und misst: Zahl der
+Kennzahlen, Zeilen, `scrollWidth − clientWidth`, Kachelhöhe. Zwei Zusicherungen
+laufen bei jedem Fall automatisch mit — leere Konsole, kein Überlauf quer.
+Fälle stehen in `t/widget/cases/<widget>.js`, Gerätedaten als Auszug in
+`t/widget/fixtures/`. Einzelheiten in `t/README.md`.
+
+**Was er nicht kann:** die SPA. Kein Raster, kein Auto-Paging, keine Kopfzeile,
+kein Longpoll. Alles, was aus dem Zusammenspiel entsteht — Seitenumbrüche, Snap,
+Kopfhöhe, Hero-Deckel —, braucht weiterhin die vollständige Attrappe unten.
+
+Beim ersten Lauf hat er gleich etwas gefunden, das beim Lesen nicht auffiel:
+liegt ein Zeitstempel in der Zukunft (Uhr des Tablets gegen die des Servers),
+liefert die Altersrechnung nichts, die erste Kennzahl fällt aus — und die
+Warnzahl daneben stand allein da, als Antwort auf eine Frage, die gerade nicht
+beantwortet wurde.
+
+**Relative Zeiten benutzen.** In den Fällen ist `"@-20"` „vor zwanzig Minuten".
+Ein absoluter Zeitstempel von heute liegt morgen einen Tag zurück, und einer,
+der vor der Rechneruhr liegt, kippt jede Altersangabe — genau daran ist der
+erste Messversuch gescheitert.
+
 ## Änderungen wirklich prüfen: FHEMWEB-Attrappe + Playwright
 
 Layout-Fehler lassen sich nicht am Code erraten – zweimal ist genau das
