@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>FHEMVIZ Widget-Probe</title>
+<style>
+  /* Die Tokens, die jedes Widget voraussetzt. Dunkel, weil die Kacheln so auf
+     dem Wandtablet stehen; der Helligkeitswechsel ist hier nicht der Prüfgegenstand. */
+  :root {
+    --viz-bg: #111; --viz-card: #1c1c1e; --viz-text: #eee; --viz-muted: #8e8e93;
+    --viz-border: #3a3a3c; --viz-error: #ff453a; --viz-ok: #30d158;
+    --viz-warn: #ff9f0a; --viz-accent: #0a84ff;
+    --viz-water-rain: #4fd8f0; --viz-water-mains: #6b7f96;
+  }
+  body { margin: 0; background: var(--viz-bg); color: var(--viz-text);
+         font: 14px -apple-system, system-ui, sans-serif; }
+  #box { margin: 20px; }
+</style>
+<div id="box"></div>
+<script type="module">
+  // Fall aus der Adresszeile: ?widget=watertank&size=2x2&breite=420&readings=<base64 json>
+  const p = new URLSearchParams(location.search);
+  const widget = p.get("widget") || "watertank";
+  const breite = parseInt(p.get("breite") || "420", 10);
+
+  const { registryFor } = await import("./js/widgets/registry.js")
+    .then((m) => ({ registryFor: m }))
+    .catch(() => ({ registryFor: null }));
+
+  // Das Widget direkt laden und als Custom Element anmelden - die Registry der
+  // SPA zieht zwei Dutzend andere mit, die hier nur Ladezeit kosten.
+  const mod = await import(`./js/widgets/${widget}.js`);
+  const Klasse = Object.values(mod).find((v) => typeof v === "function" && v.prototype);
+  const tag = `fhemviz-probe-${widget}`;
+  if (!customElements.get(tag)) customElements.define(tag, Klasse);
+
+  const daten = await (await fetch("/fixture.json")).json();
+  const readings = { ...daten.readings };
+
+  // Relative Zeitstempel: "@-20" heißt "vor 20 Minuten". Absolute Zeiten in
+  // einem Test veralten - ein Zeitpunkt von heute liegt morgen einen Tag zurück,
+  // und ein Wert, der vor der Containeruhr liegt, kippt die Altersrechnung.
+  const stempel = (min) => {
+    const d = new Date(Date.now() + min * 60000);
+    const z = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ` +
+           `${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
+  };
+
+  const roh = p.get("readings");
+  if (roh) {
+    for (const [k, v] of Object.entries(JSON.parse(atob(roh)))) {
+      if (v === null) delete readings[k];
+      else if (typeof v === "string" && v.startsWith("@")) readings[k] = stempel(+v.slice(1));
+      else readings[k] = String(v);
+    }
+  }
+
+  const box = document.getElementById("box");
+  box.style.width = breite + "px";
+
+  // Erst bestücken, dann einhängen: connectedCallback läuft sonst einmal mit
+  // device === null und wirft, bevor der Fall überhaupt beginnt.
+  const el = document.createElement(tag);
+  el.id = "w";
+  el.setAttribute("data-size", p.get("size") || "2x2");
+  if (p.get("hero")) el.setAttribute("data-hero", p.get("hero"));
+  el.device = {
+    name: daten.name,
+    state: readings.state || "idle",
+    attr: daten.attr,
+    readings,
+    internals: {},
+    sets: {},
+  };
+  el.store = null;
+  el.client = null;
+  el.readonly = true;
+  box.appendChild(el);
+
+  window.__fertig = true;
+</script>

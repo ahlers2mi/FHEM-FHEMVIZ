@@ -1,0 +1,40 @@
+{
+  "_quelle": "bewaesserung aus FHEM-Instanz, Stand 13.09.2026 - nur die Schluessel, die das watertank-Widget liest. Keine Zugangsdaten.",
+  "name": "bewaesserung",
+  "attr": {
+    "vizWidget": "watertank",
+    "vizHero": "full",
+    "vizWateringButtons": "Start=start|Stop=stop|Gewächshaus=startCircuit 8|IBC füllen=startIBCFill",
+    "barrelUsableVolume": "161",
+    "barrelFloatLevel": "93.5",
+    "ibcUsableVolume": "2000",
+    "alias": "Bewässerungssystem",
+    "room": "Draußen,Gewächshaus,FHEMVIZ->Draußen"
+  },
+  "readings": {
+    "barrelLevel_l": "0",
+    "ibcLevel_l": "0",
+    "pumpedRain_total_l": "818",
+    "mains_total_l": "574",
+    "harvest_today_l": "0.0",
+    "watered_today_l": "0",
+    "rainAmount_mm": "0.00",
+    "raining": "no",
+    "rainCollectionAlert": "no",
+    "rainSinceFill_mm": "0.00",
+    "ibcFilling": "no",
+    "ibcToBarrelActive": "no",
+    "mainsSupply": "off",
+    "ibcFillFlow_lpm": "31.6",
+    "ibcFillStarted": "2026-09-11 09:04:55",
+    "ibcToBarrelFlow_lpm": "14.9",
+    "currentValveName": "none",
+    "currentValve": "none",
+    "remainingTime": "-",
+    "cycleProgress": "0/3",
+    "soilMoisture": "25",
+    "lastWatering": "2026-09-11 05:47:53",
+    "lastCircuitWatering": "2026-09-11 21:35:39",
+    "state": "stopped - barrel empty"
+  }
+}
