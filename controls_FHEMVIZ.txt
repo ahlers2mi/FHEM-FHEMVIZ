@@ -11,7 +11,7 @@ UPD 2026-08-11_19:21:37 3498 www/fhemviz/icons/icon-180.png
 UPD 2026-08-11_19:21:37 3975 www/fhemviz/icons/icon-192.png
 UPD 2026-08-11_19:21:37 11425 www/fhemviz/icons/icon-512.png
 UPD 2026-08-29_19:13:00 359945 www/fhemviz/img/car/tesla-frei.png
-UPD 2026-08-29_19:13:00 329024 www/fhemviz/img/car/tesla-laedt.png
+UPD 2026-09-20_15:22:56 477382 www/fhemviz/img/car/tesla-laedt.png
 UPD 2026-08-29_19:13:00 321870 www/fhemviz/img/car/tesla-steckt.png
 UPD 2026-09-07_08:05:02 2425 www/fhemviz/index.html
 UPD 2026-09-13_18:10:57 78669 www/fhemviz/js/app.js
