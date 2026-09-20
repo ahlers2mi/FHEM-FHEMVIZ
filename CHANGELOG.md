@@ -11,6 +11,31 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## Ohne Versionssprung — 20.09.2026
+
+**Neues Bild für „lädt": leuchtendes Kabel und Ladeport, ohne feste Zahl**
+
+- `tesla-laedt.png` ersetzt durch ein Rendering mit grün leuchtendem Kabel
+  und Ring am Ladeport (Vorlage vom Nutzer, Grünscreen). Der Wagen ist dabei
+  aus einem etwas anderen Winkel gerendert als `tesla-frei`/`tesla-steckt`;
+  beim Wechsel in den Zustand „lädt" springt die Ansicht also. Bewusst in Kauf
+  genommen, Variante A mit ganzem Kabel gewählt.
+- **Die „85 %" aus der Vorlage sind herausgerechnet.** Die Zahl war ins
+  Heckleuchten-Band gemalt und hätte neben dem echten Ladestand im Balken
+  darunter gestanden. Der rote Balken ist an der Stelle zeilenweise zwischen
+  linkem und rechtem Nachbarpixel interpoliert.
+- Maße: 831 × 586, Auto 806 × 388, **Autohöhe 66 % der Bildhöhe** (vorher
+  95 %). Weil die Kachel das Bild auf 164 px Höhe einpasst, ist der Wagen im
+  Ladezustand jetzt kleiner dargestellt (Tablet 109 statt 156 px). Das ist der
+  Preis für das ganze Kabel — der gekürzte Zuschnitt (93 %) lag als Variante
+  vor und wurde nicht gewählt.
+- Freistellen (`docs/img/car/freistellen-gruen.py`): relative Grünstichigkeit
+  `(g − max(r,b)) / g` statt absolut, sonst bleibt der Bodenschatten als grüner
+  Fleck stehen; Hintergrund nur, was mit dem Bildrand zusammenhängt, damit der
+  grüne Ring im Wagen bleibt; Entmischen der Randpixel statt bloßem Maskieren.
+  Auf hellem und dunklem Grund gegengeprüft, Kachel im Seitentest-Rahmen
+  (Tablet und TV) aufgenommen.
+
 ## v0.37.26 — 13.09.2026
 
 **Seitentest im Repo (`t/seite`) — und ein Fund beim ersten Lauf**

@@ -147,6 +147,18 @@ Auto und nur 4 % dazwischen; Reifen und ein millimeterdünnes Ladekabel blieben
 vollständig erhalten. Der ganze Aufwand oben gilt nur für Bilder **ohne**
 Grünscreen.
 
+**Zweite Runde Grünscreen (20.09.2026), Skript jetzt im Repo:**
+`docs/img/car/freistellen-gruen.py`. Drei Ergänzungen, jede aus einem Fehler
+im ersten Durchgang: (1) Grünstichigkeit **relativ** zur Helligkeit messen,
+sonst bleibt der Bodenschatten stehen; dazu ein absoluter Mindestabstand,
+sonst gilt ein schwarzer Reifen als grün. (2) Hintergrund nur als
+**Zusammenhangskomponente vom Bildrand** – sonst frisst der Schlüssel den
+grünen Ring am Ladeport und die grüne Ladegrafik im Wagen. (3) Randpixel
+**entmischen** (`fg = (px − (1−a)·bg)/a`), sonst hat ein grün leuchtendes
+Kabel einen Saum in Hintergrundgrün. Eine ins Bild gemalte Zahl („85 %")
+zeilenweise zwischen den Nachbarpixeln interpolieren – aber erst die Stelle
+**messen** (Grünstichigkeit im Suchfenster), der erste Fleck saß daneben.
+
 **Immer auf hellem UND dunklem Grund gegenprüfen.** Auf der dunklen Kachel
 sieht ein weggefressener Reifen aus wie ein Reifen – auf hellem Grund fällt es
 sofort auf. Beide Proben in ein Bild, dann einmal hinsehen.
