@@ -1,0 +1,36 @@
+{
+ "_quelle": "mySolvis aus FHEM-Instanz, Stand 23.09.2026 15:08 - nur die Schluessel, die das solvis-Widget liest. Keine Zugangsdaten.",
+ "name": "mySolvis",
+ "attr": {
+  "vizWidget": "solvis",
+  "vizSize": "2x2"
+ },
+ "readings": {
+  "A01.Pumpe_Solar": "100",
+  "A12.Brenner": "off",
+  "S01.Warmwasserpuffer": "70.5",
+  "S02.Warmwassertemperatur": "50.4",
+  "S03.Speicherreferenztemperatur": "54.6",
+  "S04.Heizungspuffertemperatur_oben": "68.4",
+  "S05.Solarvorlauftemperatur": "78.6",
+  "S06.Solarruecklauftemperatur": "67",
+  "S07.Solardruck": "-35",
+  "S08.Solarkollektortemperatur": "81.4",
+  "S09.Heizungspuffertemperatur_unten": "65",
+  "S10.Aussentemperatur": "17.6",
+  "S11.ZirkulationRuecklauftemperatur": "250",
+  "S12.Vorlauftemperatur_HK1": "23.9",
+  "S13.Vorlauftemperatur_HK2": "250",
+  "S14": "250",
+  "S15": "250",
+  "S16": "250",
+  "S17.Durchfluss_Solarpanel": "194",
+  "S18.Durchfluss_Warmwasserzirkulation": "0",
+  "SE.Solarertrag_kWh": "48947",
+  "SL.Solarleistung_kW": "2.3",
+  "statSE.Solarertrag_kWh": "Hour: 1 Day: 4 Month: 165 Year: 2228",
+  "statSE.Solarertrag_kWhLast": "Hour: 2 Day: 14 Month: 254 Year: 1502 (since: 2025-05-20 )",
+  "statSE.Solarertrag_kWhLastDay": "14",
+  "statSE.Solarertrag_kWhToday": "4"
+ }
+}

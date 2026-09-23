@@ -115,6 +115,33 @@ export class FhemvizSolvis extends FhemvizWidget {
   }
 
   /**
+   * Solarertrag des Tages. SE ist der Gesamtzaehler der Anlage (fuenfstellig,
+   * seit Inbetriebnahme) und sagt auf der Kachel nichts. Den Tageswert legt
+   * ein statistics-Geraet ab ("statSE.Solarertrag_kWh" = "Hour: 1 Day: 4
+   * Month: …"); ein userReading "…Today" hat Vorrang, falls vorhanden.
+   * Ohne beides bleibt es beim Gesamtzaehler, dann auch so beschriftet.
+   */
+  _ertragRow() {
+    const r = this.device.readings || {};
+    const keys = Object.keys(r);
+    const zahl = (v) => {
+      const n = parseFloat(String(v).replace(",", "."));
+      return isNaN(n) ? null : n;
+    };
+    let heute = null;
+    const today = keys.find((k) => /^statSE\.[^ ]*Today$/.test(k));
+    if (today !== undefined) heute = zahl(r[today]);
+    if (heute === null) {
+      const stat = keys.find((k) => /^statSE\.[^ ]*_kWh$/.test(k) || k === "statSE");
+      const m = stat !== undefined && String(r[stat]).match(/Day:\s*([\d.,]+)/);
+      if (m) heute = zahl(m[1]);
+    }
+    if (heute === null) return this._valRow("Ertrag gesamt", "SE", "kWh", 0);
+    return `<div class="sv-row"><span class="sv-k">Ertrag heute</span>
+      <span class="sv-v">${this.fmtNum(String(heute), 0)}<span class="u">kWh</span></span></div>`;
+  }
+
+  /**
    * Farbe einer Speicherschicht aus ihrer eigenen Temperatur - stufenlos:
    * 25 °C = blau, 55 °C = orange, 95 °C = rot, dazwischen gemischt. Drei
    * feste Farbstufen wuerden einen komplett durchgeheizten Speicher (94/88/
@@ -172,7 +199,7 @@ export class FhemvizSolvis extends FhemvizWidget {
             ${panel}
             ${this._row("Kollektor", "S08")}
             ${this._valRow("Leistung", "SL", "kW", 1)}
-            ${this._valRow("Ertrag", "SE", "kWh", 0)}
+            ${this._ertragRow()}
             ${this._valRow("Durchfluss", "S17", "l/h", 0)}
           </div>
           <div class="sv-tank">

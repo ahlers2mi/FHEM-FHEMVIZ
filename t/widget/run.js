@@ -113,9 +113,15 @@ async function main() {
             regen: f.classList.contains("rain"),
             top: Math.round(f.getBoundingClientRect().top),
           }));
+          // Zeilen "Beschriftung … Wert" der Anlagen-Kacheln (solvis)
+          const reihen = [...sr.querySelectorAll(".sv-row")].map((z) => ({
+            k: (z.querySelector(".sv-k") || {}).textContent?.trim() || "",
+            v: (z.querySelector(".sv-v") || {}).textContent?.trim() || "",
+          }));
           const karte = sr.querySelector(".card") || sr.firstElementChild;
           return {
             figs,
+            reihen,
             zeilen: new Set(figs.map((f) => f.top)).size,
             ueberlauf: karte ? karte.scrollWidth - karte.clientWidth : 0,
             hoehe: Math.round(document.getElementById("w").getBoundingClientRect().height),
