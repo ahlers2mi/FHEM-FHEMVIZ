@@ -11,6 +11,24 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.37.27 — 23.09.2026
+
+**Solvis: „Ertrag" zeigt den Tagesertrag statt des Gesamtzählers**
+
+- Die Zeile „Ertrag" der `solvis`-Kachel las `SE.Solarertrag_kWh` — das ist
+  der Zähler der Anlage seit Inbetriebnahme (beim Nutzer 48947 kWh) und sagt
+  auf einer Kachel nichts. Sie heißt jetzt **„Ertrag heute"** und nimmt den
+  Tageswert: zuerst ein Reading `statSE.…Today` (userReading), sonst den
+  `Day:`-Teil aus `statSE.Solarertrag_kWh`, den ein `statistics`-Gerät mit
+  `deltaReadings SE.Solarertrag_kWh` ablegt. Ohne beides bleibt der
+  Gesamtzähler stehen, dann ehrlich als „Ertrag gesamt" beschriftet.
+- `vizReadings` wirkt auf dieses Widget nicht — es zeichnet seine Zeilen
+  selbst. Deshalb kam ein dort eingetragenes „Ertrag heute" nie an.
+- Neu: `t/widget/cases/solvis.js` mit Fixture aus dem echten `mySolvis`;
+  der Runner liefert dafür zusätzlich `r.reihen` (Beschriftung/Wert je Zeile).
+
+---
+
 ## Ohne Versionssprung — 20.09.2026
 
 **Neues Bild für „lädt": leuchtendes Kabel und Ladeport, ohne feste Zahl**
