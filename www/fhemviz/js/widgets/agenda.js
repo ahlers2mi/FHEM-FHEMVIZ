@@ -117,6 +117,12 @@ export class FhemvizAgenda extends FhemvizWidget {
     return m ? Number(m[1]) : HIDE_H;
   }
 
+  /** Hoechstzahl Zeilen (attr vizAgenda max=…, ab v0.38.0), 0 = alle. */
+  _maxRows() {
+    const m = String((this.device.attr || {}).vizAgenda || "").match(/max\s*=\s*(\d+)/i);
+    return m ? Number(m[1]) : 0;
+  }
+
   /**
    * Mehrere Kalender in EINER Kachel (attr vizAgenda src=…), z. B.
    *   src=rem_d_cal_muell:ok,rem_d_cal_google:accent,rem_d_cal_familie:blau
@@ -225,9 +231,12 @@ export class FhemvizAgenda extends FhemvizWidget {
     // Abgelaufene Termine nach der Vorhaltezeit aus der Liste nehmen.
     const stunden = this._hideHours();
     const jetzt = Date.now();
-    const rows = this._alleRows().filter(
+    let rows = this._alleRows().filter(
       (r) => !(stunden > 0 && r.ab && jetzt - r.ab.getTime() > stunden * 3600000)
     );
+    // max=…: nur die naechsten Termine (Lage-Seite: Default 4, siehe app.js).
+    const max = this._maxRows();
+    if (max > 0) rows = rows.slice(0, max);
     const naehe = (r) =>
       r.days === null ? "" : r.days < 0 ? " past"
         : r.days === 0 ? " today" : r.days === 1 ? " tomorrow" : "";
