@@ -11,6 +11,30 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.38.0 — 30.10.2026
+
+**Lage-Seite `#lage`: eine Seite, die sich nach dem Zustand richtet**
+
+- Neues Sonderziel `#lage` in `tvScenes` (wie `#uhr`). Inhalt über das neue
+  Sicht-Attribut `showIf`: je Zeile `gerät[=größe[/widget]][:bedingung]`.
+  Ohne Bedingung steht die Kachel immer da („Überblick"), mit Bedingung nur,
+  wenn sie zutrifft („Jetzt wichtig", oben). Reihenfolge = Priorität,
+  `maxTiles` deckelt die bedingten Kacheln. Trifft nichts zu: „Alles in Ordnung".
+- Größe/Widget gelten nur auf dieser Seite (Attribut-Kopie) — die Geräte und
+  alle anderen Seiten bleiben unverändert. Anlass: auf der Wandtablet-Seite
+  „Jetzt" hätte ein kleinerer Tesla auch die Solar-Seite verkleinert.
+- Bedingungen wie `vizAlert`, dazu `&` (UND), `@hour`/`@wday` und
+  `{heute}`/`{morgen}` im Vergleichswert (Müll morgen:
+  `STATE~{morgen}&@hour>=14`). Auswahl wird alle 5 s geprüft.
+- Auf der Lage-Seite entfallen die Status-Chips (sie wiederholten, was die
+  Seite selbst zeigt); die Hinweis-Leiste (`vizAlert`) bleibt.
+- `agenda`: neue Option `vizAgenda max=<n>`. Auf der Lage-Seite Default 4
+  (fester Teil) bzw. 1 (bedingte Kachel: nur der Termin, um den es geht).
+- Test: `t/seite/cases/lage.js` (Auswahl, Prio/maxTiles, „Alles in Ordnung",
+  Nachzeichnen bei Zustandswechsel).
+
+---
+
 ## v0.37.27 — 23.09.2026
 
 **Solvis: „Ertrag" zeigt den Tagesertrag statt des Gesamtzählers**

@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.37.27
+# Version:  v0.38.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.37.27";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.38.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -139,6 +139,8 @@ sub FHEMVIZ_Initialize {
           "tvScenes " .
           "tvTouch " .
           "tvHeroSec " .
+          "showIf:textField-long " .
+          "maxTiles " .
           "statusBar:textField-long " .
           "headerInfo:textField-long " .
           "background " .
@@ -341,6 +343,9 @@ sub FHEMVIZ_Get {
         my $tvScenes   = AttrVal($name, "tvScenes", "");
         my $tvTouch    = AttrVal($name, "tvTouch", "");
         my $tvHeroSec  = AttrVal($name, "tvHeroSec", "");
+        # Lage-Seite (#lage): Eintraege geraet[=groesse[/widget]][:bedingung]
+        my $showIf     = AttrVal($name, "showIf", "");
+        my $maxTiles   = AttrVal($name, "maxTiles", "");
         my $zoomAttr   = AttrVal($name, "zoom", "");
         my $widthAttr  = AttrVal($name, "width", "");
         my $statusBar  = AttrVal($name, "statusBar", "");
@@ -371,11 +376,11 @@ sub FHEMVIZ_Get {
 
         return sprintf(
             '{"name":%s,"version":%s,"devspec":%s,"theme":%s,"readonly":%s,'
-              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"tvHeroSec":%s,"statusBar":%s,"headerInfo":%s,'
+              . '"mode":%s,"zoom":%s,"width":%s,"tvScenes":%s,"tvTouch":%s,"tvHeroSec":%s,"showIf":%s,"maxTiles":%s,"statusBar":%s,"headerInfo":%s,'
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.37.27"),
+            FHEMVIZ_jsonStr("v0.38.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -385,6 +390,8 @@ sub FHEMVIZ_Get {
             FHEMVIZ_jsonStr($tvScenes),
             FHEMVIZ_jsonStr($tvTouch),
             FHEMVIZ_jsonStr($tvHeroSec),
+            FHEMVIZ_jsonStr($showIf),
+            FHEMVIZ_jsonStr($maxTiles),
             FHEMVIZ_jsonStr($statusBar),
             FHEMVIZ_jsonStr($headerInfo),
             FHEMVIZ_jsonStr($background),
@@ -654,6 +661,31 @@ sub FHEMVIZ_Attr {
         Seiten danach. Je Seite bleibt mindestens eine Sekunde; ein zu großer
         Wert wird entsprechend gekappt. Ohne Vollbild-Kachel im Raum wirkt
         das Attribut nicht.</li>
+    <li><a id="FHEMVIZ-attr-showIf"></a><b>showIf</b><br>
+        Typ: textField-long (ab v0.38.0). Inhalt der <b>Lage-Seite</b>, des
+        Sonderziels <code>#lage</code> in <code>tvScenes</code>: EINE Seite,
+        deren Kacheln sich nach dem Zustand richten. Je Zeile (oder mit
+        <code>;</code> getrennt) ein Eintrag
+        <code>gerät[=größe[/widget]][:bedingung]</code>. Ohne Bedingung steht
+        die Kachel immer da (Gruppe &bdquo;Überblick&ldquo;), mit Bedingung nur,
+        wenn sie zutrifft (Gruppe &bdquo;Jetzt wichtig&ldquo;, oben). Die
+        Reihenfolge ist die Priorität. Größe und Widget gelten <b>nur auf
+        dieser Seite</b> &ndash; am Gerät ändert sich nichts.<br>
+        Bedingung wie <code>vizAlert</code> (<code>reading OP wert</code>,
+        Komma = ODER), dazu <code>&amp;</code> = UND, die Pseudo-Readings
+        <code>@hour</code> (Stunde) und <code>@wday</code> (0 = Sonntag) und im
+        Vergleichswert <code>{heute}</code>/<code>{morgen}</code> als
+        TT.MM.JJJJ. Trifft nichts zu, steht dort &bdquo;Alles in Ordnung&ldquo;.
+        Die Seite prüft die Auswahl alle 5 s. Beispiel:<br>
+        <code>rem_d_cal_google=2x1</code><br>
+        <code>st_fenster:state!=closed</code><br>
+        <code>rem_d_cal_muell=2x1:state~{morgen}&amp;@hour&gt;=14</code><br>
+        <code>MQTT2_Tesla_Model3=1x1/sensor:@hour&gt;=18&amp;charge_port_door_open=false&amp;battery_level&lt;40</code><br>
+        dazu <code>attr vizLage tvScenes #lage:600</code>.</li>
+    <li><a id="FHEMVIZ-attr-maxTiles"></a><b>maxTiles</b><br>
+        Typ: textField (ab v0.38.0). Höchstzahl der <b>bedingten</b> Kacheln
+        auf der Lage-Seite, damit sie nie blättert. Es gewinnen die vorderen
+        Einträge aus <code>showIf</code>.</li>
     <li><a id="FHEMVIZ-attr-statusBar"></a><b>statusBar</b><br>
         Typ: textField-long. Immer sichtbare Status-Chips im Kopf:
         kommaseparierte Liste <code>gerät[:reading[:einheit[:farbe]]]</code>.

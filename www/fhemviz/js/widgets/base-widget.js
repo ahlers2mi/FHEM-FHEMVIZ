@@ -450,6 +450,43 @@ export function vizAlertHit(dev) {
   return null;
 }
 
+/**
+ * Bedingung der Lage-Seite (attr showIf, ab v0.38.0) auswerten -> true/false.
+ * Gleiche Teil-Syntax wie vizAlert, dazu:
+ *   ,          ODER (wie vizAlert)
+ *   &          UND innerhalb eines ODER-Zweigs
+ *   @hour      Pseudo-Reading: aktuelle Stunde (0-23), @wday Wochentag (0=So)
+ *   {heute} {morgen}   im Vergleichswert: Datum als TT.MM.JJJJ (fuer
+ *              Kalender-Texte, z. B. state~{morgen})
+ * Leere Bedingung = immer wahr (fester Teil der Seite).
+ */
+export function vizCondHit(spec, dev, now = new Date()) {
+  const s = String(spec || "").trim();
+  if (!s) return true;
+  const p = (n) => String(n).padStart(2, "0");
+  const datum = (d) => `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
+  const morgen = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const rd = (n) => {
+    // "@" ist in alertTeil kein Namenszeichen - darum unten auf "__" umgeschrieben.
+    if (n === "__hour") return String(now.getHours());
+    if (n === "__wday") return String(now.getDay());
+    return n === "state" ? (dev || {}).state : ((dev || {}).readings || {})[n];
+  };
+  const ersetzen = (t) =>
+    t.replace(/\{heute\}/gi, datum(now)).replace(/\{morgen\}/gi, datum(morgen));
+  return s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .some((zweig) =>
+      zweig
+        .split("&")
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .every((teil) => alertTeil(ersetzen(teil).replace(/^@(hour|wday)\b/i, "__$1"), rd) !== null)
+    );
+}
+
 /** Inline-SVG fuer einen Transport-Befehl, "" wenn keins passt. */
 export function mediaIconHtml(cmd) {
   const key = MEDIA_ALIAS[String(cmd || "").trim().toLowerCase()];

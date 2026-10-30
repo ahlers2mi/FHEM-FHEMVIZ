@@ -687,6 +687,24 @@ body.viz-clockonly #viz-clock {
   display: none !important;
 }
 
+/* Lage-Seite (Rotationsziel #lage, attr showIf) ---------------------------
+ * Trifft keine Bedingung zu, steht oben eine ruhige Zeile statt einer leeren
+ * Flaeche - "nichts zu tun" ist auch eine Information. */
+.viz-lage-ok {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  margin: 0 0 var(--viz-gap, 14px);
+  padding: clamp(10px, 2vh, 20px) clamp(14px, 2vw, 24px);
+  border: 1px solid var(--viz-border);
+  border-radius: var(--viz-radius, 14px);
+  background: var(--viz-surface);
+  font-size: clamp(1.2rem, 3.4vh, 2rem);
+  font-weight: 300;
+}
+body.viz-lageonly #viz-statusbar { display: none !important; }
+.viz-lage-ok .lo-mark { color: var(--viz-ok, #3fb950); font-weight: 600; }
+
 /* Editiermodus (?edit=1) ---------------------------------------------------
  * Rahmen um jede Kachel mit Werkzeugleiste; geschrieben werden nur die
  * Attribute, aus denen das Layout ohnehin gebaut wird (sortby, vizSize,

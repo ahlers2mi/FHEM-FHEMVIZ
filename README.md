@@ -366,6 +366,27 @@ Sekundentakt neu, damit die Uhr läuft — dieser Takt wird beim Verlassen
 abgeräumt (`set … scene`, `set … page`, Touch-Übernahme). Vor **v0.35.2**
 lief er weiter und übermalte die neue Seite nach einer Sekunde wieder.
 
+### Lage-Seite `#lage`: nur, was gerade zählt
+
+`#lage` ist eine Seite, deren Kacheln sich nach dem Zustand richten — gedacht
+als Dauerbild am Wandtablet statt einer langen Rotation:
+
+```
+define vizLage FHEMVIZ
+attr vizLage devspec st_fenster,st_tuer,rem_d_cal_.*,rem_Miele_.*,MQTT2_Tesla_Model3,...
+attr vizLage tvScenes #lage:600
+attr vizLage maxTiles 4
+attr vizLage showIf st_fenster=1x1:state!=closed\
+  rem_d_cal_muell=2x1:STATE~{morgen}&@hour>=14\
+  rem_Miele_000186810071:status~Betrieb|Ende\
+  rem_d_cal_google=2x1
+```
+
+Je Zeile `gerät[=größe[/widget]][:bedingung]`; ohne Bedingung immer da,
+sonst nur wenn wahr (Reihenfolge = Priorität). Bedingung wie `vizAlert`, dazu
+`&` = UND, `@hour`, `@wday`, `{heute}`/`{morgen}`. Größe und Widget gelten
+nur auf dieser Seite. Details: FHEM-Hilfe zu `showIf`.
+
 ### Webseite/Kamerabild einblenden: `set myViz show`
 
 Blendet eine URL als **Vollbild-Overlay über dem Dashboard** ein — ohne die

@@ -22,6 +22,7 @@ import {
   vizColorFor,
   vizStatesInfo,
   vizAlertHit,
+  vizCondHit,
   setWidgetSkinCss,
   setFlashMode,
 } from "./widgets/base-widget.js";
@@ -29,7 +30,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.37.27";
+const SPA_VERSION = "v0.38.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -298,6 +299,123 @@ function renderClockPage(root, store, cfg) {
       ${kpiHtml ? `<div class="cp-kpis">${kpiHtml}</div>` : ""}
       ${rowHtml ? `<div class="cp-rows">${rowHtml}</div>` : ""}
     </div>`;
+}
+
+/* ---------------------------- Lage-Seite (#lage) ---------------------------- */
+
+/**
+ * Sonderziel fuer tvScenes (ab v0.38.0): EINE Seite, deren Inhalt sich nach
+ * dem Zustand des Hauses richtet. Konfiguriert ueber attr showIf an der Sicht:
+ * je Zeile (oder mit ";" getrennt) ein Eintrag
+ *
+ *     geraet[=groesse[/widget]][:bedingung]
+ *
+ * Ohne Bedingung steht die Kachel IMMER da (fester Teil). Mit Bedingung nur,
+ * wenn sie zutrifft (Syntax: vizCondHit). Die Reihenfolge ist die Prioritaet;
+ * attr maxTiles deckelt die Zahl der bedingten Kacheln, damit die Seite nie
+ * blaettert. Trifft nichts zu, steht dort "Alles in Ordnung".
+ *
+ * An den Geraeten aendert sich nichts: Groesse/Widget/Gruppe gelten nur auf
+ * dieser Seite (Kopie der Attribute), alle anderen Seiten bleiben wie sie sind.
+ */
+const LAGE_PAGE = "#lage";
+const LAGE_PAGE_RE = /^#(lage|jetzt)$/i;
+const LAGE_ROOM = "Lage";
+const LAGE_GRP_JETZT = "Jetzt wichtig";
+const LAGE_GRP_IMMER = "Überblick";
+
+function isLagePage(room) {
+  return LAGE_PAGE_RE.test(String(room || "").trim());
+}
+
+/** showIf parsen -> [{name, size, widget, cond}] in Prio-Reihenfolge. */
+function parseShowIf(spec) {
+  return String(spec || "")
+    .split(/[\n;]+/)
+    .map((z) => z.trim())
+    .filter((z) => z && !z.startsWith("#"))
+    .map((z) => {
+      const m = z.match(/^([\w.\-]+)(?:=([12]x[12])?(?:\/([\w-]+))?)?(?::(.*))?$/);
+      if (!m) return null;
+      return { name: m[1], size: m[2] || "", widget: m[3] || "", cond: (m[4] || "").trim() };
+    })
+    .filter(Boolean);
+}
+
+/**
+ * Welche Kacheln stehen gerade auf der Lage-Seite? Liefert die Liste und
+ * eine Signatur (aendert sie sich, wird neu gezeichnet).
+ */
+function lageAuswahl(store, cfg, now = new Date()) {
+  const eintraege = parseShowIf(cfg.showIf);
+  const max = parseInt(cfg.maxTiles, 10);
+  const fest = [];
+  const jetzt = [];
+  for (const e of eintraege) {
+    const dev = store.get(e.name);
+    if (!dev) continue;
+    if (!e.cond) fest.push(e);
+    else if (vizCondHit(e.cond, dev, now)) jetzt.push(e);
+  }
+  const gezeigt = !isNaN(max) && max > 0 ? jetzt.slice(0, max) : jetzt;
+  return {
+    fest,
+    jetzt: gezeigt,
+    sig: [...fest, ...gezeigt].map((e) => e.name).join(","),
+  };
+}
+
+/** Lage-Seite zeichnen (ueber renderLayout, mit Attribut-Kopien). */
+function renderLagePage(root, store, client, baseOpts, cfg) {
+  const sel = lageAuswahl(store, cfg);
+  const virtuell = new Map();
+  let prio = 0;
+  const kopie = (e, gruppe) => {
+    const dev = store.get(e.name);
+    const attr = { ...(dev.attr || {}) };
+    attr.room = LAGE_ROOM;
+    attr.vizGroup = gruppe;
+    attr.vizHero = "";
+    attr.vizHide = "";
+    attr.sortby = String(++prio).padStart(3, "0");
+    if (e.size) attr.vizSize = e.size;
+    if (e.widget) attr.vizWidget = e.widget;
+    // Terminlisten auf der Lage-Seite kurz halten: im festen Teil die
+    // naechsten 4, als bedingte Kachel nur der EINE Termin, um den es geht
+    // ("Morgen Gelbe Tonne") - der Rest steht im Kalender darunter.
+    // Ein am Geraet gesetztes vizAgenda max=… geht vor (gilt dann ueberall).
+    if (!/max\s*=/i.test(attr.vizAgenda || "")) {
+      const n = gruppe === LAGE_GRP_JETZT ? 1 : 4;
+      attr.vizAgenda = `${attr.vizAgenda || ""} max=${n}`.trim();
+    }
+    virtuell.set(e.name, { ...dev, attr });
+  };
+  sel.jetzt.forEach((e) => kopie(e, LAGE_GRP_JETZT));
+  sel.fest.forEach((e) => kopie(e, LAGE_GRP_IMMER));
+
+  const lageStore = {
+    all: () => [...virtuell.values()],
+    get: (n) => virtuell.get(n) || store.get(n),
+    subscribe: (n, cb) => store.subscribe(n, cb),
+  };
+  renderLayout(root, lageStore, client, {
+    ...baseOpts,
+    activeRoom: LAGE_ROOM,
+    showTabs: false,
+    showRooms: "",
+    hideRooms: "",
+    hideStates: "",
+    hideTypes: "",
+  });
+
+  if (!sel.jetzt.length) {
+    const ok = document.createElement("div");
+    ok.className = "viz-lage-ok";
+    ok.innerHTML = `<span class="lo-mark">✓</span><span>Alles in Ordnung</span>`;
+    const ziel = root.querySelector(".viz-room") || root;
+    ziel.insertBefore(ok, ziel.firstChild);
+  }
+  return sel.sig;
 }
 
 /* ------------------------------ TV-Controller ------------------------------ */
@@ -735,8 +853,9 @@ class TvController {
   _leaveClockPage() {
     clearInterval(this._cpTimer);
     this._cpTimer = null;
-    if (document.body.classList.contains("viz-clockonly")) {
-      document.body.classList.remove("viz-clockonly");
+    if (document.body.classList.contains("viz-clockonly") ||
+        document.body.classList.contains("viz-lageonly")) {
+      document.body.classList.remove("viz-clockonly", "viz-lageonly");
       this._fit();
     }
   }
@@ -882,6 +1001,10 @@ class TvController {
     // Statuszeile bleiben stehen. Danach neu vermessen - die TV-Flaeche haengt
     // an der Kopfhoehe.
     document.body.classList.toggle("viz-clockonly", isClockPage(scene.room));
+    // Lage-Seite: die Status-Chips (Fenster zu, Tueren zu ...) wuerden genau
+    // das wiederholen, was die Seite selbst nach Zustand zeigt - ausblenden.
+    // Die Hinweis-Leiste (vizAlert) bleibt: Stoerungen sind Prio 1.
+    document.body.classList.toggle("viz-lageonly", isLagePage(scene.room));
     this._fit();
 
     // Weiterschalten ZUERST scharf machen - aus demselben Grund wie in
@@ -899,6 +1022,25 @@ class TvController {
         this._progress(scene.sec);
       } catch (e) {
         this._renderFehler("Uhr-Seite", e);
+      }
+      return;
+    }
+    if (isLagePage(scene.room)) {
+      try {
+        let sig = renderLagePage(this.root, this.store, this.client, this.baseOpts, this.cfg || {});
+        // Zustand alle 5 s pruefen: aendert sich die AUSWAHL (Fenster auf,
+        // Waschmaschine fertig, 16 Uhr ...), neu zeichnen. Die Werte IN den
+        // Kacheln kommen ohnehin live ueber den Longpoll.
+        this._cpTimer = setInterval(() => {
+          if (lageAuswahl(this.store, this.cfg || {}).sig !== sig) {
+            sig = renderLagePage(this.root, this.store, this.client, this.baseOpts, this.cfg || {});
+          }
+        }, 5000);
+        el("viz-scene").textContent = "Lage";
+        this.root.scrollTop = 0;
+        this._progress(scene.sec);
+      } catch (e) {
+        this._renderFehler("Lage-Seite", e);
       }
       return;
     }
@@ -1765,9 +1907,11 @@ async function main() {
       const scenes = [];
       const missing = [];
       for (const sc of wanted) {
-        // #uhr ist ein Sonderziel (Uhr-Seite), kein Raum -> nicht aufloesen.
+        // #uhr/#lage sind Sonderziele, keine Raeume -> nicht aufloesen.
         const r = isClockPage(sc.room)
           ? CLOCK_PAGE
+          : isLagePage(sc.room)
+          ? LAGE_PAGE
           : sc.room === ALL_ROOMS
             ? sc.room
             : resolveRoom(roomsAvail, sc.room);
