@@ -4,9 +4,11 @@
  * gross als Hauptwert (Label klein darunter), weitere als Label/Wert-
  * Zeilen. Ein *_OK-Reading (Pool-Sensor BLEYC01) faerbt die Statusleiste
  * der Kachel gruen/rot.
+ * attr vizIcon <name> (ab v0.39.0): Symbol links neben dem Hauptwert.
  */
 
 import { FhemvizWidget } from "./base-widget.js";
+import { iconKey, iconSvg, ICON_VALUE_CSS } from "./icons.js";
 
 export class FhemvizSensor extends FhemvizWidget {
   /** *_OK-Reading -> "ok" | "bad" | "" (faerbt die Statusleiste). */
@@ -78,8 +80,13 @@ export class FhemvizSensor extends FhemvizWidget {
     }
     const main = parts.shift() ?? { label: "", value: "" };
     const mainColor = main.color ? ` style="color:${main.color};"` : "";
+    // attr vizIcon (ab v0.39.0): Symbol links im Wert, gleiche Farbe.
+    const icon = iconKey(this.device.attr);
+    const mainInner = icon
+      ? `${iconSvg(icon)}<span>${this.escape(main.value)}</span>`
+      : this.escape(main.value);
     const mainHtml = `
-      <div class="value${this._sizeClass(main.value)}"${mainColor}>${this.escape(main.value)}</div>
+      <div class="value${this._sizeClass(main.value)}${icon ? " vwi" : ""}"${mainColor}>${mainInner}</div>
       ${this.barHtml(main)}
       ${main.label ? `<span class="sub">${this.escape(main.label)}</span>` : ""}`;
 
@@ -101,7 +108,7 @@ export class FhemvizSensor extends FhemvizWidget {
         .join("") +
       (more > 0 ? `<div class="sub">+${more} weitere</div>` : "");
 
-    return `
+    return `${icon ? ICON_VALUE_CSS : ""}
       <div class="card ${ok}">
         <span class="label">${this.escape(this.displayName())}</span>
         ${mainHtml}

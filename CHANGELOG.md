@@ -11,6 +11,23 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.39.0 — 10.11.2026
+
+**Symbole auch auf Sensor- und Text-Kacheln (`vizIcon`)**
+
+- `vizIcon` wirkt jetzt auch bei **Sensor-** und **Text-Kacheln**: das
+  Symbol steht links neben dem Hauptwert (bzw. dem Text), skaliert mit dessen
+  Schriftgröße und trägt dessen Farbe — mit `vizStates` also ok/warn/bad.
+  Anlass: auf der Lage-Seite standen „Wintermodus aktiv" oder „Reserve
+  gesperrt" als reiner Text; aus der Ferne erkennt man ein Symbol schneller.
+- Neue Symbole: `frost`, `batterie`, `tonne`, `waesche`, `roboter`,
+  `maeher`, `fenster`, `tuer`, `alarm`, `wasser`, `gast` (vorher nur
+  lampe|steckdose|lautsprecher|luefter|pumpe|tv|heizung|power für Schalter).
+- Die Symbole liegen jetzt gemeinsam in `widgets/icons.js`; die
+  Schalter-Kachel nutzt dieselbe Tabelle (Verhalten unverändert).
+
+---
+
 ## v0.38.0 — 30.10.2026
 
 **Lage-Seite `#lage`: eine Seite, die sich nach dem Zustand richtet**

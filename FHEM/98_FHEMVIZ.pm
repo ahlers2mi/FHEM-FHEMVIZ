@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.38.0
+# Version:  v0.39.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.38.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.39.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -93,7 +93,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:0,1,full",
     "vizHide:1,0",
-    "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power",
+    "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power,frost,batterie,tonne,waesche,roboter,maeher,fenster,tuer,alarm,wasser,gast",
     "vizGroup",
     "vizReadings:textField-long",
     "vizState",
@@ -380,7 +380,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.38.0"),
+            FHEMVIZ_jsonStr("v0.39.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -1105,7 +1105,7 @@ sub FHEMVIZ_Attr {
     <li><a id="FHEMVIZ-attr-vizHide"></a><b>vizHide</b> 1|0<br>
         Gerät aus der Sicht ausblenden.</li>
     <li><a id="FHEMVIZ-attr-vizIcon"></a><b>vizIcon</b>
-        lampe|steckdose|lautsprecher|luefter|pumpe|tv|heizung|power<br>
+        lampe|steckdose|lautsprecher|luefter|pumpe|tv|heizung|power|frost|batterie|tonne|waesche|roboter|maeher|fenster|tuer|alarm|wasser|gast<br>
         Symbol-Modus für Schalter-Kacheln: großes Symbol mittig, Name
         darunter, Bernstein = an — aus der Ferne lesbar wie ein klassisches
         Schalter-Panel. Tippen auf die Kachel schaltet. Im Skin
@@ -1116,7 +1116,14 @@ sub FHEMVIZ_Attr {
         zeigt nur den Zustand, damit die Zeile nicht wie eine reine Anzeige
         aussieht (in der großen Symbol-Kachel bleibt er weg, dort trägt die
         Farbe den Zustand). Beispiel:<br>
-        <code>attr d_deckenlampe vizIcon lampe</code></li>
+        <code>attr d_deckenlampe vizIcon lampe</code><br>
+        <b>Sensor- und Text-Kacheln</b> (ab v0.39.0): dort steht das Symbol
+        links neben dem Hauptwert bzw. dem Text und hat dessen Farbe &ndash;
+        mit <code>vizStates</code> also ok/warn/bad. Gedacht für die
+        Lage-Seite, damit man den Zustand aus der Ferne erkennt. Dazu kamen
+        die Symbole frost|batterie|tonne|waesche|roboter|maeher|fenster|tuer|alarm|wasser|gast.
+        Beispiel:<br>
+        <code>attr rp_d_Wechselrichter_all_modus vizIcon frost</code></li>
     <li><a id="FHEMVIZ-attr-vizGroup"></a><b>vizGroup</b><br>
         Typ: textField. Übersteuert das <code>group</code>-Attribut NUR im
         Dashboard (FHEMWEB bleibt unberührt) — steuert, welche Kacheln in
