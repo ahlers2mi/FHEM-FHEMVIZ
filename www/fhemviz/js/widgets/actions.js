@@ -8,6 +8,7 @@
  */
 
 import { FhemvizWidget } from "./base-widget.js";
+import { iconKey, iconSvg, ICON_VALUE_CSS } from "./icons.js";
 
 // Widget-Spezifikationen, die wir NICHT als Dropdown interpretieren.
 const NON_SELECT = /^(noArg|textField|textField-long|colorpicker|time|slider|uzsu)/;
@@ -181,13 +182,18 @@ export class FhemvizActions extends FhemvizWidget {
       if (buttons.length) parts.push(`<div class="btnrow">${buttons.join("")}</div>`);
       body = parts.join("");
     }
-    return `
+    // attr vizIcon (ab v0.39.1): Symbol in der Zustandszeile, gleiche Farbe.
+    // Es schaltet nichts - die Befehle bleiben auf den Knoepfen.
+    const icon = iconKey(this.device.attr);
+    return `${icon ? ICON_VALUE_CSS : ""}
       <div class="card${cardCls}">
         <span class="label">${this.escape(this.displayName())}</span>
         ${
           stateImControl
             ? ""
-            : `<div class="value" style="font-size:1.15rem;font-weight:450;${stColor}">${state}</div>`
+            : `<div class="value${icon ? " vwi" : ""}" style="font-size:1.15rem;font-weight:450;${stColor}">${
+                icon ? `${iconSvg(icon)}<span>${state}</span>` : state
+              }</div>`
         }
         ${body}
         ${this.readingRowsHtml()}

@@ -11,6 +11,15 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.39.1 — 10.11.2026
+
+- `vizIcon` auch bei **Befehls-Kacheln** (`actions`, Knöpfe aus `webCmd`):
+  Symbol in der Zustandszeile, gleiche Farbe, es schaltet nichts. Anlass: das
+  Garagentor auf der Lage-Seite („Segmenttor: offen") hatte kein Symbol.
+- Neues Symbol `tor` (Garage mit Lamellen, vom Nutzer aus zwei Entwürfen gewählt).
+
+---
+
 ## v0.39.0 — 10.11.2026
 
 **Symbole auch auf Sensor- und Text-Kacheln (`vizIcon`)**
