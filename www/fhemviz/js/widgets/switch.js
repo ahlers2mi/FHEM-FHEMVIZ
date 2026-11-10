@@ -11,18 +11,9 @@
  */
 
 import { FhemvizWidget } from "./base-widget.js";
+import { ICONS } from "./icons.js";
 
-// Stroke-Icons (24x24) fuer den Symbol-Modus.
-const ICONS = {
-  lampe: `<path d="M9 18 h6"/><path d="M10 21 h4"/><path d="M8.5 14.5 C6.5 13 5.5 11 5.5 9 A6.5 6.5 0 0 1 18.5 9 C18.5 11 17.5 13 15.5 14.5 L15 18 H9 L8.5 14.5 Z" fill="none"/>`,
-  steckdose: `<circle cx="12" cy="12" r="8"/><circle cx="9.2" cy="12" r="1"/><circle cx="14.8" cy="12" r="1"/>`,
-  lautsprecher: `<rect x="7" y="4" width="10" height="16" rx="2"/><circle cx="12" cy="9" r="1.4"/><circle cx="12" cy="15" r="2.6"/>`,
-  luefter: `<circle cx="12" cy="12" r="1.8"/><path d="M12 10.2 C12 6 15 5 16.5 6.5 C18 8 16 10.5 12 10.2 Z"/><path d="M13.6 13 C17.2 15 16.8 18.2 14.8 18.8 C12.8 19.4 11.6 16.4 13.6 13 Z"/><path d="M10.4 13 C6.8 15 7.2 18.2 9.2 18.8 C11.2 19.4 12.4 16.4 10.4 13 Z" transform="rotate(120 12 12)"/>`,
-  pumpe: `<circle cx="12" cy="13" r="6"/><path d="M12 13 L15.5 9.5"/><path d="M9 4 h6 M12 4 v3"/>`,
-  tv: `<rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M9 20 h6"/>`,
-  heizung: `<line x1="6" y1="6" x2="6" y2="19"/><line x1="10" y1="6" x2="10" y2="19"/><line x1="14" y1="6" x2="14" y2="19"/><line x1="18" y1="6" x2="18" y2="19"/><path d="M4 10 h16"/>`,
-  power: `<circle cx="12" cy="13" r="8"/><line x1="12" y1="3" x2="12" y2="11"/>`,
-};
+// Stroke-Icons (24x24): seit v0.39.0 gemeinsam in icons.js.
 
 const ICON_CSS = `
   .icard {

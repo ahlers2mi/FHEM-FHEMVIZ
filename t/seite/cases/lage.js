@@ -104,4 +104,49 @@ module.exports = [
       ok(!(await okZeile(page)), "'Alles in Ordnung' ist weg");
     },
   },
+  {
+    name: "vizIcon auf einer Sensor-Kachel (v0.39.0): Symbol links im Wert, Wertfarbe",
+    geraet: "tv",
+    config: { tvScenes: "#lage:600", showIf: "MQTT2_Tesla_Model3=1x1/sensor:battery_level<99&@hour>=0\nmySolvis" },
+    geraete(liste) {
+      const d = liste.find((g) => g.Name === "MQTT2_Tesla_Model3");
+      d.Attributes.vizIcon = "batterie";
+    },
+    async pruefe({ page, ok, h }) {
+      await h.timerStoppen();
+      const r = await page.evaluate(() => {
+        const w = [...document.querySelectorAll("#fhemviz-app .viz-grid > *")]
+          .find((x) => (x.device || {}).name === "MQTT2_Tesla_Model3");
+        if (!w) return null;
+        const svg = w.shadowRoot.querySelector(".value.vwi svg.vicon");
+        const v = w.shadowRoot.querySelector(".value.vwi");
+        const b = svg && svg.getBoundingClientRect();
+        const card = w.shadowRoot.querySelector(".card");
+        const s = v && v.querySelector("span");
+        const abstand = b && s ? Math.round(s.getBoundingClientRect().left - b.right) : -1;
+        return { svg: !!svg, breite: b ? Math.round(b.width) : 0, abstand,
+                 farbeGleich: svg && v ? getComputedStyle(svg).color === getComputedStyle(v).color : false,
+                 quer: card ? card.scrollWidth - card.clientWidth : -1 };
+      });
+      ok(r && r.svg, "Symbol steht im Hauptwert");
+      ok(r && r.breite >= 28, `Symbol gut sichtbar (ist: ${r && r.breite} px)`);
+      ok(r && r.farbeGleich, "Symbol hat die Farbe des Werts");
+      ok(r && r.abstand >= 0 && r.abstand < 40, `Wert steht direkt neben dem Symbol (Abstand: ${r && r.abstand} px)`);
+      ok(r && r.quer <= 0, `kein Ueberlauf quer (ist: ${r && r.quer})`);
+    },
+  },
+  {
+    name: "ohne vizIcon: Sensor-Kachel unveraendert, kein Symbol",
+    geraet: "tv",
+    config: { tvScenes: "#lage:600", showIf: "MQTT2_Tesla_Model3=1x1/sensor:battery_level<99&@hour>=0\nmySolvis" },
+    async pruefe({ page, ok, h }) {
+      await h.timerStoppen();
+      const n = await page.evaluate(() => {
+        const w = [...document.querySelectorAll("#fhemviz-app .viz-grid > *")]
+          .find((x) => (x.device || {}).name === "MQTT2_Tesla_Model3");
+        return w ? w.shadowRoot.querySelectorAll("svg.vicon").length : -1;
+      });
+      ok(n === 0, `kein Symbol (ist: ${n})`);
+    },
+  },
 ];

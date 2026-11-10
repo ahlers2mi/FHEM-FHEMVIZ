@@ -12,6 +12,7 @@
  */
 
 import { FhemvizWidget } from "./base-widget.js";
+import { iconKey, iconSvg, ICON_VALUE_CSS } from "./icons.js";
 
 const TEXT_CSS = `
   <style>
@@ -112,13 +113,20 @@ export class FhemvizText extends FhemvizWidget {
     return out;
   }
 
+  /** attr vizIcon (ab v0.39.0): Symbol links neben dem Textblock. */
+  _withIcon(inner) {
+    const icon = iconKey(this.device.attr);
+    if (!icon) return inner;
+    return `${ICON_VALUE_CSS}<div class="tiw">${iconSvg(icon)}<div>${inner}</div></div>`;
+  }
+
   render() {
     const tpl = (this.device.attr || {}).vizText;
     if (tpl) {
       return TEXT_CSS + `
         <div class="card">
           <span class="label">${this.escape(this.displayName())}</span>
-          <div class="text fmt">${this._renderTemplate(tpl)}</div>
+          ${this._withIcon(`<div class="text fmt">${this._renderTemplate(tpl)}</div>`)}
         </div>`;
     }
     // Reading STATE (Grossbuchstaben, mit echten \n) bevorzugen - der
@@ -129,7 +137,7 @@ export class FhemvizText extends FhemvizWidget {
     return `
       <div class="card">
         <span class="label">${this.escape(this.displayName())}</span>
-        <div class="text">${this.escape(text)}</div>
+        ${this._withIcon(`<div class="text">${this.escape(text)}</div>`)}
       </div>`;
   }
 }
