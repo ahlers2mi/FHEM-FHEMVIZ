@@ -1,8 +1,9 @@
 /*
  * FHEMVIZ - gemeinsame Stroke-Icons (24x24, ab v0.39.0).
- * Genutzt vom Symbol-Modus der Schalter-Kachel und - neu - von Sensor- und
- * Text-Kacheln (attr vizIcon): dort steht das Symbol links neben dem
- * Hauptwert und traegt dessen Farbe (vizStates ok/warn/bad/accent).
+ * Genutzt vom Symbol-Modus der Schalter-Kachel sowie (attr vizIcon) von
+ * Sensor- und Text-Kacheln und ab v0.39.1 von Befehls-Kacheln (actions):
+ * dort steht das Symbol links neben dem Hauptwert bzw. Zustand und traegt
+ * dessen Farbe (vizStates ok/warn/bad/accent).
  * Gezeichnet mit stroke="currentColor", stroke-width 1.6, round caps.
  */
 
@@ -26,6 +27,8 @@ export const ICONS = {
   tuer: `<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17"/><path d="M4 21h16"/><circle cx="15" cy="12.5" r=".8"/>`,
   alarm: `<path d="M6 17V11a6 6 0 0 1 12 0v6"/><path d="M4 17h16"/><path d="M10 20h4"/><path d="M12 2v2M4.2 5.2l1.4 1.4M19.8 5.2l-1.4 1.4"/>`,
   wasser: `<path d="M12 3.5C9 7.5 6.5 10.5 6.5 14a5.5 5.5 0 0 0 11 0c0-3.5-2.5-6.5-5.5-10.5z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>`,
+  // ab v0.39.1
+  tor: `<path d="M3 21V9l9-5 9 5v12"/><path d="M6.5 21V11.5h11V21"/><path d="M6.5 14.5h11M6.5 17.5h11"/>`,
   gast: `<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.8 3.3-6 6.5-6s5.9 2.2 6.5 6"/><path d="M19 8v6M16 11h6"/>`,
 };
 
