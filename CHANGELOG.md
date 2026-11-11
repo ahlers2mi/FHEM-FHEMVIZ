@@ -11,6 +11,45 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.40.0 — 11.11.2026
+
+**Skin `signal`: die Lage-Seite als Meldungsliste**
+
+Anlass: die Lage-Seite war ein Kachelraster wie jede andere Seite — aus der
+Ferne sah „Tor offen" genauso aus wie „Wintermodus aktiv". Der Nutzer hat aus
+fünf Entwürfen und vier Varianten die Richtung „Signalblock" gewählt.
+
+- Neuer Skin `signal` (`attr <viz> skin signal`). Baut auf `bento` auf: Raster,
+  Raum-Schiene und Glas-Kacheln bleiben, dazu eigene Palette und die Schrift
+  Barlow Semi Condensed (OFL, als data:-Adresse in der CSS-Datei, damit sie
+  nicht an der Endungstabelle von FHEMWEB hängt).
+- Unter diesem Skin zeigt `#lage` **Sätze statt Kacheln**: die wichtigste
+  Meldung als großer Block in Rot, Gelb oder Blau, alle weiteren als Zeilen
+  darunter. Rechts Uhr, Datum und der feste Teil aus `showIf` (z. B. der
+  Kalender), unten leise die Werte aus `headerInfo`. Trifft nichts zu: ein
+  ruhiger Block „Alles in Ordnung".
+- `showIf` bekommt dafür einen **Meldungsteil** hinter `=>`:
+  `gerät:bedingung => [stufe |] Satz [| Unterzeile]`, mit Platzhaltern
+  (`[reading]`, `[reading:0]`, `[gerät/reading]`, `[alias]`, `[heute]`,
+  `[morgen]`, `[seit]`). Ohne Meldungsteil entsteht der Satz aus Alias und
+  Zustand — ein `showIf` von vorher funktioniert unverändert, auch in den
+  anderen Skins (dort wird der Meldungsteil ignoriert).
+- Rot schlägt Gelb schlägt Blau; innerhalb einer Stufe gilt die Reihenfolge
+  aus `showIf`.
+- Hat das Gerät ein Fahrzeugbild (`vizCar image=`), zeigt der Block es.
+- „seit 18:12 Uhr": die Seite merkt sich selbst, wann eine Bedingung erstmals
+  zutraf. Der Zeitstempel eines Readings taugt dafür nicht — er ist die letzte
+  Meldung, nicht der letzte Wechsel. Bei einem Zahlenvergleich, der beim Laden
+  schon zutrifft, steht darum nichts da statt etwas Falschem.
+- Passt die Liste nicht auf den Schirm, fällt von unten weg, was am wenigsten
+  wichtig ist; die letzte Zeile nennt den Rest. `maxTiles` deckelt weiterhin.
+- Neues Symbol `auto` für `vizIcon`.
+- Skins können auf einem anderen aufbauen (`SKIN_BASIS` in `app.js`).
+- Tests: `t/seite/cases/lage-liste.js` (zehn Fälle); `fall.url` darf die
+  Profil-Adresse jetzt ersetzen, wenn sie mit `?` beginnt.
+
+---
+
 ## v0.39.1 — 10.11.2026
 
 - `vizIcon` auch bei **Befehls-Kacheln** (`actions`, Knöpfe aus `webCmd`):

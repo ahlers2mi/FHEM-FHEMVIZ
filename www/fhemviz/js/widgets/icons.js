@@ -29,6 +29,8 @@ export const ICONS = {
   wasser: `<path d="M12 3.5C9 7.5 6.5 10.5 6.5 14a5.5 5.5 0 0 0 11 0c0-3.5-2.5-6.5-5.5-10.5z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>`,
   // ab v0.39.1
   tor: `<path d="M3 21V9l9-5 9 5v12"/><path d="M6.5 21V11.5h11V21"/><path d="M6.5 14.5h11M6.5 17.5h11"/>`,
+  // ab v0.40.0 (Lage-Liste: Fahrzeug-Meldungen)
+  auto: `<path d="M4 16v-3l2-5h12l2 5v3"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="16.5" cy="18" r="1.6"/>`,
   gast: `<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.8 3.3-6 6.5-6s5.9 2.2 6.5 6"/><path d="M19 8v6M16 11h6"/>`,
 };
 

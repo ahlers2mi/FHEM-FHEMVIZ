@@ -18,6 +18,7 @@ import {
   VIZ_ROOM_PREFIX,
 } from "./layout.js";
 import { registerCoreWidgets } from "./widgets/registry.js";
+import { parseMeldung, renderLageListe } from "./lage-liste.js";
 import {
   vizColorFor,
   vizStatesInfo,
@@ -30,7 +31,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.39.1";
+const SPA_VERSION = "v0.40.0";
 
 const el = (id) => document.getElementById(id);
 
@@ -66,6 +67,14 @@ function applyTheme(theme) {
  * schaltet Glas-/Blur-Effekte ab (attr skinBlur 0 - schwache Panels).
  */
 const SKIN_NAME_RE = /^[a-z][a-z0-9_-]{0,31}$/;
+/**
+ * Skins, die auf einem anderen aufbauen (ab v0.40.0): dessen beide Dateien
+ * werden VOR den eigenen geladen. Die Seiten-Regeln der Basis haengen an
+ * html[data-vizskin="<basis>"] - der Selektor wird beim Laden auf den
+ * abgeleiteten Namen umgeschrieben, damit sie auch dort greifen. So muss
+ * "signal" Raster, Raum-Schiene und Glas von "bento" nicht kopieren.
+ */
+const SKIN_BASIS = { signal: "bento" };
 
 async function applySkin(urlSkin, cfg) {
   const root = document.documentElement;
@@ -111,10 +120,21 @@ async function applySkin(urlSkin, cfg) {
       return null;
     }
   };
-  const [pageCss, widgetCss] = await Promise.all([
+  let [pageCss, widgetCss] = await Promise.all([
     get(`skin-${skin}.css`),
     get(`skin-${skin}.widget.css`),
   ]);
+  const basis = SKIN_BASIS[skin];
+  if (basis && (pageCss !== null || widgetCss !== null)) {
+    const [bPage, bWidget] = await Promise.all([
+      get(`skin-${basis}.css`),
+      get(`skin-${basis}.widget.css`),
+    ]);
+    const um = (css) =>
+      css.split(`[data-vizskin="${basis}"]`).join(`[data-vizskin="${skin}"]`);
+    if (bPage !== null) pageCss = `${um(bPage)}\n${pageCss || ""}`;
+    if (bWidget !== null) widgetCss = `${bWidget}\n${widgetCss || ""}`;
+  }
   if (pageCss === null && widgetCss === null) {
     // Skin gibt es nicht -> sauber zurueck auf classic, sichtbar melden.
     configWarn = [configWarn, `Skin "${skin}" nicht gefunden (css/skin-${skin}.css)`]
@@ -240,6 +260,29 @@ const MONTHS = [
 ];
 
 /**
+ * Kennzahlen aus attr headerInfo als Daten -> [{label, wert, einheit, farbe}].
+ * Genutzt von der Uhr-Seite und (ab v0.40.0) von der Fusszeile der
+ * Lage-Liste - beide zeigen, was fuer die Kopfzeile schon konfiguriert ist.
+ */
+function kopfKennzahlen(store, cfg) {
+  return parseHeaderItems(store, cfg.headerInfo)
+    .filter((it) => it.kind === "val")
+    .map((it) => {
+      const dev = store.get(it.dev);
+      const wert = vizPlain((dev.readings || {})[it.reading] ?? "–");
+      // Beschriftung: ausdrueckliches Label, sonst der Geraete-Alias. Der
+      // rohe Reading-Name ("temp_C") ist nur die letzte Rueckfallebene - als
+      // Versalien gesetzt sah er wie ein Fehler aus.
+      const label =
+        it.label || (dev.attr && dev.attr.alias) || dev.name || it.reading;
+      // Farbe/Schwellwerte aus dem 5. headerInfo-Feld - auf der Uhr-Seite
+      // sind die Zahlen gross, ein roter Batteriestand faellt dort auf.
+      const farbe = vizColorFor(it.color, parseFloat(String(wert).replace(",", ".")), dev);
+      return { label, wert, einheit: it.unit || "", farbe };
+    });
+}
+
+/**
  * Rendert die Uhr-Seite: grosse Uhrzeit + Datum, darunter die Kennzahlen aus
  * attr headerInfo und je statusBar-Eintrag eine Zeile. Bewusst OHNE eigene
  * Attribute - es wird gezeigt, was fuer Kopfzeile und Statusleiste schon
@@ -252,28 +295,17 @@ const MONTHS = [
 function renderClockPage(root, store, cfg) {
   const d = new Date();
   const p = (n) => String(n).padStart(2, "0");
-  const kpis = parseHeaderItems(store, cfg.headerInfo).filter((it) => it.kind === "val");
   const rows = parseStatusEntries(store, cfg.statusBar);
 
-  const kpiHtml = kpis
-    .map((it) => {
-      const dev = store.get(it.dev);
-      const v = vizPlain((dev.readings || {})[it.reading] ?? "–");
-      // Beschriftung: ausdrueckliches Label, sonst der Geraete-Alias. Der
-      // rohe Reading-Name ("temp_C") ist nur die letzte Rueckfallebene - als
-      // Versalien gesetzt sah er wie ein Fehler aus.
-      const label =
-        it.label || (dev.attr && dev.attr.alias) || dev.name || it.reading;
-      // Farbe/Schwellwerte aus dem 5. headerInfo-Feld - auf der Uhr-Seite
-      // sind die Zahlen gross, ein roter Batteriestand faellt dort auf.
-      const col = vizColorFor(it.color, parseFloat(String(v).replace(",", ".")), dev);
-      return `<div class="cp-k">
-        <div class="cp-v"${col ? ` style="color:${col}"` : ""}>${escapeHtml(v)}${
-          it.unit ? `<small>${escapeHtml(it.unit)}</small>` : ""
+  const kpiHtml = kopfKennzahlen(store, cfg)
+    .map(
+      (k) => `<div class="cp-k">
+        <div class="cp-v"${k.farbe ? ` style="color:${k.farbe}"` : ""}>${escapeHtml(k.wert)}${
+          k.einheit ? `<small>${escapeHtml(k.einheit)}</small>` : ""
         }</div>
-        <div class="cp-l">${escapeHtml(label)}</div>
-      </div>`;
-    })
+        <div class="cp-l">${escapeHtml(k.label)}</div>
+      </div>`
+    )
     .join("");
 
   const rowHtml = rows
@@ -328,16 +360,27 @@ function isLagePage(room) {
   return LAGE_PAGE_RE.test(String(room || "").trim());
 }
 
-/** showIf parsen -> [{name, size, widget, cond}] in Prio-Reihenfolge. */
+/**
+ * showIf parsen -> [{name, size, widget, cond, stufe, text, sub}] in
+ * Prio-Reihenfolge. Hinter "=>" steht (ab v0.40.0) wahlweise der Meldungsteil
+ * fuer die Listen-Darstellung (Skin signal): [stufe |] Satz [| Unterzeile].
+ * Getrennt wird an "=>" und NICHT an "|" - das kommt in Bedingungen vor
+ * ("status~Betrieb|Ende|Pause"); ">=" und "<=" bleiben davon unberuehrt.
+ */
 function parseShowIf(spec) {
   return String(spec || "")
     .split(/[\n;]+/)
     .map((z) => z.trim())
     .filter((z) => z && !z.startsWith("#"))
     .map((z) => {
-      const m = z.match(/^([\w.\-]+)(?:=([12]x[12])?(?:\/([\w-]+))?)?(?::(.*))?$/);
+      const i = z.indexOf("=>");
+      const links = (i < 0 ? z : z.slice(0, i)).trim();
+      const m = links.match(/^([\w.\-]+)(?:=([12]x[12])?(?:\/([\w-]+))?)?(?::(.*))?$/);
       if (!m) return null;
-      return { name: m[1], size: m[2] || "", widget: m[3] || "", cond: (m[4] || "").trim() };
+      return {
+        name: m[1], size: m[2] || "", widget: m[3] || "", cond: (m[4] || "").trim(),
+        ...parseMeldung(i < 0 ? "" : z.slice(i + 2)),
+      };
     })
     .filter(Boolean);
 }
@@ -361,13 +404,18 @@ function lageAuswahl(store, cfg, now = new Date()) {
   return {
     fest,
     jetzt: gezeigt,
+    mehr: jetzt.length - gezeigt.length,
+    alle: eintraege.filter((e) => e.cond),
     sig: [...fest, ...gezeigt].map((e) => e.name).join(","),
   };
 }
 
-/** Lage-Seite zeichnen (ueber renderLayout, mit Attribut-Kopien). */
-function renderLagePage(root, store, client, baseOpts, cfg) {
-  const sel = lageAuswahl(store, cfg);
+/**
+ * Kacheln der Lage-Seite in ein Element zeichnen (ueber renderLayout, mit
+ * Attribut-Kopien). Eigene Funktion, weil die Listen-Darstellung (Skin
+ * signal) damit nur den FESTEN Teil in ihre Seitenspalte setzt.
+ */
+function lageKacheln(root, store, client, baseOpts, jetzt, fest) {
   const virtuell = new Map();
   let prio = 0;
   const kopie = (e, gruppe) => {
@@ -390,8 +438,8 @@ function renderLagePage(root, store, client, baseOpts, cfg) {
     }
     virtuell.set(e.name, { ...dev, attr });
   };
-  sel.jetzt.forEach((e) => kopie(e, LAGE_GRP_JETZT));
-  sel.fest.forEach((e) => kopie(e, LAGE_GRP_IMMER));
+  jetzt.forEach((e) => kopie(e, LAGE_GRP_JETZT));
+  fest.forEach((e) => kopie(e, LAGE_GRP_IMMER));
 
   const lageStore = {
     all: () => [...virtuell.values()],
@@ -407,6 +455,12 @@ function renderLagePage(root, store, client, baseOpts, cfg) {
     hideStates: "",
     hideTypes: "",
   });
+}
+
+/** Lage-Seite als Kachelraster zeichnen (alle Skins ausser signal). */
+function renderLagePage(root, store, client, baseOpts, cfg) {
+  const sel = lageAuswahl(store, cfg);
+  lageKacheln(root, store, client, baseOpts, sel.jetzt, sel.fest);
 
   if (!sel.jetzt.length) {
     const ok = document.createElement("div");
@@ -416,6 +470,15 @@ function renderLagePage(root, store, client, baseOpts, cfg) {
     ziel.insertBefore(ok, ziel.firstChild);
   }
   return sel.sig;
+}
+
+/**
+ * Skins, die die Lage-Seite als Meldungsliste zeigen (lage-liste.js) statt
+ * als Kachelraster: ein Block fuer das Wichtigste, darunter Zeilen.
+ */
+const LAGE_LISTE_SKINS = new Set(["signal"]);
+function lageAlsListe() {
+  return LAGE_LISTE_SKINS.has(document.documentElement.dataset.vizskin || "");
 }
 
 /* ------------------------------ TV-Controller ------------------------------ */
@@ -855,7 +918,7 @@ class TvController {
     this._cpTimer = null;
     if (document.body.classList.contains("viz-clockonly") ||
         document.body.classList.contains("viz-lageonly")) {
-      document.body.classList.remove("viz-clockonly", "viz-lageonly");
+      document.body.classList.remove("viz-clockonly", "viz-lageonly", "viz-lageliste");
       this._fit();
     }
   }
@@ -1005,6 +1068,7 @@ class TvController {
     // das wiederholen, was die Seite selbst nach Zustand zeigt - ausblenden.
     // Die Hinweis-Leiste (vizAlert) bleibt: Stoerungen sind Prio 1.
     document.body.classList.toggle("viz-lageonly", isLagePage(scene.room));
+    document.body.classList.remove("viz-lageliste");
     this._fit();
 
     // Weiterschalten ZUERST scharf machen - aus demselben Grund wie in
@@ -1022,6 +1086,29 @@ class TvController {
         this._progress(scene.sec);
       } catch (e) {
         this._renderFehler("Uhr-Seite", e);
+      }
+      return;
+    }
+    if (isLagePage(scene.room) && lageAlsListe()) {
+      try {
+        // Die Seite bringt Uhr und Kennzahlen selbst mit - in der Kopfleiste
+        // stuenden sie ein zweites Mal (wie auf der Uhr-Seite).
+        document.body.classList.add("viz-lageliste");
+        this._fit();
+        const cfg = this.cfg || {};
+        const seite = renderLageListe(this.root, this.store, {
+          auswahl: () => lageAuswahl(this.store, cfg),
+          kennzahlen: () => kopfKennzahlen(this.store, cfg),
+          fest: (el, fest) => lageKacheln(el, this.store, this.client, this.baseOpts, [], fest),
+        });
+        // Alle 5 s nachziehen: Auswahl, Texte mit Platzhaltern, Uhr. Neu
+        // gezeichnet wird nur, was sich geaendert hat.
+        this._cpTimer = setInterval(() => seite.update(), 5000);
+        el("viz-scene").textContent = "Lage";
+        this.root.scrollTop = 0;
+        this._progress(scene.sec);
+      } catch (e) {
+        this._renderFehler("Lage-Seite", e);
       }
       return;
     }

@@ -64,7 +64,7 @@ ein Eintrag **FHEMVIZ** (wie „Floorplans"), der direkt die Oberfläche öffnet
 | `hideTypes` | TYPE-Liste | Geräte-TYPEs ohne Kachel. Default: `SVG,FileLog,notify,at,DOIF,watchdog,weblink,readingsGroup` |
 | `hideStates` | Regex-Liste | Geräte, deren state komplett matcht, werden ausgeblendet. Default: `\?\?\?,unknown,initialized,defined,disabled,inactive` |
 | `width` | 320–3840 | Feste Layout-Breite in CSS-Pixeln; die Seite wird in dieser Breite gerendert und bildschirmfüllend skaliert. Setzt `zoom` außer Kraft. Kleinere Breite = größere Darstellung |
-| `skin` | `bento` / `zeilen` / … | Optik: `bento` = Kacheln (Wandtablet/TV), `zeilen` = Listenzeilen (Handy). Per URL übersteuerbar (`?skin=zeilen`) |
+| `skin` | `bento` / `zeilen` / `signal` | Optik: `bento` = Kacheln (Wandtablet/TV), `zeilen` = Listenzeilen (Handy), `signal` = wie bento, aber die Lage-Seite als Meldungsliste. Per URL übersteuerbar (`?skin=zeilen`) |
 | `skinBlur` | `0` / `1` | Weichzeichnen hinter den Kacheln (nur mit Hintergrundbild sinnvoll) |
 | `snap` | `kachel` (Default) / `gruppe` / `off` | **Rastendes Scrollen** auf Tablet/Handy: ein Wisch endet auf einer Kachelzeile bzw. auf einer Gruppenüberschrift, statt eine halbe Kachel unter der Kopfzeile stehen zu lassen. Im TV-Modus wirkungslos (der blättert). Per URL übersteuerbar (`?snap=gruppe`) |
 | `background` / `backgroundDim` | URL / 0–100 | Hintergrundbild und wie stark es abgedunkelt wird |
@@ -386,6 +386,22 @@ Je Zeile `gerät[=größe[/widget]][:bedingung]`; ohne Bedingung immer da,
 sonst nur wenn wahr (Reihenfolge = Priorität). Bedingung wie `vizAlert`, dazu
 `&` = UND, `@hour`, `@wday`, `{heute}`/`{morgen}`. Größe und Widget gelten
 nur auf dieser Seite. Details: FHEM-Hilfe zu `showIf`.
+
+**Als Meldungsliste (Skin `signal`, ab v0.40.0):** statt Kacheln steht die
+wichtigste Meldung als großer farbiger Block oben, der Rest als Zeilen. Der
+Satz dazu kommt hinter `=>` in denselben Eintrag:
+
+```
+attr vizLage skin signal
+attr vizLage showIf d_garage_neu:icon!=down => rot | Das Segmenttor steht offen\
+MQTT2_Tesla_Model3:heimkehr!=off => blau | Der Tesla kommt in [active_route_minutes_to_arrival:0] Minuten | Akku [battery_level] %\
+d_blumen_giessen:state=on => gelb | Blumen gießen\
+d_lage_kalender
+```
+
+Stufe `rot`/`gelb`/`blau`, dann der Satz, wahlweise eine Unterzeile (ohne sie
+steht dort „seit …"). Einträge ohne Bedingung (hier der Kalender) stehen rechts
+unter der Uhr.
 
 ### Webseite/Kamerabild einblenden: `set myViz show`
 
