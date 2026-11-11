@@ -29,11 +29,14 @@ fünf Entwürfen und vier Varianten die Richtung „Signalblock" gewählt.
   Kalender), unten leise die Werte aus `headerInfo`. Trifft nichts zu: ein
   ruhiger Block „Alles in Ordnung".
 - `showIf` bekommt dafür einen **Meldungsteil** hinter `=>`:
-  `gerät:bedingung => [stufe |] Satz [| Unterzeile]`, mit Platzhaltern
+  `gerät:bedingung => [stufe[:symbol] |] Satz [| Unterzeile]`, mit Platzhaltern
   (`[reading]`, `[reading:0]`, `[gerät/reading]`, `[alias]`, `[heute]`,
   `[morgen]`, `[seit]`). Ohne Meldungsteil entsteht der Satz aus Alias und
   Zustand — ein `showIf` von vorher funktioniert unverändert, auch in den
   anderen Skins (dort wird der Meldungsteil ignoriert).
+- Das Symbol einer Meldung kommt vom `vizIcon` des Geräts oder aus dem Eintrag
+  selbst (`blau:alarm`) — nötig für Schalter, deren Kachel `vizIcon` sonst
+  überall zur Symbol-Kachel machen würde.
 - Rot schlägt Gelb schlägt Blau; innerhalb einer Stufe gilt die Reihenfolge
   aus `showIf`.
 - Hat das Gerät ein Fahrzeugbild (`vizCar image=`), zeigt der Block es.

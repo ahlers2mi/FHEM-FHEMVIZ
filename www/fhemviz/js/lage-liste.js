@@ -14,6 +14,10 @@
  *
  *   stufe       rot | gelb | blau  (auch alarm/warn/info). Ohne Angabe folgt
  *               sie der vizStates-Farbe des Zustands, sonst blau.
+ *               Mit ":symbol" dahinter (blau:alarm, oder nur :alarm) bekommt
+ *               die Meldung ein Symbol aus icons.js, ohne dass am Geraet
+ *               vizIcon gesetzt wird - bei Schaltern wuerde das deren Kachel
+ *               auf allen anderen Seiten zur Symbol-Kachel machen.
  *   Satz        Platzhalter in eckigen Klammern:
  *                 [reading]            Reading des Geraets ("state" = Anzeige)
  *                 [reading:0]          als Zahl mit so vielen Nachkommastellen
@@ -40,7 +44,7 @@
  */
 
 import { vizCondHit, vizPlain, vizStatesInfo } from "./widgets/base-widget.js";
-import { iconKey, iconSvg } from "./widgets/icons.js";
+import { ICONS, iconKey, iconSvg } from "./widgets/icons.js";
 
 const STUFE = {
   rot: "rot", alarm: "rot", bad: "rot", red: "rot",
@@ -75,8 +79,16 @@ const esc = (s) =>
 export function parseMeldung(rechts) {
   const teile = String(rechts || "").split("|").map((t) => t.trim());
   let stufe = "";
-  if (teile.length && STUFE[teile[0].toLowerCase()]) stufe = STUFE[teile.shift().toLowerCase()];
-  return { stufe, text: teile[0] || "", sub: teile.slice(1).join(" | ").trim() };
+  let icon = "";
+  // Erstes Feld "stufe", "stufe:symbol" oder ":symbol" - nur wenn es GENAU
+  // so aussieht; sonst ist es schon der Satz.
+  const m = (teile[0] || "").toLowerCase().match(/^([a-z]*)(?::([a-z]+))?$/);
+  if (m && (m[1] || m[2]) && (!m[1] || STUFE[m[1]]) && (!m[2] || ICONS[m[2]])) {
+    stufe = STUFE[m[1]] || "";
+    icon = m[2] || "";
+    teile.shift();
+  }
+  return { stufe, icon, text: teile[0] || "", sub: teile.slice(1).join(" | ").trim() };
 }
 
 /* ------------------------------ seit wann ---------------------------------- */
@@ -254,7 +266,7 @@ function meldung(e, store, now) {
   }
   const sub = e.sub === "-" ? "" : e.sub ? platzhalter(e.sub, dev, store, ctx).trim() : seitTxt;
 
-  return { name: e.name, stufe, text, sub, icon: iconKey(dev.attr) || "", bild: blockBild(dev) };
+  return { name: e.name, stufe, text, sub, icon: e.icon || iconKey(dev.attr) || "", bild: blockBild(dev) };
 }
 
 /* ------------------------------ Zeichnen ----------------------------------- */
@@ -271,12 +283,12 @@ function blockHtml(m) {
   const rechts = m.bild
     ? `<img src="${esc(m.bild)}" alt="">`
     : `<span class="lg-sym">${symbol(m.icon)}</span>`;
-  return `<div class="lg-erste ${m.stufe}${m.bild ? " bild" : ""}" data-geraet="${esc(m.name)}">
+  return `<div class="lg-erste ${m.stufe}${m.bild ? " bild" : ""}" data-geraet="${esc(m.name)}" data-symbol="${esc(m.icon)}">
     <div><p>${esc(m.text)}</p>${m.sub ? `<small>${esc(m.sub)}</small>` : ""}</div>${rechts}</div>`;
 }
 
 const zeileHtml = (m) =>
-  `<li class="${m.stufe}" data-geraet="${esc(m.name)}"><span class="lg-sym">${symbol(m.icon)}</span>` +
+  `<li class="${m.stufe}" data-geraet="${esc(m.name)}" data-symbol="${esc(m.icon)}"><span class="lg-sym">${symbol(m.icon)}</span>` +
   `<p>${esc(m.text)}</p>${m.sub ? `<time>${esc(m.sub)}</time>` : ""}</li>`;
 
 const mehrHtml = (n) =>

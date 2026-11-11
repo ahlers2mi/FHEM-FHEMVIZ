@@ -684,9 +684,15 @@ sub FHEMVIZ_Attr {
         dazu <code>attr vizLage tvScenes #lage:600</code>.<br>
         <b>Meldungsteil</b> (ab v0.40.0, wirkt im Skin <code>signal</code>):
         hinter <code>=&gt;</code> steht, was auf der Seite zu lesen ist:
-        <code>gerät:bedingung =&gt; [stufe |] Satz [| Unterzeile]</code>.
+        <code>gerät:bedingung =&gt; [stufe[:symbol] |] Satz [| Unterzeile]</code>.
         Stufe <code>rot</code>, <code>gelb</code> oder <code>blau</code>; ohne
-        Angabe folgt sie der <code>vizStates</code>-Farbe, sonst blau. Die
+        Angabe folgt sie der <code>vizStates</code>-Farbe, sonst blau. Mit
+        <code>:symbol</code> dahinter (<code>blau:alarm</code>, oder nur
+        <code>:alarm</code>) bekommt die Meldung ein Symbol aus der
+        <code>vizIcon</code>-Liste, ohne dass es am Gerät gesetzt wird
+        &ndash; bei Schaltern würde <code>vizIcon</code> deren Kachel auf allen
+        anderen Seiten zur Symbol-Kachel machen. Sonst gilt das
+        <code>vizIcon</code> des Geräts. Die
         wichtigste Meldung (rot vor gelb vor blau, innerhalb einer Stufe die
         Reihenfolge der Einträge) steht als großer Block oben, die übrigen
         als Zeilen darunter. Platzhalter im Satz und in der Unterzeile:

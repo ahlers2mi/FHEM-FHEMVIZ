@@ -32,7 +32,9 @@ function setze(liste, name, readings, minuten = 5) {
 function haus(liste, { tor = "up" } = {}) {
   dazu(liste, "d_garage_neu", tor === "down" ? "Zu" : "Auf",
        { alias: "Segmenttor", vizIcon: "tor", vizStates: "up:offen:warn,down:zu:ok" }, { icon: tor }, 21);
-  dazu(liste, "myalarm", "on", { alias: "Alarm Anlage", vizIcon: "alarm" }, {}, 600);
+  // Ein Schalter: bewusst OHNE vizIcon (das machte seine Kachel auf den anderen
+  // Seiten zur Symbol-Kachel) - das Symbol kommt aus showIf ("blau:alarm").
+  dazu(liste, "myalarm", "on", { alias: "Alarm Anlage" }, {}, 600);
   dazu(liste, "rp_d_Wechselrichter_all_modus", "winter",
        { alias: "Wechselrichter Modus", vizIcon: "frost", vizStates: "winter:Wintermodus aktiv:warn" }, {}, 5 * 1440);
   dazu(liste, "d_blumen_giessen", "on", { alias: "Blumen gießen", vizIcon: "wasser" }, {}, 3 * 1440);
@@ -50,7 +52,7 @@ function haus(liste, { tor = "up" } = {}) {
 
 const SHOWIF = [
   "MQTT2_BlitzWolf3:ENERGY_Power>10 => rot | Die Pumpe im Keller läuft",
-  "myalarm:state=on => blau | Alarmanlage ist scharf | -",
+  "myalarm:state=on => blau:alarm | Alarmanlage ist scharf | -",
   "d_garage_neu:icon!=down => rot | Das Segmenttor steht offen",
   "MQTT2_Tesla_Model3:heimkehr!=off => blau | Der Tesla kommt in [active_route_minutes_to_arrival:0] Minuten | Akku [battery_level] %, [battery_range_km:0] km Reichweite",
   "rp_d_Wechselrichter_all_modus:state=winter => blau | Wechselrichter läuft im Wintermodus",
@@ -79,7 +81,7 @@ const lese = (page) =>
                        geraet: erste.getAttribute("data-geraet") } : null,
       zeilen: zeilen.map((li) => ({ klasse: li.className, text: li.querySelector("p").textContent,
                                     sub: (li.querySelector("time") || {}).textContent || "",
-                                    geraet: li.getAttribute("data-geraet") })),
+                                    geraet: li.getAttribute("data-geraet"), symbol: li.getAttribute("data-symbol") })),
       // Ueberlauf: Seite gegen die App-Flaeche, Liste gegen sich selbst, und
       // die letzte Zeile muss ganz in der Liste liegen.
       ueberSeite: app.scrollHeight - app.clientHeight,
@@ -127,6 +129,9 @@ module.exports = [
       const blumen = r.zeilen.find((x) => x.geraet === "d_blumen_giessen");
       ok(blumen && /^seit (Mo|Di|Mi|Do|Fr|Sa|So)\.$/.test(blumen.sub), `drei Tage alt -> Wochentag (ist: "${blumen && blumen.sub}")`);
       ok(![r.block.text, ...r.zeilen.map((x) => x.text + x.sub)].some((t) => /\[|\]/.test(t)), "kein Platzhalter bleibt stehen");
+      const sym = Object.fromEntries(r.zeilen.map((x) => [x.geraet, x.symbol]));
+      ok(sym.myalarm === "alarm", `Symbol aus showIf ("blau:alarm"), ohne vizIcon am Geraet (ist: "${sym.myalarm}")`);
+      ok(sym.d_blumen_giessen === "wasser" && sym.MQTT2_Tesla_Model3 === "auto", `sonst vizIcon des Geraets (ist: ${sym.d_blumen_giessen}, ${sym.MQTT2_Tesla_Model3})`);
       ok(!r.zeilen.some((x) => x.geraet === "MQTT2_BlitzWolf3" || x.geraet === "st_fenster"), "was nicht zutrifft, steht nicht da");
       ok(r.ueberSeite <= 0 && r.ueberListe <= 1 && r.letzteDrin && r.quer <= 0,
          `nichts laeuft aus dem Schirm (Seite ${r.ueberSeite}, Liste ${r.ueberListe}, quer ${r.quer})`);
