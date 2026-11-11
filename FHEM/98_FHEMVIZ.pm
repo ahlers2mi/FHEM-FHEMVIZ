@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.40.0
+# Version:  v0.40.1
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.40.0";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.40.1";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -380,7 +380,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.40.0"),
+            FHEMVIZ_jsonStr("v0.40.1"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -709,7 +709,9 @@ sub FHEMVIZ_Attr {
         Gerät und Bedingung): der Zeitstempel eines Readings ist die letzte
         Meldung, nicht der letzte Wechsel. Trifft eine Bedingung beim ersten
         Laden schon zu, wird bei einem Textvergleich der Zeitstempel des
-        Readings genommen, bei einem Zahlenvergleich (&gt;, &lt;) nichts
+        Readings genommen &ndash; ab v0.40.1 nur, wenn er mindestens eine
+        Stunde alt ist (ein junger kann eine Wiederholung desselben Zustands
+        sein) &ndash;, bei einem Zahlenvergleich (&gt;, &lt;) nichts
         angezeigt. Beispiel:<br>
         <code>d_garage_neu:icon!=down =&gt; rot | Das Segmenttor steht offen</code><br>
         <code>MQTT2_Tesla_Model3:heimkehr!=off =&gt; blau | Der Tesla kommt in [active_route_minutes_to_arrival:0] Minuten | Akku [battery_level] %</code><br>

@@ -11,6 +11,25 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.40.1 — 11.11.2026
+
+**Lage-Liste: falsches „seit“ und zu große Textkachel in der Seitenspalte**
+
+Beides am ersten Tag auf dem Küchentablet aufgefallen.
+
+- „Wechselrichter läuft im Wintermodus – seit 11:56 Uhr": der Modus gilt seit
+  Oktober, das Gerät (ein readingsProxy) meldet seinen Zustand aber alle paar
+  Minuten neu. Trifft eine Bedingung beim Laden schon zu, gilt der Zeitstempel
+  des Readings jetzt nur noch als Beginn, wenn er mindestens eine Stunde alt
+  ist; sonst steht nichts da. Wechsel, die die Seite selbst sieht, sind davon
+  nicht betroffen.
+- Eine Text-Kachel als fester Eintrag (Anlass: „Aufgaben" aus der Familien-App)
+  stand in der Seitenspalte in TV-Größe: größer als die Termine darüber und
+  unten abgeschnitten. Sie hat dort jetzt die Schriftgröße der Termine.
+- Tests: zwei Fälle dazu in `t/seite/cases/lage-liste.js`.
+
+---
+
 ## v0.40.0 — 11.11.2026
 
 **Skin `signal`: die Lage-Seite als Meldungsliste**

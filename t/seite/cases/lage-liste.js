@@ -31,7 +31,7 @@ function setze(liste, name, readings, minuten = 5) {
 /** Das Haus an einem Novemberabend: Tor offen, Tesla kommt, drei Hinweise. */
 function haus(liste, { tor = "up" } = {}) {
   dazu(liste, "d_garage_neu", tor === "down" ? "Zu" : "Auf",
-       { alias: "Segmenttor", vizIcon: "tor", vizStates: "up:offen:warn,down:zu:ok" }, { icon: tor }, 21);
+       { alias: "Segmenttor", vizIcon: "tor", vizStates: "up:offen:warn,down:zu:ok" }, { icon: tor }, 95);
   // Ein Schalter: bewusst OHNE vizIcon (das machte seine Kachel auf den anderen
   // Seiten zur Symbol-Kachel) - das Symbol kommt aus showIf ("blau:alarm").
   dazu(liste, "myalarm", "on", { alias: "Alarm Anlage" }, {}, 600);
@@ -116,7 +116,9 @@ module.exports = [
       ok(r.block && r.block.geraet === "d_garage_neu" && /rot/.test(r.block.klasse),
          `Block = Segmenttor in Rot, obwohl die Alarmanlage in showIf davor steht (ist: ${r.block && r.block.geraet})`);
       ok(r.block && r.block.text === "Das Segmenttor steht offen", `Satz aus showIf (ist: "${r.block && r.block.text}")`);
-      ok(r.block && /^seit \d\d:\d\d Uhr$/.test(r.block.sub), `Unterzeile "seit HH:MM Uhr" (ist: "${r.block && r.block.sub}")`);
+      // 95 Minuten alt: beim Laden glaubwuerdig (ab einer Stunde). Kurz nach
+      // Mitternacht ist das "gestern".
+      ok(r.block && /^seit (\d\d:\d\d Uhr|gestern)$/.test(r.block.sub), `Unterzeile "seit HH:MM Uhr" (ist: "${r.block && r.block.sub}")`);
       ok(r.zeilen.map((x) => x.geraet).join(",") ===
          "rem_d_cal_muell,d_blumen_giessen,myalarm,MQTT2_Tesla_Model3,rp_d_Wechselrichter_all_modus",
          `gelb vor blau, innerhalb der Stufe wie in showIf (ist: ${r.zeilen.map((x) => x.geraet).join(",")})`);
@@ -248,6 +250,54 @@ module.exports = [
       await h.timerStoppen();
       const r = await lese(page);
       ok(r.block && r.block.geraet === "MQTT2_BlitzWolf3" && r.block.sub === "", `Block ohne Unterzeile (ist: "${r.block && r.block.sub}")`);
+    },
+  },
+  {
+    name: "Textvergleich mit JUNGEM Zeitstempel beim Laden: kein 'seit' (kann eine Wiederholung sein)",
+    geraet: "tv",
+    config: { ...CFG, showIf: "rp_d_Wechselrichter_all_modus:state=winter => blau | Wechselrichter läuft im Wintermodus\nd_blumen_giessen:state=on => gelb | Blumen gießen" },
+    geraete(liste) {
+      haus(liste);
+      // Der Modus gilt seit Tagen, das Geraet hat ihn aber vor 4 Minuten erneut gemeldet.
+      setze(liste, "rp_d_Wechselrichter_all_modus", { state: "winter" }, 4);
+    },
+    async pruefe({ page, ok, h }) {
+      await h.timerStoppen();
+      const r = await lese(page);
+      const alle = [r.block, ...r.zeilen];
+      const wr = alle.find((x) => x.geraet === "rp_d_Wechselrichter_all_modus");
+      const bl = alle.find((x) => x.geraet === "d_blumen_giessen");
+      ok(wr && wr.sub === "", `4 Minuten alt -> nichts (ist: "${wr && wr.sub}")`);
+      ok(bl && /^seit /.test(bl.sub), `drei Tage alt -> bleibt (ist: "${bl && bl.sub}")`);
+    },
+  },
+  {
+    name: "Text-Kachel als fester Eintrag (Aufgaben): so gross wie die Termine, nichts abgeschnitten",
+    geraet: "tv",
+    config: { ...CFG, showIf: SHOWIF + "\nd_aufgaben" },
+    geraete(liste) {
+      haus(liste);
+      dazu(liste, "d_aufgaben", "Trockner ausräumen (seit gestern)<br>Wasserbetten lüften (seit gestern)<br>Altpapier rausstellen",
+           { alias: "Aufgaben", vizWidget: "text" });
+    },
+    async pruefe({ page, ok, h }) {
+      await h.timerStoppen();
+      const m = await page.evaluate(() => {
+        const ws = [...document.querySelectorAll(".lg-fest .viz-grid > *")];
+        const a = ws.find((w) => (w.device || {}).name === "d_aufgaben");
+        const k = ws.find((w) => (w.device || {}).name === "d_lage_kalender");
+        const t = a && a.shadowRoot.querySelector(".text");
+        const what = k && k.shadowRoot.querySelector(".agrow .what");
+        const seite = document.querySelector(".lg-seite").getBoundingClientRect();
+        return { da: !!t, text: t ? t.innerText : "", fs: t ? parseFloat(getComputedStyle(t).fontSize) : 0,
+                 termin: what ? parseFloat(getComputedStyle(what).fontSize) : 0,
+                 unten: t ? t.getBoundingClientRect().bottom : 0, kante: seite.bottom,
+                 rahmen: a ? getComputedStyle(a.shadowRoot.querySelector(".card")).borderTopWidth : "" };
+      });
+      ok(m.da && m.text.split("\n").length === 3, `drei Zeilen (ist: ${JSON.stringify(m.text)})`);
+      ok(m.fs > 0 && Math.abs(m.fs - m.termin) < 0.6, `Schrift wie die Termine (${m.fs} px gegen ${m.termin} px)`);
+      ok(m.unten <= m.kante + 1, `Text endet in der Spalte (${Math.round(m.unten)} <= ${Math.round(m.kante)})`);
+      ok(m.rahmen === "0px", "ohne Kasten");
     },
   },
   {
