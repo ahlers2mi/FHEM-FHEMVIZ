@@ -579,3 +579,23 @@ Zwei Fallen beim Aufnehmen der Bilder, beide selbst hineingelaufen:
 - **`getBoundingClientRect()` kennt kein `overflow: hidden`.** Für „wird etwas
   abgeschnitten" taugt es nicht; `elementFromPoint` an der fraglichen Stelle
   oder `scrollHeight` gegen `clientHeight` schon.
+
+## Lage-Liste (Skin `signal`, v0.40.0): zwei Stolpersteine
+
+- **Eine Klasse, zwei Elemente.** Die Seite hieß zuerst `.viz-lageliste` – wie
+  die Klasse, die der TV-Controller für die Kopfzeile an den `body` hängt. Die
+  Rasterregel der Seite griff damit auch am `body`, die App-Fläche war 0 px
+  hoch und der Block 1737 px. Seitenklassen am `body` (`viz-clockonly`,
+  `viz-lageonly`, `viz-lageliste`) und Container-Klassen (`.viz-lg`) getrennt
+  benennen.
+- **Gemessen, bevor die Schrift da war.** Die Liste kürzt sich selbst, wenn sie
+  nicht auf den Schirm passt. Beim ersten Zeichnen steht noch die Ersatzschrift,
+  die Zeilen sind niedriger – es passte, und nach dem Schriftwechsel lag die
+  letzte Zeile 35 px unter der Kante. Dasselbe Muster wie beim Pager und dem
+  Autobild: **nicht einmal messen, sondern bei jedem Takt** (und zusätzlich an
+  `document.fonts.ready`).
+
+Alle Maße der Seite hängen an `--u` (Seitenbreite/1280 bzw. -höhe/800, das
+kleinere) – der Entwurf war 1280×800, der TV-Modus skaliert über `?width=`.
+Feste Pixel wären dort falsch.
+

@@ -1,0 +1,60 @@
+/*
+ * FHEMVIZ - Skin "signal" (Kachel-Innenleben), v0.40.0.
+ * Wird HINTER dem Kachel-CSS von "bento" in jeden Shadow DOM gehaengt
+ * (app.js, SKIN_BASIS) - hier steht nur, was abweicht.
+ */
+
+/* Barlow hat in diesem Skin drei Schnitte (400/500/600). Die duennen
+ * Wertziffern (200/250) fielen sonst auf 400 zurueck und wirkten neben den
+ * fetten Beschriftungen beliebig - also bewusst auf 500 setzen. */
+.value { font-weight: 500; letter-spacing: 0; }
+.value.md { font-weight: 500; }
+.label { letter-spacing: 0.08em; }
+
+/* --- Kacheln in der Seitenspalte der Lage-Liste (data-lage="seite") ------ */
+/* Dort steht kein Kasten: die Kachel ist ein Abschnitt mit Ueberschrift.
+ * --u erbt aus .viz-lg (Custom Properties gehen durch den Shadow DOM). */
+:host([data-lage]) .card {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  gap: calc(var(--u, 1px) * 4);
+  overflow: visible;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:host([data-lage]) .card::before { display: none; }
+:host([data-lage]) .label {
+  font-size: calc(var(--u, 1px) * 22);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+:host([data-lage]) .agrows { gap: 0; }
+:host([data-lage]) .agrow,
+:host([data-lage][data-tv]) .agrow {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: calc(var(--u, 1px) * 10) 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--viz-border, #2a323c);
+  border-radius: 0;
+}
+:host([data-lage]) .agrow.quelle { border-left: 0; }
+:host([data-lage]) .agrow .when,
+:host([data-lage][data-tv]) .agrow .when {
+  font-size: calc(var(--u, 1px) * 20);
+  font-weight: 400;
+  color: var(--viz-muted, #96a0aa);
+}
+:host([data-lage]) .agrow.today .when,
+:host([data-lage]) .agrow.tomorrow .when { color: var(--viz-accent, #f5b82e); font-weight: 500; }
+:host([data-lage]) .agrow .what,
+:host([data-lage][data-tv]) .agrow .what {
+  font-size: calc(var(--u, 1px) * 25);
+  font-weight: 500;
+}
+:host([data-lage]) .agrow .qtag { display: none; }

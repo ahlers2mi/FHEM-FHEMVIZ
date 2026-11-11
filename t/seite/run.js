@@ -181,7 +181,10 @@ async function main() {
 
       let absturz = null;
       try {
-        await page.goto(`http://127.0.0.1:${server.port}/fhem/fhemviz/index.html${profil.url}${fall.url || ""}`,
+        // fall.url haengt an die Profil-Adresse an; beginnt sie mit "?", ersetzt
+        // sie sie (noetig fuer ?skin=, weil der erste Parameter gewinnt).
+        const adresse = /^\?/.test(fall.url || "") ? fall.url : `${profil.url}${fall.url || ""}`;
+        await page.goto(`http://127.0.0.1:${server.port}/fhem/fhemviz/index.html${adresse}`,
                         { waitUntil: "load" });
         if (fall.warten !== 0) await page.waitForTimeout(fall.warten || 2500);
         await fall.pruefe({ page, ok: pruefe, server, h: helfer(page), profil });

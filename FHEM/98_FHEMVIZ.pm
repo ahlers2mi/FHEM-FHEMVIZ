@@ -21,7 +21,7 @@
 #   (http://<fhem>:<port>/fhem/fhemviz/index.html) - kein eigener Webserver.
 #
 # Autor:    ahlers2mi
-# Version:  v0.39.1
+# Version:  v0.40.0
 # Lizenz:   GPL v2 oder hoeher (wie FHEM)
 ##############################################################################
 
@@ -48,7 +48,7 @@ use vars qw($readingFnAttributes %defs %attr %modules %data $init_done);
 # "Versionskonflikt: Modul X / Oberflaeche Y". Der Hinweistext schlaegt
 # Strg+F5 vor - das fuehrt in die Irre, wenn in Wahrheit nur der Bump
 # unvollstaendig war (passiert in v0.34.50, siehe PR #126).
-my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.39.1";
+my $FHEMVIZ_VERSION = "98_FHEMVIZ.pm:v0.40.0";
 
 # Standard fuer das Attribut hideRooms: technische/Integrations-Raeume, die
 # im Dashboard nicht als eigene Raeume erscheinen sollen. Kommaseparierte
@@ -93,7 +93,7 @@ my @FHEMVIZ_DEV_ATTRS = (
     "vizSize:1x1,2x1,1x2,2x2",
     "vizHero:0,1,full",
     "vizHide:1,0",
-    "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power,frost,batterie,tonne,waesche,roboter,maeher,fenster,tuer,alarm,wasser,gast,tor",
+    "vizIcon:lampe,steckdose,lautsprecher,luefter,pumpe,tv,heizung,power,frost,batterie,tonne,waesche,roboter,maeher,fenster,tuer,alarm,wasser,gast,tor,auto",
     "vizGroup",
     "vizReadings:textField-long",
     "vizState",
@@ -380,7 +380,7 @@ sub FHEMVIZ_Get {
               . '"background":%s,"backgroundDim":%s,"skin":%s,"skinBlur":%s,"snap":%s,"flash":%s,"sound":%s,"pwa":%s,"page":%s,'
               . '"roomPrefix":%s,"showRooms":%s,"hideRooms":%s,"hideTypes":%s,"hideStates":%s}',
             FHEMVIZ_jsonStr($name),
-            FHEMVIZ_jsonStr("v0.39.1"),
+            FHEMVIZ_jsonStr("v0.40.0"),
             FHEMVIZ_jsonStr($devspec),
             FHEMVIZ_jsonStr($theme),
             $readonly,
@@ -681,11 +681,46 @@ sub FHEMVIZ_Attr {
         <code>st_fenster:state!=closed</code><br>
         <code>rem_d_cal_muell=2x1:state~{morgen}&amp;@hour&gt;=14</code><br>
         <code>MQTT2_Tesla_Model3=1x1/sensor:@hour&gt;=18&amp;charge_port_door_open=false&amp;battery_level&lt;40</code><br>
-        dazu <code>attr vizLage tvScenes #lage:600</code>.</li>
+        dazu <code>attr vizLage tvScenes #lage:600</code>.<br>
+        <b>Meldungsteil</b> (ab v0.40.0, wirkt im Skin <code>signal</code>):
+        hinter <code>=&gt;</code> steht, was auf der Seite zu lesen ist:
+        <code>gerät:bedingung =&gt; [stufe[:symbol] |] Satz [| Unterzeile]</code>.
+        Stufe <code>rot</code>, <code>gelb</code> oder <code>blau</code>; ohne
+        Angabe folgt sie der <code>vizStates</code>-Farbe, sonst blau. Mit
+        <code>:symbol</code> dahinter (<code>blau:alarm</code>, oder nur
+        <code>:alarm</code>) bekommt die Meldung ein Symbol aus der
+        <code>vizIcon</code>-Liste, ohne dass es am Gerät gesetzt wird
+        &ndash; bei Schaltern würde <code>vizIcon</code> deren Kachel auf allen
+        anderen Seiten zur Symbol-Kachel machen. Sonst gilt das
+        <code>vizIcon</code> des Geräts. Die
+        wichtigste Meldung (rot vor gelb vor blau, innerhalb einer Stufe die
+        Reihenfolge der Einträge) steht als großer Block oben, die übrigen
+        als Zeilen darunter. Platzhalter im Satz und in der Unterzeile:
+        <code>[reading]</code>, <code>[reading:0]</code> (Zahl mit so vielen
+        Nachkommastellen), <code>[gerät/reading]</code> (anderes Gerät),
+        <code>[alias]</code>, <code>[heute]</code>/<code>[morgen]</code>
+        (Termintexte dieses Tages aus einer Terminliste) und
+        <code>[seit]</code>. Ohne Unterzeile steht dort &bdquo;seit …&ldquo;,
+        mit <code>-</code> bleibt sie leer. Ohne Meldungsteil wird der Satz
+        aus Alias und Zustand gebaut. Der Satz darf kein <code>;</code>
+        enthalten (trennt Einträge). Hat das Gerät ein Fahrzeugbild
+        (<code>vizCar image=</code>), zeigt der Block es statt des Symbols.<br>
+        &bdquo;Seit wann&ldquo; merkt sich die Seite selbst (im Browser, je
+        Gerät und Bedingung): der Zeitstempel eines Readings ist die letzte
+        Meldung, nicht der letzte Wechsel. Trifft eine Bedingung beim ersten
+        Laden schon zu, wird bei einem Textvergleich der Zeitstempel des
+        Readings genommen, bei einem Zahlenvergleich (&gt;, &lt;) nichts
+        angezeigt. Beispiel:<br>
+        <code>d_garage_neu:icon!=down =&gt; rot | Das Segmenttor steht offen</code><br>
+        <code>MQTT2_Tesla_Model3:heimkehr!=off =&gt; blau | Der Tesla kommt in [active_route_minutes_to_arrival:0] Minuten | Akku [battery_level] %</code><br>
+        <code>rem_d_cal_muell:STATE~{morgen}&amp;@hour&gt;=14 =&gt; gelb | Morgen: [morgen] | -</code></li>
     <li><a id="FHEMVIZ-attr-maxTiles"></a><b>maxTiles</b><br>
         Typ: textField (ab v0.38.0). Höchstzahl der <b>bedingten</b> Kacheln
         auf der Lage-Seite, damit sie nie blättert. Es gewinnen die vorderen
-        Einträge aus <code>showIf</code>.</li>
+        Einträge aus <code>showIf</code>. Im Skin <code>signal</code>
+        (Meldungsliste) zählt der Block mit; was wegfällt, nennt die letzte
+        Zeile (&bdquo;und 3 weitere Meldungen&ldquo;). Ohne Angabe zeigt die
+        Liste so viele Zeilen, wie auf den Schirm passen.</li>
     <li><a id="FHEMVIZ-attr-statusBar"></a><b>statusBar</b><br>
         Typ: textField-long. Immer sichtbare Status-Chips im Kopf:
         kommaseparierte Liste <code>gerät[:reading[:einheit[:farbe]]]</code>.
@@ -738,6 +773,13 @@ sub FHEMVIZ_Attr {
         Glaskacheln (sinnvoll mit <code>background</code>), und im
         <b>Querformat</b> wandert die Raum-Umschaltung als Schiene an die linke
         Kante; im Hochformat bleibt die Leiste unten.<br>
+        <code>signal</code> (ab v0.40.0) &ndash; baut auf <code>bento</code>
+        auf (gleiches Raster, gleiche Raum-Schiene), mit eigener Palette, der
+        Schrift Barlow Semi Condensed und der <b>Lage-Seite als
+        Meldungsliste</b>: die wichtigste Meldung als farbiger Block, die
+        übrigen als Zeilen, rechts Uhr, Datum und der feste Teil aus
+        <code>showIf</code>, unten die Werte aus <code>headerInfo</code>
+        (siehe <code>showIf</code>, Meldungsteil). Nur dunkel.<br>
         Je Geraet uebersteuerbar per URL: <code>?skin=zeilen</code> &ndash; so
         koennen Handy und Wandtablet dasselbe FHEMVIZ-Geraet nutzen und
         trotzdem anders aussehen. Beispiel:<br>
@@ -1105,7 +1147,7 @@ sub FHEMVIZ_Attr {
     <li><a id="FHEMVIZ-attr-vizHide"></a><b>vizHide</b> 1|0<br>
         Gerät aus der Sicht ausblenden.</li>
     <li><a id="FHEMVIZ-attr-vizIcon"></a><b>vizIcon</b>
-        lampe|steckdose|lautsprecher|luefter|pumpe|tv|heizung|power|frost|batterie|tonne|waesche|roboter|maeher|fenster|tuer|alarm|wasser|gast|tor<br>
+        lampe|steckdose|lautsprecher|luefter|pumpe|tv|heizung|power|frost|batterie|tonne|waesche|roboter|maeher|fenster|tuer|alarm|wasser|gast|tor|auto<br>
         Symbol-Modus für Schalter-Kacheln: großes Symbol mittig, Name
         darunter, Bernstein = an — aus der Ferne lesbar wie ein klassisches
         Schalter-Panel. Tippen auf die Kachel schaltet. Im Skin
@@ -1124,7 +1166,9 @@ sub FHEMVIZ_Attr {
         die Symbole frost|batterie|tonne|waesche|roboter|maeher|fenster|tuer|alarm|wasser|gast.
         Ab v0.39.1 auch bei <b>Befehls-Kacheln</b> (Knöpfe aus <code>webCmd</code>,
         z. B. ein Garagentor): Symbol in der Zustandszeile, es schaltet nichts;
-        neues Symbol <code>tor</code>.
+        neues Symbol <code>tor</code>. Ab v0.40.0 nutzt auch die
+        Meldungsliste der Lage-Seite (Skin <code>signal</code>) das Symbol;
+        neues Symbol <code>auto</code>.
         Beispiel:<br>
         <code>attr rp_d_Wechselrichter_all_modus vizIcon frost</code></li>
     <li><a id="FHEMVIZ-attr-vizGroup"></a><b>vizGroup</b><br>
