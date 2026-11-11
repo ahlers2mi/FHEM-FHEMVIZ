@@ -58,3 +58,15 @@
   font-weight: 500;
 }
 :host([data-lage]) .agrow .qtag { display: none; }
+
+/* Text-Kachel in der Seitenspalte (v0.40.1, Anlass: Aufgaben des Tages).
+ * Ohne das galt die TV-Groesse fuer 2x1-Kacheln - die Zeilen waren groesser
+ * als die Termine darueber und liefen unten aus dem Schirm. !important, weil
+ * die Groessenregeln der Grundkachel (:host([data-tv][data-size=…]) .text)
+ * sonst gewinnen. */
+:host([data-lage]) .text {
+  font-size: calc(var(--u, 1px) * 25) !important;
+  font-weight: 500;
+  line-height: 1.5;
+  padding-top: calc(var(--u, 1px) * 6);
+}

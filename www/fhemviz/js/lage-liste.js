@@ -39,8 +39,9 @@
  * sich darum selbst, wann eine Bedingung erstmals zutraf (localStorage, damit
  * es ein Neuladen uebersteht). Nur beim allerersten Blick auf eine schon
  * zutreffende Bedingung muss sie schaetzen: bei einem Textvergleich nimmt sie
- * den Zeitstempel des Readings, bei einem Zahlenvergleich (>, <) zeigt sie
- * lieber nichts als etwas Falsches.
+ * den Zeitstempel des Readings, aber nur, wenn er mindestens eine Stunde alt
+ * ist (ein junger kann eine blosse Wiederholung sein); bei einem
+ * Zahlenvergleich (>, <) zeigt sie lieber nichts als etwas Falsches.
  */
 
 import { vizCondHit, vizPlain, vizStatesInfo } from "./widgets/base-widget.js";
@@ -94,6 +95,8 @@ export function parseMeldung(rechts) {
 /* ------------------------------ seit wann ---------------------------------- */
 
 const SEIT_KEY = "fhemviz.lage.seit";
+const ALT_MS = 60 * 60000; // beim Laden: erst ab einer Stunde Alter glaubwuerdig
+const FRISCH_MS = 5 * 60000; // im Lauf: Ereignis muss aus den letzten Minuten sein
 let seit = null; // Schluessel -> ms (0 = unbekannt)
 let ersterLauf = true;
 
@@ -148,12 +151,21 @@ function seitPflegen(store, alle, now) {
     if (seit.has(k)) continue;
     const c = condReading(e.cond);
     let ms = 0;
-    if (c && !(ersterLauf && c.zahl)) {
+    if (!ersterLauf) {
+      // Wechsel waehrend die Seite laeuft: der Zeitstempel des Readings ist
+      // dann der Moment des Ereignisses (Store.applyEvent), sonst "jetzt".
+      const t = dev.times || {};
+      const z = c ? zeitMs(t[c.reading] || (c.reading === "state" ? t.STATE : "")) : 0;
+      ms = z && z <= now.getTime() && now.getTime() - z < FRISCH_MS ? z : now.getTime();
+    } else if (c && !c.zahl) {
+      // Trifft beim Laden schon zu: der Zeitstempel ist nur dann ein
+      // brauchbarer Beginn, wenn er ALT ist. Ein junger kann genauso gut die
+      // Wiederholung eines Zustands sein, der seit Tagen gilt (v0.40.1: ein
+      // readingsProxy meldete "winter" alle paar Minuten neu, die Seite
+      // zeigte "seit 11:56 Uhr" fuer einen Modus vom Oktober).
       const t = dev.times || {};
       const z = zeitMs(t[c.reading] || (c.reading === "state" ? t.STATE : ""));
-      ms = z && z <= now.getTime() ? z : ersterLauf ? 0 : now.getTime();
-    } else if (!ersterLauf) {
-      ms = now.getTime();
+      ms = z && now.getTime() - z >= ALT_MS ? z : 0;
     }
     seit.set(k, ms);
     geaendert = true;
