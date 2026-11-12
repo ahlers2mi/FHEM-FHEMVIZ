@@ -11,6 +11,23 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.40.2 — 12.11.2026
+
+**Skin `signal`: Nachrichten (`set <viz> msg …`) gingen auf der Lage-Liste unter**
+
+Anlass: „Holz nachlegen" stand als dunkler Kasten mit schmalem Farbstreifen
+mitten auf einer Seite aus dunklem Grund und großen Farbflächen – der Nutzer
+hat sie übersehen.
+
+- Unter `skin signal` ist die Nachricht jetzt selbst eine Farbfläche im Stil
+  des Blocks der Lage-Liste: gelb (normal), rot (wichtig), blau (leise), große
+  Schrift, linksbündig. Die Seite dahinter wird abgedunkelt.
+- Der Puls der roten Stufe entfällt in diesem Skin (er animierte den Schatten
+  und nähme die Abdunklung weg) – die rote Fläche fällt auch so auf.
+- Andere Skins unverändert. Test: ein Fall in `t/seite/cases/lage-liste.js`.
+
+---
+
 ## v0.40.1 — 11.11.2026
 
 **Lage-Liste: falsches „seit“ und zu große Textkachel in der Seitenspalte**
