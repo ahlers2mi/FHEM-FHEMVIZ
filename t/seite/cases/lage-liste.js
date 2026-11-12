@@ -348,4 +348,38 @@ module.exports = [
       ok(/rgba|color\(/.test(r.glas), `Kacheln halbtransparent wie bei bento (ist: ${r.glas})`);
     },
   },
+  {
+    name: "Nachricht (set msg) hebt sich von der Lage-Liste ab: Farbflaeche + Schleier",
+    geraet: "tv",
+    config: CFG,
+    geraete(liste) { haus(liste); },
+    async pruefe({ page, ok, h }) {
+      await h.timerStoppen();
+      // Dasselbe Geruest, das showToast() baut (app.js) - geprueft wird die Optik.
+      const zeige = (stufe) => page.evaluate((stufe) => {
+        const alt = document.getElementById("viz-toast"); if (alt) alt.remove();
+        const t = document.createElement("div");
+        t.id = "viz-toast"; t.className = "viz-toast-" + stufe + " viz-toast-in";
+        t.innerHTML = '<div class="viz-toast-head">FHEM Ofen</div><div class="viz-toast-msg">Holz nachlegen</div>';
+        document.body.appendChild(t);
+        const c = getComputedStyle(t), m = getComputedStyle(t.querySelector(".viz-toast-msg"));
+        const block = getComputedStyle(document.querySelector(".lg-erste p"));
+        const r = t.getBoundingClientRect();
+        return { bg: c.backgroundColor, farbe: m.color, schleier: /100vmax|\d{3,}px/.test(c.boxShadow) || c.boxShadow.split("rgb").length > 2,
+                 fs: parseFloat(m.fontSize), blockFs: parseFloat(block.fontSize), streifen: c.borderLeftWidth,
+                 drin: r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, anim: c.animationName };
+      }, stufe);
+      const n = await zeige("normal");
+      ok(n.bg === "rgb(245, 184, 46)" && n.farbe === "rgb(20, 24, 30)", `normal: gelbe Flaeche, dunkle Schrift (ist: ${n.bg} / ${n.farbe})`);
+      ok(n.schleier, "Seite dahinter wird abgedunkelt");
+      ok(n.streifen === "0px", "kein Farbstreifen mehr - die Flaeche traegt die Farbe");
+      ok(n.fs >= n.blockFs * 0.85, `Text mindestens so praesent wie der Block der Liste (${n.fs} px gegen ${n.blockFs} px)`);
+      ok(n.drin, "passt auf den Schirm");
+      const w = await zeige("important");
+      ok(w.bg === "rgb(226, 65, 47)" && w.farbe === "rgb(255, 255, 255)" && w.anim === "none", `wichtig: rot, weiss, Schleier bleibt (ist: ${w.bg}, ${w.anim})`);
+      const l = await zeige("info");
+      ok(l.bg === "rgb(47, 111, 196)", `leise: blau (ist: ${l.bg})`);
+      await zeige("normal");
+    },
+  },
 ];
