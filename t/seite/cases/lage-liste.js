@@ -119,9 +119,15 @@ module.exports = [
       // 95 Minuten alt: beim Laden glaubwuerdig (ab einer Stunde). Kurz nach
       // Mitternacht ist das "gestern".
       ok(r.block && /^seit (\d\d:\d\d Uhr|gestern)$/.test(r.block.sub), `Unterzeile "seit HH:MM Uhr" (ist: "${r.block && r.block.sub}")`);
-      ok(r.zeilen.map((x) => x.geraet).join(",") ===
-         "rem_d_cal_muell,d_blumen_giessen,myalarm,MQTT2_Tesla_Model3,rp_d_Wechselrichter_all_modus",
-         `gelb vor blau, innerhalb der Stufe wie in showIf (ist: ${r.zeilen.map((x) => x.geraet).join(",")})`);
+      // Reihenfolge: gelb vor blau, innerhalb der Stufe wie in showIf. Seit
+      // v0.40.3 (groessere Schrift) passt die letzte ggf. nicht mehr - dann
+      // steht dort "und 1 weitere Meldung".
+      const soll = ["rem_d_cal_muell", "d_blumen_giessen", "myalarm", "MQTT2_Tesla_Model3", "rp_d_Wechselrichter_all_modus"];
+      const echt = r.zeilen.filter((x) => !/lg-mehr/.test(x.klasse)).map((x) => x.geraet);
+      const rest = r.zeilen.find((x) => /lg-mehr/.test(x.klasse));
+      ok(echt.join(",") === soll.slice(0, echt.length).join(",") && echt.length >= 4 &&
+         (echt.length === 5 ? !rest : rest && rest.text === "und 1 weitere Meldung"),
+         `gelb vor blau, innerhalb der Stufe wie in showIf (ist: ${r.zeilen.map((x) => x.geraet || x.text).join(",")})`);
       const tesla = r.zeilen.find((x) => x.geraet === "MQTT2_Tesla_Model3");
       ok(tesla && tesla.text === "Der Tesla kommt in 12 Minuten", `Platzhalter mit Rundung (ist: "${tesla && tesla.text}")`);
       ok(tesla && tesla.sub === "Akku 80 %, 423 km Reichweite", `Unterzeile mit Platzhaltern (ist: "${tesla && tesla.sub}")`);
@@ -382,4 +388,39 @@ module.exports = [
       await zeige("normal");
     },
   },
+  ...[false, true].map((mitHinweis) => ({
+    name: `Uhr-Seite (Skin signal) passt auf den Schirm - ${mitHinweis ? "MIT" : "ohne"} Hinweis-Leiste`,
+    geraet: "tv",
+    // Anlass v0.40.3: mit aktivem vizAlert ("Yuka: offline") ist die Kopfleiste
+    // zweizeilig, die vh-Groessen der Uhr-Seite wissen davon nichts - die
+    // letzte Statuszeile ("Wetter") lag unter der Bildschirmkante.
+    config: { tvScenes: "#uhr:600", skin: "signal" },
+    geraete(liste) {
+      haus(liste);
+      if (mitHinweis) dazu(liste, "Yuka", "offline", { alias: "Yuka", vizAlert: "state=offline" });
+    },
+    async pruefe({ page, ok, h }) {
+      await h.timerStoppen();
+      await page.waitForTimeout(1300); // ein Sekundentakt: neu gezeichnet, Faktor bleibt
+      const r = await page.evaluate(() => {
+        const app = document.getElementById("fhemviz-app").getBoundingClientRect();
+        const zeilen = [...document.querySelectorAll(".cp-r")];
+        const letzte = zeilen[zeilen.length - 1];
+        const alerts = document.getElementById("viz-alerts");
+        return {
+          zeilen: zeilen.length,
+          unten: letzte ? Math.round(letzte.getBoundingClientRect().bottom) : 0,
+          kante: Math.round(Math.min(app.bottom, innerHeight)),
+          zoom: parseFloat(document.querySelector(".viz-clockpage").style.zoom) || 1,
+          hinweis: !!alerts && alerts.offsetHeight > 0 && alerts.textContent.includes("offline"),
+          label: getComputedStyle(document.querySelector(".cp-l")).textTransform,
+        };
+      });
+      ok(r.zeilen === 4, `vier Statuszeilen (sind ${r.zeilen})`);
+      ok(r.hinweis === mitHinweis, `Hinweis-Leiste ${mitHinweis ? "sichtbar" : "aus"}`);
+      ok(r.unten <= r.kante + 1, `letzte Zeile endet ueber der Kante (${r.unten} <= ${r.kante}, zoom ${r.zoom.toFixed(3)})`);
+      if (!mitHinweis) ok(r.zoom > 0.97, `ohne Hinweis kaum verkleinert (zoom ${r.zoom.toFixed(3)})`);
+      ok(r.label === "none", "Beschriftungen ohne Versalien");
+    },
+  })),
 ];

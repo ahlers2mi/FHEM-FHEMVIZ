@@ -31,7 +31,7 @@ import {
 // Muss zur Modul-Version aus "get config" passen. Weicht sie ab, haengt
 // entweder der Browser-Cache (Strg+F5) oder das Modul wurde nach dem
 // update nicht neu geladen (reload 98_FHEMVIZ).
-const SPA_VERSION = "v0.40.2";
+const SPA_VERSION = "v0.40.3";
 
 const el = (id) => document.getElementById(id);
 
@@ -331,6 +331,33 @@ function renderClockPage(root, store, cfg) {
       ${kpiHtml ? `<div class="cp-kpis">${kpiHtml}</div>` : ""}
       ${rowHtml ? `<div class="cp-rows">${rowHtml}</div>` : ""}
     </div>`;
+  clockFit(root);
+}
+
+/**
+ * Uhr-Seite in die Flaeche einpassen (ab v0.40.3). Die Groessen haengen an
+ * vh - also an der FENSTERhoehe. Die Kopfleiste ist aber mal eine, mal zwei
+ * Zeilen hoch (Hinweis-Leiste vizAlert, z. B. "Yuka: offline"); dann fehlen
+ * der Seite rund 50 px und die letzte Statuszeile lief unten aus dem Schirm.
+ * Darum: wenn der Inhalt nicht passt, die ganze Seite per zoom verkleinern -
+ * und wieder vergroessern, sobald Platz frei wird. Der Faktor haengt am root,
+ * weil die Seite jede Sekunde neu gezeichnet wird.
+ */
+function clockFit(root) {
+  const page = root.querySelector(".viz-clockpage");
+  if (!page) return;
+  let z = parseFloat(root.dataset.cpz) || 1;
+  for (let i = 0; i < 4; i++) {
+    page.style.zoom = z === 1 ? "" : String(z);
+    const hoch = page.scrollHeight;
+    const platz = page.clientHeight;
+    if (!hoch || !platz) break;
+    const v = platz / hoch; // < 1: zu gross; > 1: Platz frei
+    if (v < 0.995) z = Math.max(0.5, z * v * 0.99);
+    else if (z < 1 && v > 1.04) z = Math.min(1, z * v * 0.99);
+    else break;
+  }
+  root.dataset.cpz = String(z);
 }
 
 /* ---------------------------- Lage-Seite (#lage) ---------------------------- */
@@ -916,6 +943,7 @@ class TvController {
   _leaveClockPage() {
     clearInterval(this._cpTimer);
     this._cpTimer = null;
+    if (this.root) delete this.root.dataset.cpz;
     if (document.body.classList.contains("viz-clockonly") ||
         document.body.classList.contains("viz-lageonly")) {
       document.body.classList.remove("viz-clockonly", "viz-lageonly", "viz-lageliste");
