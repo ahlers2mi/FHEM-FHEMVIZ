@@ -11,6 +11,28 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.40.3 — 13.11.2026
+
+**Uhr-Seite passt mit Hinweis-Leiste auf den Schirm; Lage-Liste größer**
+
+Beides am 10-Zoll-Küchentablet aufgefallen.
+
+- Uhr-Seite: Die Größen hängen an `vh`, also an der Fensterhöhe. Mit aktivem
+  `vizAlert` („Yuka: offline“) ist die Kopfleiste zweizeilig, der Seite fehlen
+  rund 50 px, und die letzte Statuszeile lag unter der Bildschirmkante. Die
+  Seite wird jetzt nach dem Zeichnen vermessen und bei Bedarf als Ganzes
+  verkleinert (`zoom`), sobald wieder Platz ist, wieder vergrößert.
+- Skin `signal`, Uhr-Seite: Beschriftungen in normaler Schreibung statt
+  gesperrter Versalien, Ziffern kräftiger – wie auf der Lage-Liste.
+- Skin `signal`, Lage-Liste: alles rund 20 % größer (Zeilen 31 → 39, Block 68 →
+  80, Uhr 92 → 108, Termine/Aufgaben 25 → 30, bezogen auf 1280 × 800). Es passen
+  dadurch weniger Zeilen; was fehlt, nennt wie bisher die letzte Zeile.
+- Lage-Liste: Wird eine Zeile eng, kürzt jetzt zuerst die Unterzeile rechts,
+  nicht der Satz („Der Tesla kommt in 12 Minu…“).
+- Tests: zwei Fälle zur Uhr-Seite (mit/ohne Hinweis-Leiste).
+
+---
+
 ## v0.40.2 — 12.11.2026
 
 **Skin `signal`: Nachrichten (`set <viz> msg …`) gingen auf der Lage-Liste unter**

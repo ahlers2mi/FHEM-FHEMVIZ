@@ -76,7 +76,7 @@ html[data-vizskin="signal"] body.viz-lageliste #viz-header {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) calc(var(--u) * 400);
+  grid-template-columns: minmax(0, 1fr) calc(var(--u) * 430);
   grid-template-rows: minmax(0, 1fr) auto;
   color: var(--viz-text);
   font-variant-numeric: tabular-nums;
@@ -102,9 +102,9 @@ html[data-vizskin="signal"] body.viz-lageliste #viz-header {
   display: flex;
   align-items: center;
   gap: calc(var(--u) * 30);
-  min-height: calc(var(--u) * 214);
-  margin-bottom: calc(var(--u) * 14);
-  padding: calc(var(--u) * 34) calc(var(--u) * 36);
+  min-height: calc(var(--u) * 220);
+  margin-bottom: calc(var(--u) * 12);
+  padding: calc(var(--u) * 32) calc(var(--u) * 36);
   border-radius: calc(var(--u) * 30);
   background: var(--f);
   color: #fff;
@@ -118,7 +118,7 @@ html[data-vizskin="signal"] body.viz-lageliste #viz-header {
 }
 .lg-erste > div { min-width: 0; }
 .lg-erste p {
-  font-size: calc(var(--u) * 68);
+  font-size: calc(var(--u) * 80);
   font-weight: 600;
   line-height: 1;
   overflow-wrap: break-word;
@@ -126,7 +126,7 @@ html[data-vizskin="signal"] body.viz-lageliste #viz-header {
 .lg-erste small {
   display: block;
   margin-top: calc(var(--u) * 12);
-  font-size: calc(var(--u) * 26);
+  font-size: calc(var(--u) * 32);
   opacity: 0.88;
 }
 .lg-erste .lg-sym {
@@ -165,42 +165,46 @@ html[data-vizskin="signal"] body.viz-lageliste #viz-header {
 .lg-liste li {
   display: flex;
   align-items: center;
-  gap: calc(var(--u) * 20);
-  padding: calc(var(--u) * 12) calc(var(--u) * 20);
+  gap: calc(var(--u) * 22);
+  padding: calc(var(--u) * 13) calc(var(--u) * 16);
 }
 .lg-liste li + li { border-top: 1px solid var(--viz-border); }
 .lg-liste .lg-sym {
   flex: none;
   display: grid;
   place-items: center;
-  width: calc(var(--u) * 50);
-  height: calc(var(--u) * 50);
-  border-radius: calc(var(--u) * 14);
+  width: calc(var(--u) * 58);
+  height: calc(var(--u) * 58);
+  border-radius: calc(var(--u) * 16);
   background: var(--f);
   color: #14181e;
 }
-.lg-liste .lg-sym svg { display: block; width: calc(var(--u) * 28); height: calc(var(--u) * 28); }
+.lg-liste .lg-sym svg { display: block; width: calc(var(--u) * 33); height: calc(var(--u) * 33); }
 .lg-liste p {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
-  font-size: calc(var(--u) * 31);
+  font-size: calc(var(--u) * 39);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .lg-liste time {
-  flex: 0 1 auto;
-  max-width: 45%;
-  font-size: calc(var(--u) * 22);
+  /* Wird es eng, kuerzt zuerst die Unterzeile, nicht der Satz (v0.40.3):
+   * der Satz behaelt seine Breite (flex 0 1 auto, s. o.), die Unterzeile
+   * bekommt nur, was rechts uebrig bleibt (Basis 0, rechtsbuendig). */
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: right;
+  font-size: calc(var(--u) * 27);
   color: var(--viz-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .lg-liste .lg-mehr p {
-  padding-left: calc(var(--u) * 70);
-  font-size: calc(var(--u) * 24);
+  padding-left: calc(var(--u) * 80);
+  font-size: calc(var(--u) * 29);
   font-weight: 400;
   color: var(--viz-muted);
 }
@@ -210,11 +214,11 @@ html[data-vizskin="signal"] body.viz-lageliste #viz-header {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  padding: calc(var(--u) * 40) calc(var(--u) * 40) 0 calc(var(--u) * 26);
+  padding: calc(var(--u) * 32) calc(var(--u) * 34) 0 calc(var(--u) * 22);
 }
-.lg-uhr { font-size: calc(var(--u) * 92); font-weight: 600; line-height: 0.9; }
-.lg-datum { margin-top: calc(var(--u) * 10); font-size: calc(var(--u) * 26); color: var(--viz-muted); }
-.lg-fest { margin-top: calc(var(--u) * 28); }
+.lg-uhr { font-size: calc(var(--u) * 108); font-weight: 600; line-height: 0.9; }
+.lg-datum { margin-top: calc(var(--u) * 10); font-size: calc(var(--u) * 31); color: var(--viz-muted); }
+.lg-fest { margin-top: calc(var(--u) * 24); }
 /* Der feste Teil sind echte Kacheln (renderLayout) - hier ohne Raum- und
  * Gruppenueberschrift, einspaltig, so hoch wie ihr Inhalt. */
 .lg-fest .viz-room > h2,
@@ -237,14 +241,14 @@ html[data-vizmode="tv"] .lg-fest .viz-grid,
   flex-wrap: wrap;
   align-items: baseline;
   gap: calc(var(--u) * 4) calc(var(--u) * 46);
-  padding: calc(var(--u) * 12) calc(var(--u) * 50) calc(var(--u) * 16);
-  font-size: calc(var(--u) * 22);
+  padding: calc(var(--u) * 10) calc(var(--u) * 46) calc(var(--u) * 14);
+  font-size: calc(var(--u) * 26);
   color: var(--viz-muted);
 }
 .lg-fuss:empty { display: none; }
 .lg-fuss b {
   margin-left: calc(var(--u) * 8);
-  font-size: calc(var(--u) * 28);
+  font-size: calc(var(--u) * 34);
   font-weight: 600;
   color: var(--viz-text);
 }
@@ -304,3 +308,16 @@ html[data-vizskin="signal"] #viz-toast.viz-toast-info .viz-toast-head { color: i
   html[data-vizskin="signal"] #viz-toast .viz-toast-head { font-size: 1.05rem; }
   html[data-vizskin="signal"] #viz-toast .viz-toast-msg { font-size: 1.9rem; }
 }
+
+/* --- Uhr-Seite im Skin signal (v0.40.3) -------------------------------- */
+/* Beschriftungen wie auf der Lage-Liste: normale Schreibung statt gesperrter
+ * Versalien, Ziffern kraeftiger (Barlow hat hier 400/500/600). */
+html[data-vizskin="signal"] .cp-time { font-weight: 500; letter-spacing: -0.01em; }
+html[data-vizskin="signal"] .cp-date { font-weight: 400; }
+html[data-vizskin="signal"] .cp-v { font-weight: 500; }
+html[data-vizskin="signal"] .cp-l {
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+html[data-vizskin="signal"] .cp-s { font-weight: 600; }
