@@ -26,7 +26,7 @@
 }
 :host([data-lage]) .card::before { display: none; }
 :host([data-lage]) .label {
-  font-size: calc(var(--u, 1px) * 27);
+  font-size: calc(var(--u, 1px) * 30);
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
@@ -37,7 +37,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  padding: calc(var(--u, 1px) * 10) 0;
+  padding: calc(var(--u, 1px) * 9) 0;
   background: none;
   border: 0;
   border-bottom: 1px solid var(--viz-border, #2a323c);
@@ -46,7 +46,7 @@
 :host([data-lage]) .agrow.quelle { border-left: 0; }
 :host([data-lage]) .agrow .when,
 :host([data-lage][data-tv]) .agrow .when {
-  font-size: calc(var(--u, 1px) * 24);
+  font-size: calc(var(--u, 1px) * 27);
   font-weight: 400;
   color: var(--viz-muted, #96a0aa);
 }
@@ -54,7 +54,7 @@
 :host([data-lage]) .agrow.tomorrow .when { color: var(--viz-accent, #f5b82e); font-weight: 500; }
 :host([data-lage]) .agrow .what,
 :host([data-lage][data-tv]) .agrow .what {
-  font-size: calc(var(--u, 1px) * 30);
+  font-size: calc(var(--u, 1px) * 34);
   font-weight: 500;
 }
 :host([data-lage]) .agrow .qtag { display: none; }
@@ -65,8 +65,8 @@
  * die Groessenregeln der Grundkachel (:host([data-tv][data-size=…]) .text)
  * sonst gewinnen. */
 :host([data-lage]) .text {
-  font-size: calc(var(--u, 1px) * 30) !important;
+  font-size: calc(var(--u, 1px) * 34) !important;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.4;
   padding-top: calc(var(--u, 1px) * 6);
 }

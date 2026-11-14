@@ -11,6 +11,20 @@ Grundwidgets, Skins, TV-Modus. Ab hier ist es einzeln festgehalten.
 
 ---
 
+## v0.40.4 — 14.11.2026
+
+**Lage-Liste: rechte Spalte breiter und größer**
+
+Am 10-Zoll-Küchentablet waren Uhr, Termine und Aufgaben zu klein.
+
+- Skin `signal`, Lage-Liste: rechte Spalte 430 → 500 breit, Uhr 108 → 128,
+  Datum 31 → 35, Überschriften 27 → 30, Termine/Aufgaben 30 → 34, Zeit der
+  Termine 24 → 27 (bezogen auf 1280 × 800). Die linke Liste wird entsprechend
+  schmaler.
+- Größer ging nicht: bei 37 brechen typische Aufgaben („Trockner ausräumen
+  (seit gestern)“) um. Bei vier Terminen passt darunter jetzt sicher eine
+  Aufgabe, weitere werden unten abgeschnitten.
+
 ## v0.40.3 — 13.11.2026
 
 **Uhr-Seite passt mit Hinweis-Leiste auf den Schirm; Lage-Liste größer**
