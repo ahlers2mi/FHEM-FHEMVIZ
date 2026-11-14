@@ -76,7 +76,7 @@ html[data-vizskin="signal"] body.viz-lageliste #viz-header {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) calc(var(--u) * 430);
+  grid-template-columns: minmax(0, 1fr) calc(var(--u) * 500);
   grid-template-rows: minmax(0, 1fr) auto;
   color: var(--viz-text);
   font-variant-numeric: tabular-nums;
@@ -209,16 +209,18 @@ html[data-vizskin="signal"] body.viz-lageliste #viz-header {
   color: var(--viz-muted);
 }
 
-/* Rechte Spalte: Uhr, Datum, fester Teil (Kalender ...). */
+/* Rechte Spalte: Uhr, Datum, fester Teil (Kalender ...).
+ * v0.40.4: breiter (430 -> 500u) und ~15 % groessere Schrift - auf dem
+ * 10-Zoll-Tablet war die Spalte aus der Kueche schlecht lesbar. */
 .lg-seite {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  padding: calc(var(--u) * 32) calc(var(--u) * 34) 0 calc(var(--u) * 22);
+  padding: calc(var(--u) * 28) calc(var(--u) * 30) 0 calc(var(--u) * 18);
 }
-.lg-uhr { font-size: calc(var(--u) * 108); font-weight: 600; line-height: 0.9; }
-.lg-datum { margin-top: calc(var(--u) * 10); font-size: calc(var(--u) * 31); color: var(--viz-muted); }
-.lg-fest { margin-top: calc(var(--u) * 24); }
+.lg-uhr { font-size: calc(var(--u) * 128); font-weight: 600; line-height: 0.9; }
+.lg-datum { margin-top: calc(var(--u) * 10); font-size: calc(var(--u) * 35); color: var(--viz-muted); }
+.lg-fest { margin-top: calc(var(--u) * 22); }
 /* Der feste Teil sind echte Kacheln (renderLayout) - hier ohne Raum- und
  * Gruppenueberschrift, einspaltig, so hoch wie ihr Inhalt. */
 .lg-fest .viz-room > h2,
@@ -230,7 +232,7 @@ html[data-vizmode="tv"] .lg-fest .viz-grid,
 .lg-fest .viz-grid {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--u) * 24);
+  gap: calc(var(--u) * 20);
 }
 .lg-fest .viz-grid > * { height: auto; }
 
